@@ -1,4 +1,5 @@
 import RecordsList from "@/components/RecordList";
+import Greeting from "@/components/Greeting";
 import { HOME_COLOR } from "@/utils/constant";
 import React from "react";
 import { View, Text, StyleSheet, Image, ImageBackground, Dimensions } from "react-native";
@@ -81,9 +82,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: HOME_COLOR.HOMEBACKGROUND,
   },
-  textContainer: {
-    flex: 0.5,
-    justifyContent: "center",
+  introContainer: {
+    flex: 0.51,
+    // justifyContent: "center",
     alignItems: "center",
     // borderWidth: 1,
     // borderColor: "red",

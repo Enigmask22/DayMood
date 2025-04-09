@@ -2,14 +2,14 @@ import { Dimensions, FlatList, StyleSheet, Text, View } from "react-native";
 import FeelingRecord from "@/components/FeelingRecord";
 import { FeelingRecordProps } from "@/components/FeelingRecord";
 import AntDesign from "@expo/vector-icons/AntDesign";
-
+const { width, height } = Dimensions.get("window");
 const RecordsList = ({ records }: { records: FeelingRecordProps[] }) => {
   return (
     <View style={styles.container}>
       {/* Navigation Bar */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Recent Records</Text>
-        <AntDesign name="rightcircleo" size={24} color="black" />
+        <AntDesign name="rightcircleo" size={width * 0.06} color="black" />
       </View>
 
       {/* Scrollable List */}
@@ -35,17 +35,17 @@ const RecordsList = ({ records }: { records: FeelingRecordProps[] }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingBottom: 100,
+    paddingBottom: height * 0.12,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 20,
-    paddingBottom: 15,
+    paddingHorizontal: width * 0.05,
+    paddingBottom: height * 0.02,
   },
   headerTitle: {
-    fontSize: 18, // Smaller font size for a minimalist look
+    fontSize: width * 0.045,
     fontWeight: "600",
     color: "#000",
   },
@@ -53,10 +53,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    paddingHorizontal: 10,
+    paddingHorizontal: width * 0.025,
     alignItems: "stretch",
-    gap: 10,
-    paddingBottom: 10,
+    gap: height * 0.015,
+    paddingBottom: height * 0.015,
   },
 });
 

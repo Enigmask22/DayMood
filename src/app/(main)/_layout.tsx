@@ -28,7 +28,7 @@ export default function MainAppLayout() {
           title: "Home",
           // @ts-ignore: Truyền params tùy chỉnh
           params: { iconSet: "Ionicons", iconName: "home-outline" },
-          headerShown: true, // Hiện header cho Home
+          headerShown: false, // Hiện header cho Home
           headerTitle: "Homepage",
         }}
       />
@@ -39,7 +39,7 @@ export default function MainAppLayout() {
           title: "Stats",
           // @ts-ignore: Truyền params tùy chỉnh
           params: { iconSet: "Ionicons", iconName: "stats-chart" },
-          headerShown: true,
+          headerShown: false,
           headerTitle: "Statistics",
         }}
       />
@@ -50,7 +50,7 @@ export default function MainAppLayout() {
           title: "Calendar",
           // @ts-ignore
           params: { iconSet: "Ionicons", iconName: "calendar-outline" },
-          headerShown: true,
+          headerShown: false,
           headerTitle: "Calendar View",
         }}
       />
@@ -61,7 +61,7 @@ export default function MainAppLayout() {
           title: "Setting",
           // @ts-ignore
           params: { iconSet: "Ionicons", iconName: "settings-outline" },
-          headerShown: true,
+          headerShown: false,
           headerTitle: "Settings",
         }}
       />
