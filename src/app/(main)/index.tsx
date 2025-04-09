@@ -1,4 +1,5 @@
 import RecordsList from "@/components/RecordList";
+import Greeting from "@/components/Greeting";
 import { HOME_COLOR } from "@/utils/constant";
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
@@ -34,8 +35,9 @@ const HomePage = () => {
   ];
   return (
     <View style={styles.container}>
-      <View style={styles.textContainer}>
-        <Text style={styles.text}>Welcome to the Homepage!</Text>
+      <View style={styles.introContainer}>
+        {/* <Text style={styles.text}>Welcome to the Homepage!</Text> */}
+        <Greeting />
       </View>
       <View style={styles.listContainer}>
         <RecordsList records={records} />
@@ -49,9 +51,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: HOME_COLOR.HOMEBACKGROUND,
   },
-  textContainer: {
+  introContainer: {
     flex: 0.51,
-    justifyContent: "center",
+    // justifyContent: "center",
     alignItems: "center",
     // borderWidth: 1,
     // borderColor: "red",
