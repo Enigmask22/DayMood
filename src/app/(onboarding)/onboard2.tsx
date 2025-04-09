@@ -19,7 +19,7 @@ const OnboardScreen2 = () => {
   const router = useRouter();
 
   const handlePrevious = () => {
-    router.push("/"); // Điều hướng sang onboard3
+    router.push("/(main)"); // Điều hướng sang onboard3
   };
 
   const handleNext = () => {
@@ -37,7 +37,9 @@ const OnboardScreen2 = () => {
           resizeMode="contain" // Hoặc "cover" tùy ảnh
         />
         <View style={styles.titleContainer}>
-          <Text style={styles.titleText}>Record your feeling inside a diary!</Text>
+          <Text style={styles.titleText}>
+            Record your feeling inside a diary!
+          </Text>
           <Text style={styles.subtitleText}>
             Explore a new way to make diary with photo and audio attachments.
           </Text>
@@ -144,7 +146,8 @@ const styles = StyleSheet.create({
   skipText: {
     fontSize: 16,
     color: "#666666",
-    fontWeight: "500",
+    fontWeight: "bold",
+    marginLeft: 10,
   },
   nextButton: {
     width: 50,
