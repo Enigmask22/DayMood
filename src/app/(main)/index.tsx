@@ -18,7 +18,7 @@ const HomePage = () => {
     {
       date: "SATURDAY, MARCH 8 14:00",
       emoji: "joyful",
-      feeling: "I'm feeling okay",
+      feeling: "I'm feeling joyful",
     },
     {
       date: "SUNDAY, MARCH 9 12:00",
@@ -79,9 +79,14 @@ const HomePage = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: HOME_COLOR.HOMEBACKGROUND,
+  },
+  textContainer: {
+    flex: 0.5,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: HOME_COLOR.HOMEBACKGROUND,
+    // borderWidth: 1,
+    // borderColor: "red",
   },
   background: {
     height: height * 0.4,

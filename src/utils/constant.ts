@@ -17,3 +17,10 @@ export const HOME_COLOR = {
   HOMETABBAR: "#22C55E",
   HOMETEXT: "#7E7E7E",
 };
+export const EMOJI_COLOR = {
+  SAD: "#0000FF",
+  EXCELLENT: "#22C55E",
+  JOYFUL: "#FFA500",
+  NORMAL: "#7E7E7E",
+  ANGRY: "#FF0000",
+};
