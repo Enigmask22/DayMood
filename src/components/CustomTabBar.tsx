@@ -9,16 +9,17 @@ import {
 } from "react-native";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs"; // Lấy kiểu props
 import { Ionicons } from "@expo/vector-icons"; // Ví dụ sử dụng Ionicons
+import { HOME_COLOR } from "@/utils/constant";
 // Import các bộ icon khác nếu cần
 // import { FontAwesome } from '@expo/vector-icons';
 
 const { width } = Dimensions.get("window");
 
 // Định nghĩa màu sắc (hoặc import từ constants)
-const ACTIVE_COLOR = "#1DB954";
+const ACTIVE_COLOR = HOME_COLOR.HOMETABBAR;
 const INACTIVE_COLOR = "#8E8E93";
 const TAB_BAR_BG = "#FFFFFF";
-const ADD_BUTTON_BG = "#1DB954";
+const ADD_BUTTON_BG = HOME_COLOR.HOMEPLUS;
 const ADD_BUTTON_COLOR = "#FFFFFF";
 
 // Tạo map để lấy component Icon dễ dàng
