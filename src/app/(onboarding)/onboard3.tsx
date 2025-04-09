@@ -10,6 +10,7 @@ import {
   Dimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { APP_COLOR } from "@/utils/constant";
 // import AsyncStorage from '@react-native-async-storage/async-storage'; // Uncomment nếu dùng AsyncStorage
 
 const { width } = Dimensions.get("window");
@@ -41,9 +42,9 @@ const OnboardScreen3 = () => {
           resizeMode="contain"
         />
         <View style={styles.titleContainer}>
-          <Text style={styles.titleText}>Sẵn sàng trải nghiệm!</Text>
+          <Text style={styles.titleText}>See through your emotion </Text>
           <Text style={styles.subtitleText}>
-            Bắt đầu hành trình cải thiện tâm trạng mỗi ngày cùng DayMood.
+            With statistical charts, we will offer some features such as advice, music,... to help improve your mood
           </Text>
         </View>
 
@@ -58,7 +59,7 @@ const OnboardScreen3 = () => {
 
         {/* Nút Finish */}
         <TouchableOpacity style={styles.button} onPress={handleFinish}>
-          <Text style={styles.buttonText}>Finish</Text>
+          <Text style={styles.buttonText}>Start</Text>
         </TouchableOpacity>
       </View>
       <View style={styles.iPhoneIndicator}>
@@ -116,17 +117,20 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#007AFF",
+    backgroundColor: APP_COLOR.ONBOARDING,
   },
   inactiveDot: {
     backgroundColor: "#D9D9D9",
   },
   button: {
-    backgroundColor: "#007AFF",
+    backgroundColor: APP_COLOR.ONBOARDING,
     borderRadius: 14,
     paddingVertical: 15,
+    paddingHorizontal: 20, // Thêm padding ngang để button không quá sát text
     alignItems: "center",
     marginBottom: 10,
+    minWidth: 200, // Đảm bảo button có chiều rộng tối thiểu
+    alignSelf: "center", // Căn giữa button theo chiều ngang
   },
   buttonText: {
     color: "#FFFFFF",
