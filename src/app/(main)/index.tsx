@@ -1,8 +1,9 @@
-import RecordsList from "@/components/RecordList";
-import Greeting from "@/components/Greeting";
+import RecordsList from "@/components/homepage/RecordsList";
+import Greeting from "@/components/homepage/Greeting";
 import { HOME_COLOR } from "@/utils/constant";
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
+import MoodPromptCard from "@/components/homepage/MoodPromptCard";
 
 const HomePage = () => {
   const records = [
@@ -36,8 +37,8 @@ const HomePage = () => {
   return (
     <View style={styles.container}>
       <View style={styles.introContainer}>
-        {/* <Text style={styles.text}>Welcome to the Homepage!</Text> */}
         <Greeting />
+        <MoodPromptCard />
       </View>
       <View style={styles.listContainer}>
         <RecordsList records={records} />
@@ -53,7 +54,6 @@ const styles = StyleSheet.create({
   },
   introContainer: {
     flex: 0.51,
-    // justifyContent: "center",
     alignItems: "center",
     // borderWidth: 1,
     // borderColor: "red",
@@ -66,8 +66,6 @@ const styles = StyleSheet.create({
     flex: 0.49,
     justifyContent: "center",
     alignItems: "center",
-    // borderWidth: 1,
-    // borderColor: "blue",
   },
 });
 
