@@ -10,14 +10,20 @@ import {
   Dimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { APP_COLOR } from "@/utils/constant";
 
 const { width } = Dimensions.get("window");
 
 const OnboardScreen2 = () => {
   const router = useRouter();
 
+  const handlePrevious = () => {
+    router.push("/"); // Điều hướng sang onboard3
+  };
+
   const handleNext = () => {
-    router.push("/onboard3" as any); // Điều hướng sang onboard3
+    router.push("/onboard3"); // Điều hướng sang onboard3
   };
 
   return (
@@ -31,9 +37,9 @@ const OnboardScreen2 = () => {
           resizeMode="contain" // Hoặc "cover" tùy ảnh
         />
         <View style={styles.titleContainer}>
-          <Text style={styles.titleText}>Tính năng tuyệt vời 1</Text>
+          <Text style={styles.titleText}>Record your feeling inside a diary!</Text>
           <Text style={styles.subtitleText}>
-            Mô tả ngắn gọn về lợi ích của tính năng này mang lại cho người dùng.
+            Explore a new way to make diary with photo and audio attachments.
           </Text>
         </View>
 
@@ -46,10 +52,17 @@ const OnboardScreen2 = () => {
           </View>
         </View>
 
-        {/* Nút Next */}
-        <TouchableOpacity style={styles.button} onPress={handleNext}>
-          <Text style={styles.buttonText}>Next</Text>
-        </TouchableOpacity>
+        <View style={styles.navContainer}>
+          {/* Nút Skip */}
+          <TouchableOpacity onPress={handlePrevious}>
+            <Text style={styles.skipText}>Skip</Text>
+          </TouchableOpacity>
+
+          {/* Nút Next */}
+          <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
+            <Ionicons name="arrow-forward" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
       </View>
       <View style={styles.iPhoneIndicator}>
         <View style={styles.indicatorLine} />
@@ -109,22 +122,37 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#007AFF",
+    backgroundColor: APP_COLOR.ONBOARDING, // Màu xanh iOS
   },
   inactiveDot: {
     backgroundColor: "#D9D9D9",
   },
   button: {
-    backgroundColor: "#007AFF",
+    backgroundColor: APP_COLOR.ONBOARDING, // Màu xanh iOS
     borderRadius: 14,
     paddingVertical: 15,
     alignItems: "center",
     marginBottom: 10,
   },
-  buttonText: {
-    color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: "600",
+  navContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 17,
+    paddingVertical: 10,
+  },
+  skipText: {
+    fontSize: 16,
+    color: "#666666",
+    fontWeight: "500",
+  },
+  nextButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: APP_COLOR.ONBOARDING, // Màu xanh iOS
+    justifyContent: "center",
+    alignItems: "center",
   },
   iPhoneIndicator: {
     height: 30,
