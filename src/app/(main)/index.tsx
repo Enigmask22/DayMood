@@ -5,6 +5,10 @@ const HomePage = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.text}>Welcome to the Homepage!</Text>
+      {/* Header */}
+      {/* MoodInput */}
+      {/* RecentRecords */}
+      {/* BottomNavigation */}
     </View>
   );
 };
