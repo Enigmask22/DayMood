@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { HOME_COLOR, EMOJI_COLOR } from "@/utils/constant";
-const { width } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
 export interface FeelingRecordProps {
   date: string;
   emoji: string;
@@ -72,7 +72,7 @@ const FeelingRecord = ({
       </View>
       <MaterialCommunityIcons
         name="dots-horizontal"
-        size={24}
+        size={width * 0.06}
         color="black"
         style={styles.options}
       />
@@ -84,29 +84,29 @@ const styles = StyleSheet.create({
   container: {
     position: "relative",
     backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 25,
-    paddingTop: 30,
+    borderRadius: width * 0.025,
+    padding: width * 0.06,
+    paddingTop: height * 0.035,
     shadowColor: "#000",
-    shadowOffset: { width: 2, height: 4 },
+    shadowOffset: { width: 2, height: height * 0.005 },
     shadowOpacity: 0.4,
-    shadowRadius: 5,
-    elevation: 3, // For Android shadow
+    shadowRadius: width * 0.013,
+    elevation: 3,
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    gap: 10,
+    gap: width * 0.025,
     width: width * 0.8,
   },
   textContainer: {
     flexDirection: "column",
-    gap: 10,
-    paddingHorizontal: 10,
+    gap: height * 0.015,
+    paddingHorizontal: width * 0.025,
     alignItems: "center",
     justifyContent: "center",
   },
   dateText: {
-    fontSize: 14,
+    fontSize: width * 0.035,
     color: HOME_COLOR.HOMETEXT,
     fontWeight: "500",
     width: width * 0.5,
@@ -114,26 +114,26 @@ const styles = StyleSheet.create({
   },
 
   imageContainer: {
-    width: 70,
-    height: 70,
+    width: width * 0.18,
+    height: width * 0.18,
     justifyContent: "center",
     alignItems: "center",
   },
   button: {
-    borderRadius: 20,
-    paddingVertical: 10,
+    borderRadius: width * 0.05,
+    paddingVertical: height * 0.012,
     alignItems: "center",
     width: width * 0.4,
   },
   buttonText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: width * 0.04,
     fontWeight: "600",
   },
   options: {
     position: "absolute",
-    top: 10,
-    right: 10,
+    top: height * 0.012,
+    right: width * 0.025,
   },
 });
 

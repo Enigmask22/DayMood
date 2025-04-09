@@ -13,7 +13,8 @@ import { HOME_COLOR } from "@/utils/constant";
 // Import các bộ icon khác nếu cần
 // import { FontAwesome } from '@expo/vector-icons';
 
-const { width } = Dimensions.get("window");
+// Lấy cả width và height
+const { width, height } = Dimensions.get("window");
 
 // Định nghĩa màu sắc (hoặc import từ constants)
 const ACTIVE_COLOR = HOME_COLOR.HOMETABBAR;
@@ -90,7 +91,7 @@ const CustomTabBar = ({
               // Đặt logic xử lý trực tiếp ở đây
               console.log("Custom Add button pressed!");
               // Ví dụ: Điều hướng đến màn hình Modal
-              // navigation.navigate('YourAddModalScreen');
+              navigation.navigate("add"); // Giả sử có màn hình tên 'add'
             };
 
             return (
@@ -107,7 +108,7 @@ const CustomTabBar = ({
                 >
                   <IconComponent
                     name={iconName}
-                    size={24}
+                    size={width * 0.06} // Sử dụng width
                     color={isFocused ? ACTIVE_COLOR : INACTIVE_COLOR}
                   />
                   <Text
@@ -129,7 +130,12 @@ const CustomTabBar = ({
                   style={styles.addButtonContainer}
                 >
                   <View style={styles.addButton}>
-                    <Ionicons name="add" size={32} color={ADD_BUTTON_COLOR} />
+                    <Ionicons
+                      name="add"
+                      size={width * 0.08}
+                      color={ADD_BUTTON_COLOR}
+                    />
+                    {/* Sử dụng width */}
                   </View>
                 </TouchableOpacity>
               </React.Fragment>
@@ -150,7 +156,7 @@ const CustomTabBar = ({
             >
               <IconComponent
                 name={iconName}
-                size={24}
+                size={width * 0.06} // Sử dụng width
                 color={isFocused ? ACTIVE_COLOR : INACTIVE_COLOR}
               />
               <Text
@@ -175,25 +181,31 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: Platform.OS === "ios" ? 90 : 70, // Chiều cao tab bar (cao hơn cho iOS để chứa vùng an toàn)
+    // Sử dụng height
+    height: Platform.OS === "ios" ? height * 0.11 : height * 0.08,
     backgroundColor: "transparent", // Nền ngoài cùng trong suốt
     elevation: 0, // Bỏ shadow mặc định trên Android
   },
   tabBar: {
     flexDirection: "row",
-    height: Platform.OS === "ios" ? 90 : 70,
+    // Sử dụng height
+    height: Platform.OS === "ios" ? height * 0.11 : height * 0.09,
     backgroundColor: TAB_BAR_BG,
-    borderTopLeftRadius: 20, // Bo góc trên
-    borderTopRightRadius: 20,
-    paddingBottom: Platform.OS === "ios" ? 30 : 10, // Padding dưới cho vùng an toàn iOS
-    paddingHorizontal: 10,
+    // Sử dụng width
+    borderTopLeftRadius: width * 0.05,
+    borderTopRightRadius: width * 0.05,
+    // Sử dụng height và width
+    paddingBottom: Platform.OS === "ios" ? height * 0.04 : height * 0.015,
+    paddingHorizontal: width * 0.025,
     alignItems: "center", // Căn giữa các item theo chiều dọc
     justifyContent: "space-around", // Phân bố đều các tab
     // Shadow cho iOS
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
+    // Sử dụng height
+    shadowOffset: { width: 0, height: -height * 0.0025 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    // Sử dụng width
+    shadowRadius: width * 0.01,
     // Shadow cho Android (dùng elevation nếu muốn đơn giản hơn)
     elevation: 5,
     borderTopWidth: StyleSheet.hairlineWidth, // Thêm viền mỏng nếu muốn
@@ -203,28 +215,34 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center", // Căn giữa icon và text
-    paddingTop: 10, // Khoảng cách trên cùng
+    // Sử dụng height
+    paddingTop: height * 0.012,
   },
   tabLabel: {
-    fontSize: 11,
-    marginTop: 4, // Khoảng cách giữa icon và text
+    // Sử dụng width và height
+    fontSize: width * 0.028,
+    marginTop: height * 0.005, // Khoảng cách giữa icon và text
   },
   addButtonContainer: {
     // Dùng vị trí tuyệt đối hoặc một cách khác để đưa nút lên trên
     position: "absolute",
-    left: width / 2 - 25, // Căn giữa nút (50 là width mới của nút)
-    bottom: Platform.OS === "ios" ? 45 : 40, // Giữ nguyên giá trị bottom đã sửa
-    width: 50,
-    height: 50,
-    borderRadius: 30,
+    // Tính toán dựa trên width
+    width: width * 0.13,
+    height: width * 0.13, // Giữ hình vuông theo width
+    left: width / 2 - (width * 0.13) / 2, // Căn giữa
+    // Sử dụng height
+    bottom: Platform.OS === "ios" ? height * 0.055 : height * 0.05,
+    // Sử dụng width
+    borderRadius: width * 0.075,
     backgroundColor: ADD_BUTTON_BG,
     justifyContent: "center",
     alignItems: "center",
     // Shadow cho nút Add
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
+    // Sử dụng height và width
+    shadowOffset: { width: 0, height: height * 0.004 },
     shadowOpacity: 0.3,
-    shadowRadius: 4,
+    shadowRadius: width * 0.01,
     elevation: 6,
   },
   addButton: {
