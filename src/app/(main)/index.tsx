@@ -53,6 +53,8 @@ const styles = StyleSheet.create({
     flex: 0.5,
     justifyContent: "center",
     alignItems: "center",
+    // borderWidth: 1,
+    // borderColor: "red",
   },
   text: {
     fontSize: 20,
@@ -62,6 +64,8 @@ const styles = StyleSheet.create({
     flex: 0.5,
     justifyContent: "center",
     alignItems: "center",
+    // borderWidth: 1,
+    // borderColor: "blue",
   },
 });
 
