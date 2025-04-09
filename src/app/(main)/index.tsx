@@ -58,7 +58,17 @@ const styles = StyleSheet.create({
     // borderWidth: 1,
     // borderColor: "red",
   },
-  text: {
+  background: {
+    height: height * 0.4,
+    width: width,
+    padding: height * 0.05,
+    marginBottom: height * 0.03,
+  },
+  greeting: {
+    fontSize: 16,
+    color: "#000",
+  },
+  quote: {
     fontSize: 20,
     fontWeight: "bold",
   },
