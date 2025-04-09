@@ -7,7 +7,7 @@ import {
   Dimensions,
 } from "react-native";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { HOME_COLOR } from "@/utils/constant";
+import { HOME_COLOR, EMOJI_COLOR } from "@/utils/constant";
 const { width } = Dimensions.get("window");
 export interface FeelingRecordProps {
   date: string;
@@ -33,6 +33,26 @@ const FeelingRecord = ({
   // Use the emojiMap to get the correct image source
   const emojiSource = emojiMap[emoji] || emojiMap["normal"]; // Fallback to a default emoji if not found
 
+  // Logic lấy màu nút dựa trên emoji
+  const getButtonColor = () => {
+    switch (emoji) {
+      case "normal":
+        return EMOJI_COLOR.NORMAL;
+      case "angry":
+        return EMOJI_COLOR.ANGRY;
+      case "sad":
+        return EMOJI_COLOR.SAD;
+      case "excellent":
+        return EMOJI_COLOR.EXCELLENT;
+      case "joyful":
+        return EMOJI_COLOR.JOYFUL;
+      default:
+        return "#2E7D32"; // Màu mặc định nếu không khớp
+    }
+  };
+
+  const buttonColor = getButtonColor();
+
   return (
     <View style={styles.container}>
       {/* Emoji Section */}
@@ -43,8 +63,10 @@ const FeelingRecord = ({
       />
       <View style={styles.textContainer}>
         <Text style={styles.dateText}>{date}</Text>
-        {/* Button */}
-        <TouchableOpacity style={styles.button}>
+        {/* Button - Áp dụng màu động */}
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: buttonColor }]}
+        >
           <Text style={styles.buttonText}>{feeling}</Text>
         </TouchableOpacity>
       </View>
@@ -82,16 +104,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     alignItems: "center",
     justifyContent: "center",
-    // borderWidth: 1,
-    // borderColor: "red",
   },
   dateText: {
     fontSize: 14,
     color: HOME_COLOR.HOMETEXT,
     fontWeight: "500",
     width: width * 0.5,
-    // borderWidth: 1,
-    // borderColor: "blue",
     textAlign: "center",
   },
 
@@ -102,7 +120,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   button: {
-    backgroundColor: "#2E7D32", // Dark green color
     borderRadius: 20,
     paddingVertical: 10,
     alignItems: "center",

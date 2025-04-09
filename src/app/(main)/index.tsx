@@ -18,7 +18,7 @@ const HomePage = () => {
     {
       date: "SATURDAY, MARCH 8 14:00",
       emoji: "joyful",
-      feeling: "I'm feeling okay",
+      feeling: "I'm feeling joyful",
     },
     {
       date: "SUNDAY, MARCH 9 12:00",
