@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
     backgroundColor: HOME_COLOR.HOMEBACKGROUND,
   },
   textContainer: {
-    flex: 0.5,
+    flex: 0.51,
     justifyContent: "center",
     alignItems: "center",
     // borderWidth: 1,
@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   listContainer: {
-    flex: 0.5,
+    flex: 0.49,
     justifyContent: "center",
     alignItems: "center",
     // borderWidth: 1,
