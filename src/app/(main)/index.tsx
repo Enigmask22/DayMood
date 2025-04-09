@@ -2,9 +2,9 @@ import RecordsList from "@/components/homepage/RecordsList";
 import Greeting from "@/components/homepage/Greeting";
 import { HOME_COLOR } from "@/utils/constant";
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Dimensions } from "react-native";
 import MoodPromptCard from "@/components/homepage/MoodPromptCard";
-
+const { width, height } = Dimensions.get("window");
 const HomePage = () => {
   const records = [
     {
