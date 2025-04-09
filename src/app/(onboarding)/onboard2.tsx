@@ -66,9 +66,6 @@ const OnboardScreen2 = () => {
           </TouchableOpacity>
         </View>
       </View>
-      <View style={styles.iPhoneIndicator}>
-        <View style={styles.indicatorLine} />
-      </View>
     </SafeAreaView>
   );
 };
@@ -97,13 +94,14 @@ const styles = StyleSheet.create({
   },
   titleText: {
     // Đổi tên từ welcomeText cho rõ nghĩa hơn
+    fontFamily: "Poppins-Bold",
     fontSize: 24, // Có thể điều chỉnh font size
-    fontWeight: "bold",
     textAlign: "center",
     lineHeight: 32, // Điều chỉnh line height
     marginBottom: 12, // Khoảng cách với subtitle
   },
   subtitleText: {
+    fontFamily: "Inter-Light",
     fontSize: 18, // Điều chỉnh font size
     color: "#666666",
     // marginTop: 12, // Đã có margin bottom ở title
@@ -144,9 +142,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   skipText: {
+    fontFamily: "Inter-Light",
     fontSize: 16,
     color: "#666666",
-    fontWeight: "bold",
     marginLeft: 10,
   },
   nextButton: {
@@ -156,17 +154,6 @@ const styles = StyleSheet.create({
     backgroundColor: APP_COLOR.ONBOARDING, // Màu xanh iOS
     justifyContent: "center",
     alignItems: "center",
-  },
-  iPhoneIndicator: {
-    height: 30,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  indicatorLine: {
-    width: 135,
-    height: 5,
-    backgroundColor: "#B9C0C9",
-    borderRadius: 100,
   },
 });
 

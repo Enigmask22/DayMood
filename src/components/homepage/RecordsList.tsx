@@ -45,6 +45,7 @@ const styles = StyleSheet.create({
     paddingBottom: height * 0.02,
   },
   headerTitle: {
+    fontFamily: "Quicksand-Bold",
     fontSize: width * 0.045,
     fontWeight: "600",
     color: "#000",

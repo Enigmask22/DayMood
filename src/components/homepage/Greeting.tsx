@@ -60,10 +60,12 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   greetingText: {
+    fontFamily: "Quicksand-Semibold",
     fontSize: width * 0.035,
     color: "#000",
   },
   nameText: {
+    fontFamily: "Quicksand-Bold",
     fontSize: width * 0.045,
     fontWeight: "600",
     color: "#000",
@@ -91,20 +93,16 @@ const styles = StyleSheet.create({
     width: width * 0.9,
     alignSelf: "center",
     backgroundColor: "#fff",
+    opacity: 0.97,
     padding: width * 0.04,
     borderRadius: width * 0.04,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: height * 0.003 },
-    shadowOpacity: 0.1,
-    shadowRadius: width * 0.013,
-    elevation: 3,
   },
   quoteText: {
+    fontFamily: "Quicksand-Semibold",
     fontSize: width * 0.035,
     fontWeight: "600",
     color: "#333",
     textAlign: "center",
-    fontStyle: "italic",
   },
 });
 

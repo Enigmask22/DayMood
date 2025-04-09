@@ -106,6 +106,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   dateText: {
+    fontFamily: "Quicksand-Regular",
     fontSize: width * 0.035,
     color: HOME_COLOR.HOMETEXT,
     fontWeight: "500",
@@ -126,6 +127,7 @@ const styles = StyleSheet.create({
     width: width * 0.4,
   },
   buttonText: {
+    fontFamily: "Quicksand-Bold",
     color: "#fff",
     fontSize: width * 0.04,
     fontWeight: "600",

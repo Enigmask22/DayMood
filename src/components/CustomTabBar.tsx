@@ -220,6 +220,7 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     // Sử dụng width và height
+    fontFamily: "Poppins-Regular",
     fontSize: width * 0.028,
     marginTop: height * 0.005, // Khoảng cách giữa icon và text
   },

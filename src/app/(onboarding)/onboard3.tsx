@@ -62,9 +62,6 @@ const OnboardScreen3 = () => {
           <Text style={styles.buttonText}>Start</Text>
         </TouchableOpacity>
       </View>
-      <View style={styles.iPhoneIndicator}>
-        <View style={styles.indicatorLine} />
-      </View>
     </SafeAreaView>
   );
 };
@@ -91,6 +88,7 @@ const styles = StyleSheet.create({
     marginTop: 33,
   },
   titleText: {
+    fontFamily: "Poppins-Bold",
     fontSize: 24,
     fontWeight: "bold",
     textAlign: "center",
@@ -98,6 +96,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   subtitleText: {
+    fontFamily: "Inter-Light",
     fontSize: 18,
     color: "#666666",
     textAlign: "center",
@@ -133,20 +132,10 @@ const styles = StyleSheet.create({
     alignSelf: "center", // Căn giữa button theo chiều ngang
   },
   buttonText: {
+    fontFamily: "Inter-ExtraBold",
     color: "#FFFFFF",
     fontSize: 18,
     fontWeight: "600",
-  },
-  iPhoneIndicator: {
-    height: 30,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  indicatorLine: {
-    width: 135,
-    height: 5,
-    backgroundColor: "#B9C0C9",
-    borderRadius: 100,
   },
 });
 

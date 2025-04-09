@@ -121,6 +121,7 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent", // Đảm bảo nền của nội dung con trong suốt
   },
   titleText: {
+    fontFamily: "Quicksand-Bold",
     fontSize: baseFontSize * 1.125, // ~18px (1.125 * 16)
     fontWeight: "bold",
     color: "#000", // Có thể cần đổi màu chữ nếu nền mới làm khó đọc
@@ -132,6 +133,7 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
   subtitleText: {
+    fontFamily: "Quicksand-Regular",
     fontSize: baseFontSize * 0.875, // ~14px (0.875 * 16)
     color: "#888", // Có thể cần đổi màu chữ nếu nền mới làm khó đọc
     marginRight: wp(2), // ~8px

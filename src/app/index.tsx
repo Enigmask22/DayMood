@@ -88,11 +88,6 @@ const OnboardScreen1 = () => {
           <Text style={styles.buttonText}>Getting Started</Text>
         </TouchableOpacity>
       </View>
-
-      {/* Vạch indicator của iPhone */}
-      <View style={styles.iPhoneIndicator}>
-        <View style={styles.indicatorLine} />
-      </View>
     </SafeAreaView>
   );
 };
@@ -117,15 +112,19 @@ const styles = StyleSheet.create({
     marginTop: 33,
   },
   welcomeText: {
+    fontFamily: "Poppins-Bold",
+    color: "#000000",
     fontSize: 28,
-    fontWeight: "bold",
     textAlign: "center",
     lineHeight: 36,
   },
   brandText: {
+    fontFamily: "Poppins-Bold",
+    fontSize: 28,
     color: ONBOARDINGTEXT3,
   },
   subtitleText: {
+    fontFamily: "Poppins-Light",
     fontSize: 20,
     color: "#666666",
     marginTop: 12,
@@ -162,20 +161,10 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   buttonText: {
+    fontFamily: "Inter-ExtraBold",
     color: "#FFFFFF",
     fontSize: 18,
     fontWeight: "600",
-  },
-  iPhoneIndicator: {
-    height: 30,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  indicatorLine: {
-    width: 135,
-    height: 5,
-    backgroundColor: "#B9C0C9",
-    borderRadius: 100,
   },
 });
 
