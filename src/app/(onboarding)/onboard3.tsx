@@ -8,88 +8,59 @@ import {
   TouchableOpacity,
   StatusBar,
   Dimensions,
-  Animated,
-  Easing,
 } from "react-native";
 import { useRouter } from "expo-router";
+// import AsyncStorage from '@react-native-async-storage/async-storage'; // Uncomment nếu dùng AsyncStorage
 
 const { width } = Dimensions.get("window");
 
-// Giả sử chúng ta import từ file constant.ts
-const ONBOARDINGTEXT3 = "#79BF5D";
-
-const OnboardScreen1 = () => {
+const OnboardScreen3 = () => {
   const router = useRouter();
-  const rotateValue = new Animated.Value(0);
 
-  React.useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(rotateValue, {
-          toValue: 1,
-          duration: 1000,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        }),
-        Animated.timing(rotateValue, {
-          toValue: 0,
-          duration: 1000,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-  }, []);
+  const handleFinish = async () => {
+    try {
+      // Lưu trạng thái đã hoàn thành onboarding (tuỳ chọn)
+      // await AsyncStorage.setItem('@onboarding_complete', 'true');
 
-  const rotate = rotateValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["-20deg", "20deg"],
-  });
-
-  const handleNext = () => {
-    router.push("/onboard2" as any);
+      // Điều hướng đến màn hình chính và xoá stack onboarding
+      router.replace("/(main)" as any);
+    } catch (e) {
+      // Xử lý lỗi nếu có
+      console.error("Failed to save onboarding status or navigate:", e);
+    }
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
-
-      {/* Main Content */}
       <View style={styles.contentContainer}>
+        {/* Thay thế bằng hình ảnh và nội dung của bạn cho Onboard 3 */}
         <Image
-          source={require("@/assets/images/onboard/onboard1.png")}
+          source={require("@/assets/images/onboard/onboard3.png")} // Placeholder image
           style={styles.image}
-          resizeMode="cover"
+          resizeMode="contain"
         />
-
         <View style={styles.titleContainer}>
-          <Text style={styles.welcomeText}>
-            Welcome to{"\n"}
-            <Text style={styles.brandText}>DayMood</Text>
+          <Text style={styles.titleText}>Sẵn sàng trải nghiệm!</Text>
+          <Text style={styles.subtitleText}>
+            Bắt đầu hành trình cải thiện tâm trạng mỗi ngày cùng DayMood.
           </Text>
-          <Text style={styles.subtitleText}>Let's make your day better</Text>
-          {/* Biểu tượng vẫy tay */}
-          <Animated.Text style={[styles.waveHand, { transform: [{ rotate }] }]}>
-            👋
-          </Animated.Text>
         </View>
 
-        {/* Chỉ báo trang (pagination) */}
+        {/* Pagination */}
         <View style={styles.paginationContainer}>
           <View style={styles.paginationWrapper}>
+            <View style={[styles.paginationDot, styles.inactiveDot]} />
+            <View style={[styles.paginationDot, styles.inactiveDot]} />
             <View style={styles.paginationDot} />
-            <View style={[styles.paginationDot, styles.inactiveDot]} />
-            <View style={[styles.paginationDot, styles.inactiveDot]} />
           </View>
         </View>
 
-        {/* Nút Getting Started */}
-        <TouchableOpacity style={styles.button} onPress={handleNext}>
-          <Text style={styles.buttonText}>Getting Started</Text>
+        {/* Nút Finish */}
+        <TouchableOpacity style={styles.button} onPress={handleFinish}>
+          <Text style={styles.buttonText}>Finish</Text>
         </TouchableOpacity>
       </View>
-
-      {/* Vạch indicator của iPhone */}
       <View style={styles.iPhoneIndicator}>
         <View style={styles.indicatorLine} />
       </View>
@@ -97,6 +68,7 @@ const OnboardScreen1 = () => {
   );
 };
 
+// --- Style tương tự Onboard 1 & 2 ---
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -105,35 +77,30 @@ const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
     paddingHorizontal: 17,
-    marginTop: 64, // Để tránh StatusBar
+    marginTop: 64,
   },
   image: {
-    width: width - 34, // Trừ đi padding 2 bên
-    height: width - 34, // Để giữ tỷ lệ 1:1
+    width: width - 34,
+    height: width - 34,
     alignSelf: "center",
+    // marginBottom: 33,
   },
   titleContainer: {
     alignItems: "center",
     marginTop: 33,
   },
-  welcomeText: {
-    fontSize: 28,
+  titleText: {
+    fontSize: 24,
     fontWeight: "bold",
     textAlign: "center",
-    lineHeight: 36,
-  },
-  brandText: {
-    color: ONBOARDINGTEXT3,
+    lineHeight: 32,
+    marginBottom: 12,
   },
   subtitleText: {
-    fontSize: 20,
+    fontSize: 18,
     color: "#666666",
-    marginTop: 12,
     textAlign: "center",
-  },
-  waveHand: {
-    fontSize: 30,
-    marginTop: 16,
+    paddingHorizontal: 20,
   },
   paginationContainer: {
     marginTop: "auto",
@@ -149,10 +116,10 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#007AFF", // Màu xanh iOS
+    backgroundColor: "#007AFF",
   },
   inactiveDot: {
-    backgroundColor: "#D9D9D9", // Màu xám nhạt
+    backgroundColor: "#D9D9D9",
   },
   button: {
     backgroundColor: "#007AFF",
@@ -179,4 +146,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default OnboardScreen1;
+export default OnboardScreen3;

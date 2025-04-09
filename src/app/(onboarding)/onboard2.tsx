@@ -8,88 +8,49 @@ import {
   TouchableOpacity,
   StatusBar,
   Dimensions,
-  Animated,
-  Easing,
 } from "react-native";
 import { useRouter } from "expo-router";
 
 const { width } = Dimensions.get("window");
 
-// Giả sử chúng ta import từ file constant.ts
-const ONBOARDINGTEXT3 = "#79BF5D";
-
-const OnboardScreen1 = () => {
+const OnboardScreen2 = () => {
   const router = useRouter();
-  const rotateValue = new Animated.Value(0);
-
-  React.useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(rotateValue, {
-          toValue: 1,
-          duration: 1000,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        }),
-        Animated.timing(rotateValue, {
-          toValue: 0,
-          duration: 1000,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-  }, []);
-
-  const rotate = rotateValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["-20deg", "20deg"],
-  });
 
   const handleNext = () => {
-    router.push("/onboard2" as any);
+    router.push("/onboard3" as any); // Điều hướng sang onboard3
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
-
-      {/* Main Content */}
       <View style={styles.contentContainer}>
+        {/* Thay thế bằng hình ảnh và nội dung của bạn cho Onboard 2 */}
         <Image
-          source={require("@/assets/images/onboard/onboard1.png")}
+          source={require("@/assets/images/onboard/onboard2.png")} // Placeholder image
           style={styles.image}
-          resizeMode="cover"
+          resizeMode="contain" // Hoặc "cover" tùy ảnh
         />
-
         <View style={styles.titleContainer}>
-          <Text style={styles.welcomeText}>
-            Welcome to{"\n"}
-            <Text style={styles.brandText}>DayMood</Text>
+          <Text style={styles.titleText}>Tính năng tuyệt vời 1</Text>
+          <Text style={styles.subtitleText}>
+            Mô tả ngắn gọn về lợi ích của tính năng này mang lại cho người dùng.
           </Text>
-          <Text style={styles.subtitleText}>Let's make your day better</Text>
-          {/* Biểu tượng vẫy tay */}
-          <Animated.Text style={[styles.waveHand, { transform: [{ rotate }] }]}>
-            👋
-          </Animated.Text>
         </View>
 
-        {/* Chỉ báo trang (pagination) */}
+        {/* Pagination */}
         <View style={styles.paginationContainer}>
           <View style={styles.paginationWrapper}>
-            <View style={styles.paginationDot} />
             <View style={[styles.paginationDot, styles.inactiveDot]} />
+            <View style={styles.paginationDot} />
             <View style={[styles.paginationDot, styles.inactiveDot]} />
           </View>
         </View>
 
-        {/* Nút Getting Started */}
+        {/* Nút Next */}
         <TouchableOpacity style={styles.button} onPress={handleNext}>
-          <Text style={styles.buttonText}>Getting Started</Text>
+          <Text style={styles.buttonText}>Next</Text>
         </TouchableOpacity>
       </View>
-
-      {/* Vạch indicator của iPhone */}
       <View style={styles.iPhoneIndicator}>
         <View style={styles.indicatorLine} />
       </View>
@@ -97,6 +58,8 @@ const OnboardScreen1 = () => {
   );
 };
 
+// --- Style tương tự Onboard 1 ---
+// Bạn có thể tách styles ra file riêng nếu muốn dùng chung
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -105,35 +68,32 @@ const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
     paddingHorizontal: 17,
-    marginTop: 64, // Để tránh StatusBar
+    marginTop: 64,
   },
   image: {
-    width: width - 34, // Trừ đi padding 2 bên
-    height: width - 34, // Để giữ tỷ lệ 1:1
+    width: width - 34,
+    height: width - 34, // Điều chỉnh nếu cần tỷ lệ khác
     alignSelf: "center",
+    // marginBottom: 33, // Thêm khoảng cách nếu cần
   },
   titleContainer: {
     alignItems: "center",
     marginTop: 33,
   },
-  welcomeText: {
-    fontSize: 28,
+  titleText: {
+    // Đổi tên từ welcomeText cho rõ nghĩa hơn
+    fontSize: 24, // Có thể điều chỉnh font size
     fontWeight: "bold",
     textAlign: "center",
-    lineHeight: 36,
-  },
-  brandText: {
-    color: ONBOARDINGTEXT3,
+    lineHeight: 32, // Điều chỉnh line height
+    marginBottom: 12, // Khoảng cách với subtitle
   },
   subtitleText: {
-    fontSize: 20,
+    fontSize: 18, // Điều chỉnh font size
     color: "#666666",
-    marginTop: 12,
+    // marginTop: 12, // Đã có margin bottom ở title
     textAlign: "center",
-  },
-  waveHand: {
-    fontSize: 30,
-    marginTop: 16,
+    paddingHorizontal: 20, // Thêm padding để text không quá dài
   },
   paginationContainer: {
     marginTop: "auto",
@@ -149,10 +109,10 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#007AFF", // Màu xanh iOS
+    backgroundColor: "#007AFF",
   },
   inactiveDot: {
-    backgroundColor: "#D9D9D9", // Màu xám nhạt
+    backgroundColor: "#D9D9D9",
   },
   button: {
     backgroundColor: "#007AFF",
@@ -179,4 +139,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default OnboardScreen1;
+export default OnboardScreen2;
