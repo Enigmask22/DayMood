@@ -1,7 +1,6 @@
-import React from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
-import FeelingRecord from './record';
-import { FeelingRecordProps } from './record';
+import FeelingRecord from '@/components/FeelingRecord';
+import { FeelingRecordProps } from '@/components/FeelingRecord';
 import AntDesign from '@expo/vector-icons/AntDesign';
 
 const RecordsList = ({ records }: { records: FeelingRecordProps[] }) => {

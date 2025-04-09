@@ -1,4 +1,3 @@
-import FeelingRecord from "@/components/record";
 import RecordsList from "@/components/RecordList";
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
