@@ -34,10 +34,12 @@ const HomePage = () => {
   ];
   return (
     <View style={styles.container}>
-      <Text style={[styles.text, { paddingVertical: 180 }]}>
-        Welcome to the Homepage!
-      </Text>
-      <RecordsList records={records} />
+      <View style={styles.textContainer}>
+        <Text style={styles.text}>Welcome to the Homepage!</Text>
+      </View>
+      <View style={styles.listContainer}>
+        <RecordsList records={records} />
+      </View>
     </View>
   );
 };
@@ -45,13 +47,21 @@ const HomePage = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: HOME_COLOR.HOMEBACKGROUND,
+  },
+  textContainer: {
+    flex: 0.5,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: HOME_COLOR.HOMEBACKGROUND,
   },
   text: {
     fontSize: 20,
     fontWeight: "bold",
+  },
+  listContainer: {
+    flex: 0.5,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 
