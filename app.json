@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "04-expo-router-hello-world",
-    "slug": "04-expo-router-hello-world",
+    "name": "DayMood",
+    "slug": "DayMood",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./src/assets/images/react_temp/icon.png",
@@ -13,13 +13,18 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.dkdh.DayMood",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./src/assets/images/react_temp/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.dkdh.DayMood"
     },
     "web": {
       "bundler": "metro",
@@ -32,6 +37,21 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "newArchEnabled": true,
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "d80daa62-ee26-4793-93c1-a4e5c5542362"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/d80daa62-ee26-4793-93c1-a4e5c5542362"
     }
   }
 }

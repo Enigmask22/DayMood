@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { APP_COLOR } from "@/utils/constant";
-// import AsyncStorage from '@react-native-async-storage/async-storage'; // Uncomment nếu dùng AsyncStorage
+import AsyncStorage from "@react-native-async-storage/async-storage"; // Bỏ comment dòng này
 
 const { width } = Dimensions.get("window");
 
@@ -20,14 +20,15 @@ const OnboardScreen3 = () => {
 
   const handleFinish = async () => {
     try {
-      // Lưu trạng thái đã hoàn thành onboarding (tuỳ chọn)
-      // await AsyncStorage.setItem('@onboarding_complete', 'true');
+      // Lưu trạng thái đã hoàn thành onboarding
+      await AsyncStorage.setItem("hasCompletedOnboarding", "true"); // Thay đổi key và bỏ comment
 
       // Điều hướng đến màn hình chính và xoá stack onboarding
-      router.replace("/(main)" as any);
+      router.replace("/(main)"); // Xoá "as any" nếu không cần thiết
     } catch (e) {
       // Xử lý lỗi nếu có
       console.error("Failed to save onboarding status or navigate:", e);
+      // Cân nhắc hiển thị thông báo lỗi cho người dùng ở đây
     }
   };
 
@@ -44,7 +45,8 @@ const OnboardScreen3 = () => {
         <View style={styles.titleContainer}>
           <Text style={styles.titleText}>See through your emotion </Text>
           <Text style={styles.subtitleText}>
-            With statistical charts, we will offer some features such as advice, music,... to help improve your mood
+            With statistical charts, we will offer some features such as advice,
+            music,... to help improve your mood
           </Text>
         </View>
 
