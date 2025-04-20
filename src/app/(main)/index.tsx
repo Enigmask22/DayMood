@@ -4,36 +4,10 @@ import { HOME_COLOR } from "@/utils/constant";
 import React from "react";
 import { View, Text, StyleSheet, Dimensions } from "react-native";
 import MoodPromptCard from "@/components/homepage/MoodPromptCard";
+import { useAppSelector } from "@/store";
 const { width, height } = Dimensions.get("window");
 const HomePage = () => {
-  const records = [
-    {
-      date: "THURSDAY, MARCH 6 20:00",
-      emoji: "sad",
-      feeling: "I'm feeling bad",
-    },
-    {
-      date: "FRIDAY, MARCH 7 18:00",
-      emoji: "excellent",
-      feeling: "I'm feeling great",
-    },
-    {
-      date: "SATURDAY, MARCH 8 14:00",
-      emoji: "joyful",
-      feeling: "I'm feeling joyful",
-    },
-    {
-      date: "SUNDAY, MARCH 9 12:00",
-      emoji: "normal",
-      feeling: "I'm feeling normal",
-    },
-    {
-      date: "MONDAY, MARCH 10 10:00",
-      emoji: "angry",
-      feeling: "I'm feeling angry",
-    },
-    // Add more records as needed
-  ];
+  const records = useAppSelector((state) => state.records.records);
   return (
     <View style={styles.container}>
       <View style={styles.introContainer}>
