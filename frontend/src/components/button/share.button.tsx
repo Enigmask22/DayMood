@@ -6,7 +6,7 @@ import {
   type TextStyle,
   type StyleProp,
 } from "react-native";
-import { APP_COLOR } from "@/utils/constant";
+import { APP_COLOR } from "frontend/src/utils/constant";
 const styles = StyleSheet.create({
   text: {
     textTransform: "uppercase",

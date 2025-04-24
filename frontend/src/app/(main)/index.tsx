@@ -1,10 +1,10 @@
-import RecordsList from "@/components/homepage/RecordsList";
-import Greeting from "@/components/homepage/Greeting";
-import { HOME_COLOR } from "@/utils/constant";
+import RecordsList from "frontend/src/components/homepage/RecordsList";
+import Greeting from "frontend/src/components/homepage/Greeting";
+import { HOME_COLOR } from "frontend/src/utils/constant";
 import React from "react";
 import { View, Text, StyleSheet, Dimensions } from "react-native";
-import MoodPromptCard from "@/components/homepage/MoodPromptCard";
-import { useAppSelector } from "@/store";
+import MoodPromptCard from "frontend/src/components/homepage/MoodPromptCard";
+import { useAppSelector } from "frontend/src/store";
 const { width, height } = Dimensions.get("window");
 const HomePage = () => {
   const records = useAppSelector((state) => state.records.records);

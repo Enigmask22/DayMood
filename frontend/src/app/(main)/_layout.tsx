@@ -5,7 +5,7 @@ import { Tabs } from "expo-router";
 // import { Ionicons } from '@expo/vector-icons';
 
 // Import component Tab Bar tùy chỉnh
-import CustomTabBar from "@/components/CustomTabBar";
+import CustomTabBar from "frontend/src/components/CustomTabBar";
 
 // Định nghĩa màu sắc
 const ACTIVE_COLOR = "#1DB954";

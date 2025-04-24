@@ -4,9 +4,9 @@
     "strict": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "components/*": ["src/components/*"],
-      "utils/*": ["src/utils/*"]
+      "@/*": ["frontend/src/*"],
+      "components/*": ["frontend/src/components/*"],
+      "utils/*": ["frontend/src/utils/*"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]

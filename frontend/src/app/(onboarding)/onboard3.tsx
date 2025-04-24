@@ -10,7 +10,7 @@ import {
   Dimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { APP_COLOR } from "@/utils/constant";
+import { APP_COLOR } from "frontend/src/utils/constant";
 import AsyncStorage from "@react-native-async-storage/async-storage"; // Bỏ comment dòng này
 
 const { width } = Dimensions.get("window");

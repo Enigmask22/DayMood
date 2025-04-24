@@ -7,7 +7,7 @@ import {
   Dimensions,
 } from "react-native";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { HOME_COLOR, EMOJI_COLOR } from "@/utils/constant";
+import { HOME_COLOR, EMOJI_COLOR } from "frontend/src/utils/constant";
 const { width, height } = Dimensions.get("window");
 export interface FeelingRecordProps {
   date: string;

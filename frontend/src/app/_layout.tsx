@@ -4,7 +4,7 @@ import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { store } from "@/store";
+import { store } from "frontend/src/store";
 import { Provider } from "react-redux";
 
 SplashScreen.preventAutoHideAsync();
