@@ -44,14 +44,14 @@
         "origin": false
       },
       "eas": {
-        "projectId": "d80daa62-ee26-4793-93c1-a4e5c5542362"
+        "projectId": "98d078e7-327f-4d8e-a878-84d21eed5ef0"
       }
     },
     "runtimeVersion": {
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/d80daa62-ee26-4793-93c1-a4e5c5542362"
+      "url": "https://u.expo.dev/98d078e7-327f-4d8e-a878-84d21eed5ef0"
     }
   }
 }

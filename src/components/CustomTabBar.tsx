@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs"; // Lấy kiểu props
 import { Ionicons } from "@expo/vector-icons"; // Ví dụ sử dụng Ionicons
-import { HOME_COLOR } from "frontend/src/utils/constant";
+import { HOME_COLOR } from "src/utils/constant";
 // Import các bộ icon khác nếu cần
 // import { FontAwesome } from '@expo/vector-icons';
 

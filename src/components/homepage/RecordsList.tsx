@@ -1,6 +1,6 @@
 import { Dimensions, FlatList, StyleSheet, Text, View } from "react-native";
-import FeelingRecord from "frontend/src/components/homepage/FeelingRecord";
-import { FeelingRecordProps } from "frontend/src/components/homepage/FeelingRecord";
+import FeelingRecord from "src/components/homepage/FeelingRecord";
+import { FeelingRecordProps } from "src/components/homepage/FeelingRecord";
 import AntDesign from "@expo/vector-icons/AntDesign";
 const { width, height } = Dimensions.get("window");
 const RecordsList = ({ records }: { records: FeelingRecordProps[] }) => {

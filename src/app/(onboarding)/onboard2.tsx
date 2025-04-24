@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { APP_COLOR } from "frontend/src/utils/constant";
+import { APP_COLOR } from "src/utils/constant";
 
 const { width } = Dimensions.get("window");
 
