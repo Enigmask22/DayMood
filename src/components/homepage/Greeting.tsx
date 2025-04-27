@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     width: "100%",
-    height: "100%",
+    height: "90%",
     zIndex: -1,
     // borderWidth: 1,
     // borderColor: "red",
@@ -96,6 +96,7 @@ const styles = StyleSheet.create({
     opacity: 0.97,
     padding: width * 0.04,
     borderRadius: width * 0.04,
+    marginBottom: height * 0.02,
   },
   quoteText: {
     fontFamily: "Quicksand-Semibold",

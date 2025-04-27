@@ -48,7 +48,7 @@ const MoodPromptCard = () => {
 
   return (
     <LinearGradient
-      colors={rainbowColors}
+      colors={rainbowColors as [string, string, ...string[]]}
       start={{ x: 0.0, y: 0.5 }} // Bắt đầu từ trái sang
       end={{ x: 1.0, y: 0.5 }} // Kết thúc ở phải
       style={styles.gradientBorder}
@@ -93,7 +93,6 @@ const styles = StyleSheet.create({
     borderRadius: wp(5), // ~20px trên màn hình ~400px
     padding: wp(0.75), // ~3px
     marginHorizontal: wp(3.75), // ~15px
-    marginTop: hp(1.5), // Giảm từ hp(2.5) xuống hp(1.5) (hoặc giá trị khác nhỏ hơn)
   },
   cardContainer: {
     // 5. Xóa backgroundColor

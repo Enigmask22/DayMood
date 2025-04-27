@@ -101,6 +101,7 @@ const CustomTabBar = ({
                   accessibilityRole="button"
                   accessibilityState={isFocused ? { selected: true } : {}}
                   accessibilityLabel={options.tabBarAccessibilityLabel}
+                  // @ts-ignore // Tạm thời bỏ qua lỗi type checking cho tabBarTestID
                   testID={options.tabBarTestID}
                   onPress={onPress}
                   onLongPress={onLongPress}
@@ -149,6 +150,7 @@ const CustomTabBar = ({
               accessibilityRole="button"
               accessibilityState={isFocused ? { selected: true } : {}}
               accessibilityLabel={options.tabBarAccessibilityLabel}
+              // @ts-ignore // Tạm thời bỏ qua lỗi type checking cho tabBarTestID
               testID={options.tabBarTestID}
               onPress={onPress}
               onLongPress={onLongPress}

@@ -31,10 +31,7 @@
       "output": "static",
       "favicon": "./src/assets/images/react_temp/favicon.png"
     },
-    "plugins": [
-      "expo-router",
-      "expo-font"
-    ],
+    "plugins": ["expo-router", "expo-font"],
     "experiments": {
       "typedRoutes": true
     },
@@ -47,9 +44,7 @@
         "projectId": "98d078e7-327f-4d8e-a878-84d21eed5ef0"
       }
     },
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
+    "runtimeVersion": "1.0.0",
     "updates": {
       "url": "https://u.expo.dev/98d078e7-327f-4d8e-a878-84d21eed5ef0"
     }
