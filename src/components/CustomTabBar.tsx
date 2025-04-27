@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   TouchableOpacity,
@@ -6,6 +6,8 @@ import {
   StyleSheet,
   Dimensions,
   Platform,
+  Animated,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs"; // Lấy kiểu props
 import { Ionicons } from "@expo/vector-icons"; // Ví dụ sử dụng Ionicons
@@ -34,11 +36,205 @@ const CustomTabBar = ({
   descriptors,
   navigation,
 }: BottomTabBarProps) => {
+  // Thêm state để theo dõi trạng thái hiển thị menu
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  // Các giá trị animated
+  const rotateAnimation = useRef(new Animated.Value(0)).current;
+  const scaleAnimation = useRef(new Animated.Value(0)).current;
+  const opacityAnimation = useRef(new Animated.Value(0)).current;
+
+  // Chuyển đổi giá trị rotate thành độ
+  const rotate = rotateAnimation.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "45deg"],
+  });
+
   // Lọc bỏ route 'add' khỏi danh sách hiển thị các tab thông thường
   const visibleRoutes = state.routes.filter((route) => route.name !== "add");
 
+  // Reset animations khi component unmount
+  useEffect(() => {
+    return () => {
+      rotateAnimation.setValue(0);
+      scaleAnimation.setValue(0);
+      opacityAnimation.setValue(0);
+    };
+  }, []);
+
+  // Hàm xử lý mở/đóng menu
+  const toggleMenu = () => {
+    if (isMenuOpen) {
+      // Đóng menu
+      Animated.parallel([
+        Animated.timing(rotateAnimation, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnimation, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacityAnimation, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        // Đảm bảo state được cập nhật sau khi animation hoàn thành
+        setIsMenuOpen(false);
+      });
+    } else {
+      // Mở menu
+      setIsMenuOpen(true); // Cập nhật state trước để render các nút
+      Animated.parallel([
+        Animated.timing(rotateAnimation, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnimation, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacityAnimation, {
+          toValue: 0.5,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  };
+
+  // Thực hiện các hành động khi nhấn vào một nút menu
+  const handleAction = (actionType: string) => {
+    console.log(`Action ${actionType} pressed`);
+
+    // Đóng menu sau khi nhấn nút
+    toggleMenu();
+
+    // Có thể điều hướng đến màn hình tương ứng tùy vào actionType
+    if (actionType === "primary") {
+      navigation.navigate("add"); // Điều hướng đến màn hình Add chính
+    } else if (actionType === "back") {
+      // Xử lý cho nút quay lại
+    } else if (actionType === "clock") {
+      // Xử lý cho nút đồng hồ
+    } else if (actionType === "calendar") {
+      // Xử lý cho nút lịch
+    }
+  };
+
   return (
     <View style={styles.container}>
+      {/* Overlay làm mờ màn hình khi menu mở */}
+      {isMenuOpen && (
+        <TouchableWithoutFeedback onPress={toggleMenu}>
+          <Animated.View
+            style={[styles.overlay, { opacity: opacityAnimation }]}
+          />
+        </TouchableWithoutFeedback>
+      )}
+
+      {/* 3 nút menu mở rộng - bố trí thành tam giác */}
+      {isMenuOpen && (
+        <>
+          {/* Nút quay lại (bên trái) */}
+          <Animated.View
+            style={[
+              styles.actionButton,
+              {
+                transform: [
+                  { scale: scaleAnimation },
+                  {
+                    translateX: scaleAnimation.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, -80], // Di chuyển sang trái
+                    }),
+                  },
+                  {
+                    translateY: scaleAnimation.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, -80], // Di chuyển lên trên
+                    }),
+                  },
+                ],
+                opacity: scaleAnimation,
+              },
+            ]}
+          >
+            <TouchableOpacity
+              style={[styles.fabButton, { backgroundColor: "#4CAF50" }]}
+              onPress={() => handleAction("back")}
+            >
+              <Ionicons name="arrow-back" size={24} color="#fff" />
+            </TouchableOpacity>
+          </Animated.View>
+
+          {/* Nút đồng hồ (chính giữa phía trên) */}
+          <Animated.View
+            style={[
+              styles.actionButton,
+              {
+                transform: [
+                  { scale: scaleAnimation },
+                  {
+                    translateY: scaleAnimation.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, -120], // Di chuyển lên trên
+                    }),
+                  },
+                ],
+                opacity: scaleAnimation,
+                left: width / 2 - (width * 0.12) / 2, // Căn giữa
+              },
+            ]}
+          >
+            <TouchableOpacity
+              style={[styles.fabButton, { backgroundColor: "#00BCD4" }]}
+              onPress={() => handleAction("clock")}
+            >
+              <Ionicons name="time" size={24} color="#fff" />
+            </TouchableOpacity>
+          </Animated.View>
+
+          {/* Nút lịch (bên phải) */}
+          <Animated.View
+            style={[
+              styles.actionButton,
+              {
+                transform: [
+                  { scale: scaleAnimation },
+                  {
+                    translateX: scaleAnimation.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, 80], // Di chuyển sang phải
+                    }),
+                  },
+                  {
+                    translateY: scaleAnimation.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, -80], // Di chuyển lên trên
+                    }),
+                  },
+                ],
+                opacity: scaleAnimation,
+              },
+            ]}
+          >
+            <TouchableOpacity
+              style={[styles.fabButton, { backgroundColor: "#FFA000" }]}
+              onPress={() => handleAction("calendar")}
+            >
+              <Ionicons name="calendar" size={24} color="#fff" />
+            </TouchableOpacity>
+          </Animated.View>
+        </>
+      )}
+
       <View style={styles.tabBar}>
         {visibleRoutes.map((route, index) => {
           const { options } = descriptors[route.key];
@@ -86,14 +282,6 @@ const CustomTabBar = ({
 
           // Render nút Add ở vị trí giữa
           if (index === Math.floor(visibleRoutes.length / 2)) {
-            // Xóa việc tìm addRouteKey
-            const addOnPress = () => {
-              // Đặt logic xử lý trực tiếp ở đây
-              console.log("Custom Add button pressed!");
-              // Ví dụ: Điều hướng đến màn hình Modal
-              navigation.navigate("add"); // Giả sử có màn hình tên 'add'
-            };
-
             return (
               <React.Fragment key="add-button-fragment">
                 {/* Render tab trước nút Add */}
@@ -122,22 +310,23 @@ const CustomTabBar = ({
                   </Text>
                 </TouchableOpacity>
 
-                {/* Render nút Add */}
+                {/* Render nút Add/Close với animation xoay */}
                 <TouchableOpacity
                   key="add-button"
                   accessibilityRole="button"
-                  accessibilityLabel="Add Item" // Thêm label rõ ràng
-                  onPress={addOnPress} // Gọi listener của route 'add'
+                  accessibilityLabel={isMenuOpen ? "Close Menu" : "Open Menu"}
+                  onPress={toggleMenu}
                   style={styles.addButtonContainer}
                 >
-                  <View style={styles.addButton}>
+                  <Animated.View
+                    style={[styles.addButton, { transform: [{ rotate }] }]}
+                  >
                     <Ionicons
                       name="add"
                       size={width * 0.08}
                       color={ADD_BUTTON_COLOR}
                     />
-                    {/* Sử dụng width */}
-                  </View>
+                  </Animated.View>
                 </TouchableOpacity>
               </React.Fragment>
             );
@@ -187,6 +376,15 @@ const styles = StyleSheet.create({
     height: Platform.OS === "ios" ? height * 0.11 : height * 0.08,
     backgroundColor: "transparent", // Nền ngoài cùng trong suốt
     elevation: 0, // Bỏ shadow mặc định trên Android
+  },
+  overlay: {
+    position: "absolute",
+    top: -height, // Bắt đầu từ đỉnh màn hình
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "#000",
+    zIndex: 1,
   },
   tabBar: {
     flexDirection: "row",
@@ -247,9 +445,35 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: width * 0.01,
     elevation: 6,
+    zIndex: 10, // Đảm bảo nút hiển thị trên các phần tử khác
   },
   addButton: {
-    // Có thể không cần nếu container đã style đủ
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  actionButton: {
+    position: "absolute",
+    width: width * 0.12,
+    height: width * 0.12,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 9, // Hiển thị dưới nút chính nhưng trên các phần tử khác
+    left: width / 2 - (width * 0.12) / 2, // Mặc định căn giữa, nhưng sẽ bị ghi đè bởi transform
+    bottom: Platform.OS === "ios" ? height * 0.055 : height * 0.05,
+  },
+  fabButton: {
+    width: "100%",
+    height: "100%",
+    borderRadius: width * 0.06,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
 });
 
