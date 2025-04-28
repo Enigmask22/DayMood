@@ -124,7 +124,8 @@ const CustomTabBar = ({
     } else if (actionType === "clock") {
       // Xử lý cho nút đồng hồ
     } else if (actionType === "calendar") {
-      // Xử lý cho nút lịch
+      // Điều hướng đến trang newemoj trong thư mục (new)
+      navigation.navigate("(new)/newemoj");
     }
   };
 
