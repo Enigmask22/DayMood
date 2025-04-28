@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -11,10 +11,12 @@ import {
   Platform,
 } from "react-native";
 import { Image } from "expo-image";
-import { Link, router } from "expo-router";
-import { EMOJI_COLOR } from "@/utils/constant";
+import { router } from "expo-router";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { moods } from "@/utils/constant"; // Importing the moods array from constants
+import { moodIdAsyncStorageKey } from "@/utils/constant";
 
 const { width, height } = Dimensions.get("window");
 
@@ -30,38 +32,7 @@ const hp = (percentage: number) => {
   return Math.round(value);
 };
 
-const moods = [
-  {
-    id: 1,
-    name: "Sad",
-    emoji: require("@/assets/emoji/sad.gif"),
-    color: "#7E7E7E",
-  },
-  {
-    id: 2,
-    name: "Angry",
-    emoji: require("@/assets/emoji/angry.gif"),
-    color: "#EF0808",
-  },
-  {
-    id: 3,
-    name: "Normal",
-    emoji: require("@/assets/emoji/normal.gif"),
-    color: "#540BFF",
-  },
-  {
-    id: 4,
-    name: "Joyful",
-    emoji: require("@/assets/emoji/joyful.gif"),
-    color: "#FCA10C",
-  },
-  {
-    id: 5,
-    name: "Excellent",
-    emoji: require("@/assets/emoji/excellent.gif"),
-    color: "#22C55E",
-  },
-];
+
 
 export default function NewEmojiScreen() {
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
@@ -120,6 +91,7 @@ export default function NewEmojiScreen() {
 
   const handleSelectMood = (id: number) => {
     setSelectedMood(id);
+    AsyncStorage.setItem(moodIdAsyncStorageKey, JSON.stringify(id));
   };
 
   const handleSave = () => {
@@ -232,7 +204,7 @@ export default function NewEmojiScreen() {
           </View>
 
           {/* Activity Selection Button */}
-          <TouchableOpacity style={styles.activityButton}>
+          <TouchableOpacity style={styles.activityButton} onPress={() => router.push("/(new)/newactivity")}>
             <Text style={styles.activityButtonText}>Select your activity</Text>
           </TouchableOpacity>
 
