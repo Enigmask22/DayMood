@@ -3,9 +3,9 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Image,
   Dimensions,
 } from "react-native";
+import { Image } from "expo-image";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { HOME_COLOR, EMOJI_COLOR } from "src/utils/constant";
 const { width, height } = Dimensions.get("window");
@@ -17,11 +17,11 @@ export interface FeelingRecordProps {
 
 // Mapping of emoji names to their image paths
 const emojiMap: { [key: string]: any } = {
-  sad: require("@/assets/emoji/sad.png"),
-  excellent: require("@/assets/emoji/excellent.png"),
-  joyful: require("@/assets/emoji/joyful.png"),
-  normal: require("@/assets/emoji/normal.png"),
-  angry: require("@/assets/emoji/angry.png"),
+  sad: require("@/assets/emoji/sad.gif"),
+  excellent: require("@/assets/emoji/excellent.gif"),
+  joyful: require("@/assets/emoji/joyful.gif"),
+  normal: require("@/assets/emoji/normal.gif"),
+  angry: require("@/assets/emoji/angry.gif"),
   // Add more emojis as needed
 };
 
@@ -58,7 +58,8 @@ const FeelingRecord = ({
       {/* Emoji Section */}
       <Image
         source={emojiSource}
-        resizeMode="contain"
+        contentFit="contain"
+        autoplay={true}
         style={styles.imageContainer}
       />
       <View style={styles.textContainer}>
