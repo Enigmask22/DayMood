@@ -1,27 +1,24 @@
 import React, { useState, useEffect } from "react";
 import {
   View,
-  Text,
   StyleSheet,
   SafeAreaView,
-  TouchableOpacity,
   ScrollView,
-  Platform,
   Alert,
 } from "react-native";
-import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
-import {
-  Ionicons,
-  Feather,
-  FontAwesome5,
-  MaterialCommunityIcons,
-} from "@expo/vector-icons";
 import { wp, hp } from "@/components/newemoji/utils";
 import { format } from "date-fns";
-import { LinearGradient } from "expo-linear-gradient";
 import { Audio } from "expo-av";
 import * as FileSystem from "expo-file-system";
+
+// Import các component đã tách
+import DateTimeHeader from "@/components/carddetail/DateTimeHeader";
+import EmojiDisplay from "@/components/carddetail/EmojiDisplay";
+import NoteCard from "@/components/carddetail/NoteCard";
+import ImagesGrid from "@/components/carddetail/ImagesGrid";
+import RecordingsList from "@/components/carddetail/RecordingsList";
+import MusicPlayer from "@/components/carddetail/MusicPlayer";
 
 // Map emoji IDs to emoji images
 const emojiMap: { [key: number]: any } = {
@@ -42,14 +39,14 @@ const moodTitles: { [key: number]: string } = {
 };
 
 // Định nghĩa kiểu dữ liệu cho bản ghi âm
-type RecordingData = {
+interface RecordingData {
   id: number;
   uri: string;
   duration: string;
   sound?: Audio.Sound;
   isPlaying?: boolean;
   fileExists: boolean;
-};
+}
 
 export default function CardDetailScreen() {
   // Nhận các tham số từ navigation
@@ -180,9 +177,15 @@ export default function CardDetailScreen() {
         setCurrentSound(null);
       }
 
+      // Tìm đối tượng sound từ recordings
+      const currentRecording = recordings.find(
+        (rec) => rec.id === recording.id
+      );
+      const soundToPlay = currentRecording?.sound;
+
       // Kiểm tra trạng thái âm thanh trước khi phát
-      if (recording.sound) {
-        const status = await recording.sound.getStatusAsync();
+      if (soundToPlay) {
+        const status = await soundToPlay.getStatusAsync();
         console.log("Trạng thái âm thanh:", status);
       }
 
@@ -192,14 +195,14 @@ export default function CardDetailScreen() {
       );
 
       // Phát bản ghi đã chọn
-      if (recording.sound) {
+      if (soundToPlay) {
         console.log("Đang phát âm thanh...");
-        await recording.sound.setPositionAsync(0); // Đặt lại vị trí về đầu
-        await recording.sound.playAsync(); // Sử dụng playAsync thay vì replayAsync
-        setCurrentSound(recording.sound);
+        await soundToPlay.setPositionAsync(0); // Đặt lại vị trí về đầu
+        await soundToPlay.playAsync(); // Sử dụng playAsync thay vì replayAsync
+        setCurrentSound(soundToPlay);
 
         // Lắng nghe sự kiện kết thúc phát
-        recording.sound.setOnPlaybackStatusUpdate((status) => {
+        soundToPlay.setOnPlaybackStatusUpdate((status) => {
           console.log("Cập nhật trạng thái phát:", status);
           if (status.isLoaded && !status.isPlaying && status.didJustFinish) {
             console.log("Âm thanh đã phát xong");
@@ -252,9 +255,6 @@ export default function CardDetailScreen() {
     },
   };
 
-  const [backPressed, setBackPressed] = useState(false);
-  const [editPressed, setEditPressed] = useState(false);
-
   // Xử lý quay về trang chính
   const handleBackToHome = () => {
     try {
@@ -273,192 +273,46 @@ export default function CardDetailScreen() {
     }
   };
 
+  // Xử lý khi nhấn phát nhạc
+  const handlePlayMusic = () => {
+    console.log("Play music:", cardData.music.title);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
           {/* Header với nút back, ngày giờ và nút edit */}
-          <View style={styles.header}>
-            <LinearGradient
-              colors={["#E0F7ED", "#B9F0DA"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={[
-                styles.buttonGradient,
-                backPressed && styles.buttonPressed,
-              ]}
-            >
-              <TouchableOpacity
-                style={styles.backButton}
-                onPress={handleBackToHome}
-                onPressIn={() => setBackPressed(true)}
-                onPressOut={() => setBackPressed(false)}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="chevron-back" size={wp(6)} color="#32B768" />
-              </TouchableOpacity>
-            </LinearGradient>
-
-            <LinearGradient
-              colors={["#D5F7E5", "#E8F9F0"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.dateTimeContainer}
-            >
-              <View style={styles.dateRow}>
-                <MaterialCommunityIcons
-                  name="calendar-month"
-                  size={wp(4.5)}
-                  color="#32B768"
-                />
-                <View style={styles.dateTextContainer}>
-                  <Text style={styles.dayName}>{dayName}</Text>
-                  <View style={styles.dateDetails}>
-                    <Text style={styles.dayNumber}>{dayNumber}</Text>
-                    <Text style={styles.monthName}>{monthName}</Text>
-                  </View>
-                </View>
-              </View>
-              <View style={styles.divider} />
-              <View style={styles.timeRow}>
-                <MaterialCommunityIcons
-                  name="clock-outline"
-                  size={wp(4.5)}
-                  color="#32B768"
-                />
-                <Text style={styles.timeText}>{formattedTime}</Text>
-              </View>
-            </LinearGradient>
-
-            <LinearGradient
-              colors={["#E0F7ED", "#B9F0DA"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={[
-                styles.buttonGradient,
-                editPressed && styles.buttonPressed,
-              ]}
-            >
-              <TouchableOpacity
-                style={styles.editButton}
-                onPress={handleEdit}
-                onPressIn={() => setEditPressed(true)}
-                onPressOut={() => setEditPressed(false)}
-                activeOpacity={0.7}
-              >
-                <Feather name="edit-2" size={wp(5)} color="#32B768" />
-              </TouchableOpacity>
-            </LinearGradient>
-          </View>
+          <DateTimeHeader
+            dayName={dayName}
+            dayNumber={dayNumber}
+            monthName={monthName}
+            formattedTime={formattedTime}
+            onBack={handleBackToHome}
+            onEdit={handleEdit}
+          />
 
           {/* Emoji */}
-          <View style={styles.emojiContainer}>
-            <Image
-              source={cardData.emoji}
-              style={styles.emojiImage}
-              contentFit="contain"
-              autoplay={true}
-            />
-          </View>
+          <EmojiDisplay moodId={moodId} />
 
           {/* Note Card */}
-          <View style={styles.noteCard}>
-            <Text style={styles.noteTitle}>{cardData.title}</Text>
-            <View style={styles.titleUnderline} />
-            <Text style={styles.noteText}>{cardData.note}</Text>
-          </View>
+          <NoteCard moodId={moodId} note={cardData.note} />
 
-          {/* Images Grid - Sử dụng View màu thay vì hình ảnh */}
-          {cardData.hasImages && (
-            <View style={styles.imagesGrid}>
-              {[1, 2, 3, 4].map((_, index) => (
-                <View key={index} style={styles.placeholderImage} />
-              ))}
-            </View>
-          )}
+          {/* Images Grid */}
+          {cardData.hasImages && <ImagesGrid />}
 
           {/* Audio Recordings */}
-          {recordings.length > 0 && (
-            <View style={styles.recordingsContainer}>
-              <View style={styles.recordingsHeader}>
-                <View style={styles.sectionTitleContainer}>
-                  <FontAwesome5 name="headphones" size={wp(4.5)} color="#333" />
-                  <Text style={styles.sectionTitle}>Audio Recordings</Text>
-                </View>
-              </View>
-
-              <View style={styles.recordingsList}>
-                {recordings.map((recording) => (
-                  <View key={recording.id} style={styles.recordingItem}>
-                    <View style={styles.recordingInfo}>
-                      <View
-                        style={[
-                          styles.recordingIconContainer,
-                          recording.isPlaying &&
-                            styles.recordingIconContainerActive,
-                        ]}
-                      >
-                        <FontAwesome5
-                          name={recording.isPlaying ? "volume-up" : "music"}
-                          size={wp(4)}
-                          color={recording.isPlaying ? "#fff" : "#32B768"}
-                        />
-                      </View>
-                      <Text style={styles.recordingTitle}>
-                        Bản ghi #{recording.id + 1}
-                        <Text style={styles.recordingDuration}>
-                          {" "}
-                          | {recording.duration}
-                        </Text>
-                      </Text>
-                    </View>
-
-                    <TouchableOpacity
-                      style={styles.playButton}
-                      onPress={() => playRecording(recording)}
-                    >
-                      <LinearGradient
-                        colors={
-                          recording.isPlaying
-                            ? ["#ff6b6b", "#ff5252"]
-                            : ["#32B768", "#27A35A"]
-                        }
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={styles.playButtonGradient}
-                      >
-                        <FontAwesome5
-                          name={recording.isPlaying ? "pause" : "play"}
-                          size={wp(3.5)}
-                          color="#fff"
-                        />
-                        <Text style={styles.playButtonText}>
-                          {recording.isPlaying ? "DỪNG" : "PHÁT"}
-                        </Text>
-                      </LinearGradient>
-                    </TouchableOpacity>
-                  </View>
-                ))}
-              </View>
-            </View>
-          )}
+          <RecordingsList
+            recordings={recordings}
+            onPlayRecording={playRecording}
+          />
 
           {/* Music Player */}
           {cardData.hasMusic && (
-            <View style={styles.musicPlayer}>
-              <FontAwesome5 name="music" size={wp(5)} color="#333" />
-              <Text style={styles.musicTitle}>{cardData.music.title}</Text>
-              <TouchableOpacity style={styles.playButton}>
-                <LinearGradient
-                  colors={["#32B768", "#27A35A"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.musicPlayButton}
-                >
-                  <Ionicons name="play" size={wp(4)} color="#fff" />
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
+            <MusicPlayer
+              musicTitle={cardData.music.title}
+              onPlayMusic={handlePlayMusic}
+            />
           )}
         </View>
       </ScrollView>
@@ -474,286 +328,5 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: wp(5),
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: hp(2),
-  },
-  buttonGradient: {
-    width: wp(12),
-    height: wp(12),
-    borderRadius: wp(6),
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
-    borderWidth: 1,
-    borderColor: "rgba(50, 183, 104, 0.2)",
-  },
-  buttonPressed: {
-    transform: [{ scale: 0.95 }],
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-    borderColor: "rgba(50, 183, 104, 0.4)",
-  },
-  backButton: {
-    width: wp(10),
-    height: wp(10),
-    borderRadius: wp(5),
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  editButton: {
-    width: wp(10),
-    height: wp(10),
-    borderRadius: wp(5),
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  dateTimeContainer: {
-    alignItems: "center",
-    paddingHorizontal: wp(4),
-    paddingVertical: hp(1),
-    borderRadius: wp(5),
-    borderWidth: 1,
-    borderColor: "rgba(50, 183, 104, 0.3)",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
-    width: wp(50),
-  },
-  dateRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: hp(0.6),
-    width: "100%",
-  },
-  timeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    width: "100%",
-  },
-  dateTextContainer: {
-    marginLeft: wp(2),
-    flex: 1,
-  },
-  dayName: {
-    fontSize: wp(3),
-    color: "#333",
-    fontFamily: "Quicksand-SemiBold",
-    textTransform: "uppercase",
-  },
-  dateDetails: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  dayNumber: {
-    fontSize: wp(4),
-    color: "#32B768",
-    fontFamily: "Quicksand-Bold",
-    marginRight: wp(1),
-  },
-  monthName: {
-    fontSize: wp(3),
-    color: "#555",
-    fontFamily: "Quicksand-Medium",
-  },
-  divider: {
-    height: 1,
-    backgroundColor: "rgba(50, 183, 104, 0.2)",
-    width: "100%",
-    marginVertical: hp(0.5),
-  },
-  timeText: {
-    fontSize: wp(4.2),
-    color: "#333",
-    fontFamily: "Quicksand-Bold",
-    marginLeft: wp(2),
-  },
-  emojiContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    marginVertical: hp(2),
-  },
-  emojiImage: {
-    width: wp(20),
-    height: wp(20),
-  },
-  noteCard: {
-    backgroundColor: "#FFFFC0", // Màu vàng nhạt
-    borderRadius: wp(4),
-    padding: wp(5),
-    marginBottom: hp(3),
-  },
-  noteTitle: {
-    fontSize: wp(5),
-    fontWeight: "bold",
-    fontFamily: "Quicksand-Bold",
-    textAlign: "center",
-    color: "#333",
-  },
-  titleUnderline: {
-    height: 1,
-    backgroundColor: "#999",
-    marginVertical: hp(1),
-    width: "90%",
-    alignSelf: "center",
-  },
-  noteText: {
-    fontSize: wp(3.8),
-    color: "#333",
-    fontFamily: "Quicksand-Regular",
-    lineHeight: wp(5.5),
-  },
-  imagesGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    marginBottom: hp(3),
-  },
-  placeholderImage: {
-    width: wp(42),
-    height: wp(30),
-    borderRadius: wp(3),
-    marginBottom: hp(1.5),
-    backgroundColor: "#87CEEB", // Màu xanh da trời nhạt làm placeholder
-  },
-  recordingsContainer: {
-    marginBottom: hp(3),
-    backgroundColor: "#e6f9f0",
-    borderRadius: wp(3),
-    padding: wp(3),
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: "rgba(50, 183, 104, 0.2)",
-  },
-  recordingsHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: hp(1.5),
-    paddingBottom: hp(0.8),
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(50, 183, 104, 0.2)",
-  },
-  sectionTitleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  sectionTitle: {
-    fontSize: wp(4),
-    fontWeight: "bold",
-    color: "#333",
-    marginLeft: wp(2),
-    fontFamily: "Quicksand-Bold",
-  },
-  recordingsList: {
-    gap: hp(1.5),
-  },
-  recordingItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#fff",
-    padding: wp(3),
-    borderRadius: wp(2.5),
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 1,
-    elevation: 1,
-  },
-  recordingInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-  },
-  recordingIconContainer: {
-    width: wp(8),
-    height: wp(8),
-    borderRadius: wp(4),
-    backgroundColor: "rgba(50, 183, 104, 0.1)",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: wp(2.5),
-  },
-  recordingIconContainerActive: {
-    backgroundColor: "#ff5252",
-  },
-  recordingTitle: {
-    fontSize: wp(3.8),
-    color: "#333",
-    fontFamily: "Quicksand-Bold",
-  },
-  recordingDuration: {
-    fontSize: wp(3.5),
-    color: "#666",
-    fontFamily: "Quicksand-Regular",
-  },
-  playButton: {
-    borderRadius: wp(5),
-    overflow: "hidden",
-  },
-  playButtonGradient: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: hp(1),
-    paddingHorizontal: wp(3.5),
-    borderRadius: wp(5),
-  },
-  playButtonText: {
-    fontSize: wp(3.3),
-    color: "#fff",
-    fontWeight: "bold",
-    marginLeft: wp(1.5),
-    fontFamily: "Quicksand-Bold",
-    letterSpacing: 0.5,
-  },
-  musicPlayer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#F0FFF0",
-    padding: wp(4),
-    borderRadius: wp(10),
-  },
-  musicTitle: {
-    fontSize: wp(4),
-    color: "#333",
-    fontFamily: "Quicksand-Regular",
-  },
-  musicPlayButton: {
-    width: wp(10),
-    height: wp(10),
-    borderRadius: wp(5),
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  audioPlayer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#F0FFF0",
-    padding: wp(4),
-    borderRadius: wp(10),
-    marginBottom: hp(2),
-  },
-  audioDuration: {
-    fontSize: wp(4),
-    color: "#333",
-    fontFamily: "Quicksand-Regular",
   },
 });
