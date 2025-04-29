@@ -46,6 +46,8 @@ interface RecordingData {
   sound?: Audio.Sound;
   isPlaying?: boolean;
   fileExists: boolean;
+  isMusic?: boolean;
+  name?: string;
 }
 
 export default function CardDetailScreen() {
@@ -59,19 +61,62 @@ export default function CardDetailScreen() {
   const [recordings, setRecordings] = useState<RecordingData[]>([]);
   const [currentSound, setCurrentSound] = useState<Audio.Sound | null>(null);
 
+  // Xử lý dữ liệu hình ảnh
+  const [images, setImages] = useState<string[]>([]);
+
+  // Tải dữ liệu hình ảnh từ params
+  useEffect(() => {
+    try {
+      console.log("params.images:", params.images);
+      if (
+        params.images &&
+        typeof params.images === "string" &&
+        params.images !== ""
+      ) {
+        const parsedImages = JSON.parse(params.images);
+        console.log("Ảnh đã parse:", parsedImages);
+
+        // Đơn giản hóa cách xử lý - chỉ cần mảng URI hợp lệ
+        if (Array.isArray(parsedImages)) {
+          // Lọc ra các URI có giá trị
+          const validImages = parsedImages.filter(
+            (uri) =>
+              uri &&
+              typeof uri === "string" &&
+              (uri.startsWith("data:image") ||
+                uri.startsWith("file://") ||
+                uri.startsWith("http"))
+          );
+
+          console.log("Đường dẫn ảnh hợp lệ:", validImages);
+          setImages(validImages);
+          console.log("Số lượng ảnh đã set:", validImages.length);
+        }
+      }
+    } catch (error) {
+      console.error("Lỗi khi phân tích dữ liệu hình ảnh:", error);
+    }
+  }, [params.images]);
+
   // Tải dữ liệu bản ghi âm từ params
   useEffect(() => {
     const loadRecordings = async () => {
       try {
-        if (params.recordings) {
+        if (params.recordings && params.recordings !== "") {
+          console.log("Raw recordings data:", params.recordings);
           const recordingsJson = JSON.parse(params.recordings as string);
+          console.log("Parsed recordings data:", recordingsJson);
+
           if (Array.isArray(recordingsJson) && recordingsJson.length > 0) {
             // Tạo mảng mới để giữ dữ liệu ghi âm và đối tượng sound
             const loadedRecordings: RecordingData[] = await Promise.all(
               recordingsJson.map(async (rec, index) => {
                 try {
                   // Kiểm tra xem file có tồn tại không
+                  console.log(`Đang kiểm tra file: ${rec.uri}`);
                   const fileInfo = await FileSystem.getInfoAsync(rec.uri);
+                  console.log(`Thông tin file #${index}:`, fileInfo);
+
                   if (!fileInfo.exists) {
                     console.log(`File không tồn tại: ${rec.uri}`);
                     return {
@@ -88,11 +133,19 @@ export default function CardDetailScreen() {
                     { uri: rec.uri },
                     { shouldPlay: false }
                   );
+
+                  // Kiểm tra trạng thái âm thanh
+                  const status = await sound.getStatusAsync();
+                  console.log(`Trạng thái âm thanh #${index}:`, status);
+
                   return {
                     ...rec,
                     sound,
                     isPlaying: false,
                     fileExists: true,
+                    // Giữ nguyên thông tin isMusic và name từ dữ liệu gốc
+                    isMusic: rec.isMusic || false,
+                    name: rec.name || `Bản ghi #${index + 1}`,
                   };
                 } catch (err) {
                   console.error(`Không thể tải âm thanh #${index + 1}:`, err);
@@ -106,10 +159,17 @@ export default function CardDetailScreen() {
               })
             );
 
+            console.log("Tất cả bản ghi đã được tải:", loadedRecordings);
+
             // Lọc ra các bản ghi có thể phát được
             const validRecordings = loadedRecordings.filter(
               (rec) => rec.fileExists
             );
+
+            console.log(
+              `Số bản ghi hợp lệ: ${validRecordings.length}/${loadedRecordings.length}`
+            );
+
             if (validRecordings.length === 0 && loadedRecordings.length > 0) {
               // Nếu không có bản ghi nào hợp lệ
               Alert.alert(
@@ -125,7 +185,11 @@ export default function CardDetailScreen() {
             }
 
             setRecordings(validRecordings);
+          } else {
+            console.log("Không có bản ghi hoặc định dạng không hợp lệ");
           }
+        } else {
+          console.log("Không có dữ liệu bản ghi âm");
         }
       } catch (error) {
         console.error("Lỗi khi tải dữ liệu bản ghi âm:", error);
@@ -163,6 +227,8 @@ export default function CardDetailScreen() {
 
       // Kiểm tra lại xem file có tồn tại không trước khi phát
       const fileInfo = await FileSystem.getInfoAsync(recording.uri);
+      console.log("Kiểm tra file trước khi phát:", fileInfo);
+
       if (!fileInfo.exists) {
         Alert.alert("Thông báo", "File âm thanh không tồn tại hoặc đã bị xóa");
         // Cập nhật lại danh sách recordings để loại bỏ file không tồn tại
@@ -174,6 +240,7 @@ export default function CardDetailScreen() {
       if (currentSound) {
         console.log("Dừng âm thanh hiện tại");
         await currentSound.stopAsync();
+        await currentSound.unloadAsync();
         setCurrentSound(null);
       }
 
@@ -181,13 +248,18 @@ export default function CardDetailScreen() {
       const currentRecording = recordings.find(
         (rec) => rec.id === recording.id
       );
-      const soundToPlay = currentRecording?.sound;
+
+      if (!currentRecording || !currentRecording.sound) {
+        console.log("Không tìm thấy bản ghi hoặc sound không tồn tại");
+        Alert.alert("Lỗi", "Không thể phát âm thanh");
+        return;
+      }
+
+      const soundToPlay = currentRecording.sound;
 
       // Kiểm tra trạng thái âm thanh trước khi phát
-      if (soundToPlay) {
-        const status = await soundToPlay.getStatusAsync();
-        console.log("Trạng thái âm thanh:", status);
-      }
+      const status = await soundToPlay.getStatusAsync();
+      console.log("Trạng thái âm thanh trước khi phát:", status);
 
       // Đánh dấu tất cả các bản ghi là không đang phát
       setRecordings((prev) =>
@@ -195,60 +267,106 @@ export default function CardDetailScreen() {
       );
 
       // Phát bản ghi đã chọn
-      if (soundToPlay) {
-        console.log("Đang phát âm thanh...");
-        await soundToPlay.setPositionAsync(0); // Đặt lại vị trí về đầu
-        await soundToPlay.playAsync(); // Sử dụng playAsync thay vì replayAsync
-        setCurrentSound(soundToPlay);
+      console.log("Đang phát âm thanh...");
+      await soundToPlay.setPositionAsync(0); // Đặt lại vị trí về đầu
+      await soundToPlay.playAsync(); // Sử dụng playAsync thay vì replayAsync
+      setCurrentSound(soundToPlay);
 
-        // Lắng nghe sự kiện kết thúc phát
-        soundToPlay.setOnPlaybackStatusUpdate((status) => {
-          console.log("Cập nhật trạng thái phát:", status);
-          if (status.isLoaded && !status.isPlaying && status.didJustFinish) {
-            console.log("Âm thanh đã phát xong");
-            setRecordings((prev) =>
-              prev.map((rec) =>
-                rec.id === recording.id ? { ...rec, isPlaying: false } : rec
-              )
-            );
-            setCurrentSound(null);
-          }
-        });
-      } else {
-        Alert.alert("Thông báo", "Không thể phát bản ghi âm");
-      }
+      // Lắng nghe sự kiện kết thúc phát
+      soundToPlay.setOnPlaybackStatusUpdate((status) => {
+        console.log("Cập nhật trạng thái phát:", status);
+        if (status.isLoaded && !status.isPlaying && status.didJustFinish) {
+          console.log("Âm thanh đã phát xong");
+          // Đặt lại trạng thái isPlaying
+          setRecordings((prev) =>
+            prev.map((rec) =>
+              rec.id === recording.id ? { ...rec, isPlaying: false } : rec
+            )
+          );
+          setCurrentSound(null);
+        }
+      });
     } catch (error) {
-      console.error("Lỗi khi phát âm thanh", error);
-      Alert.alert("Lỗi", "Không thể phát bản ghi âm");
-
-      // Đặt lại trạng thái khi có lỗi
+      console.error("Lỗi khi phát âm thanh:", error);
+      Alert.alert("Lỗi", "Không thể phát âm thanh");
       setRecordings((prev) =>
         prev.map((rec) =>
           rec.id === recording.id ? { ...rec, isPlaying: false } : rec
         )
       );
-      setCurrentSound(null);
     }
   };
 
-  // Sử dụng ngày từ params hoặc ngày hiện tại
-  const currentDate = dateParam ? new Date(dateParam) : new Date();
-  const formattedDate = format(currentDate, "EEEE, MMMM d").toUpperCase();
-  const formattedTime = format(currentDate, "HH:mm");
-  const dayNumber = format(currentDate, "d");
-  const dayName = format(currentDate, "EEEE");
-  const monthName = format(currentDate, "MMMM");
+  // Đoạn chuẩn bị dữ liệu cho hiển thị
+  const date = dateParam ? new Date(dateParam) : new Date();
+  const dayName = format(date, "EEEE");
+  const dayNumber = format(date, "d");
+  const monthName = format(date, "MMMM");
+  const formattedTime = format(date, "HH:mm");
+
+  // Xác định music recordings nếu có
+  const [musicRecording, setMusicRecording] = useState<RecordingData | null>(
+    null
+  );
+  const [musicIsPlaying, setMusicIsPlaying] = useState(false);
+
+  // Tách ra bản ghi nhạc (nếu có) cho player riêng
+  useEffect(() => {
+    if (recordings.length > 0) {
+      const music = recordings.find((rec) => rec.isMusic === true);
+      if (music) {
+        setMusicRecording(music);
+      }
+    }
+  }, [recordings]);
+
+  // Xử lý phát nhạc
+  const handlePlayMusic = () => {
+    if (musicRecording) {
+      // Nếu đang phát thì dừng, nếu đang dừng thì phát
+      if (musicIsPlaying) {
+        // Logic dừng nhạc
+        if (currentSound) {
+          currentSound.stopAsync();
+          setCurrentSound(null);
+        }
+        setMusicIsPlaying(false);
+
+        // Cập nhật trạng thái của recording
+        setRecordings((prev) =>
+          prev.map((rec) =>
+            rec.id === musicRecording.id ? { ...rec, isPlaying: false } : rec
+          )
+        );
+      } else {
+        // Logic phát nhạc
+        playRecording(musicRecording);
+        setMusicIsPlaying(true);
+      }
+    }
+  };
+
+  // Chuẩn bị danh sách activities nếu có
+  const [activities, setActivities] = useState<number[]>([]);
+  useEffect(() => {
+    if (params.activities && typeof params.activities === "string") {
+      const activityIds = params.activities
+        .split(",")
+        .map((id) => parseInt(id));
+      setActivities(activityIds.filter((id) => !isNaN(id)));
+    }
+  }, [params.activities]);
 
   // Dữ liệu card
   const cardData = {
-    date: formattedDate,
+    date: formattedTime,
     time: formattedTime,
     emoji: emojiMap[moodId],
     title: moodTitles[moodId] || "How I feel today",
     note:
       note ||
       'Lorem ipsum...\n"Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit..."\n\nLorem ipsum...\n\nLorem ipsum...',
-    hasImages: true, // Đổi thành true nếu có hình ảnh thực tế
+    hasImages: images.length > 0, // Chỉ true nếu thực sự có hình ảnh
     hasMusic: true,
     music: {
       title: "Shape of you",
@@ -273,16 +391,15 @@ export default function CardDetailScreen() {
     }
   };
 
-  // Xử lý khi nhấn phát nhạc
-  const handlePlayMusic = () => {
-    console.log("Play music:", cardData.music.title);
-  };
+  // Hiển thị trước khi trả về JSX để kiểm tra
+  console.log("Trước render - Số lượng ảnh:", images.length);
+  console.log("hasImages:", cardData.hasImages);
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
-          {/* Header với nút back, ngày giờ và nút edit */}
+          {/* Hiển thị ngày và thời gian */}
           <DateTimeHeader
             dayName={dayName}
             dayNumber={dayNumber}
@@ -292,28 +409,30 @@ export default function CardDetailScreen() {
             onEdit={handleEdit}
           />
 
-          {/* Emoji */}
+          {/* Hiển thị emoji tương ứng với mood */}
           <EmojiDisplay moodId={moodId} />
 
-          {/* Note Card */}
-          <NoteCard moodId={moodId} note={cardData.note} />
+          {/* Hiển thị ghi chú */}
+          {note && <NoteCard moodId={moodId} note={note} />}
 
-          {/* Images Grid */}
-          {cardData.hasImages && <ImagesGrid />}
+          {/* Hiển thị hình ảnh nếu có */}
+          {images.length > 0 && <ImagesGrid images={images} />}
 
-          {/* Audio Recordings */}
-          <RecordingsList
-            recordings={recordings}
-            onPlayRecording={playRecording}
-          />
-
-          {/* Music Player */}
-          {cardData.hasMusic && (
-            <MusicPlayer
-              musicTitle={cardData.music.title}
-              onPlayMusic={handlePlayMusic}
+          {/* Hiển thị danh sách bản ghi âm */}
+          {recordings.length > 0 && (
+            <RecordingsList
+              recordings={recordings}
+              onPlayRecording={playRecording}
             />
           )}
+
+          {/* Hiển thị player nhạc nếu có */}
+          {/* {musicRecording && (
+            <MusicPlayer
+              musicTitle={musicRecording.name || "Nhạc nền"}
+              onPlayMusic={handlePlayMusic}
+            />
+          )} */}
         </View>
       </ScrollView>
     </SafeAreaView>

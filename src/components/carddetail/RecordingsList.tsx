@@ -12,6 +12,8 @@ interface RecordingData {
   sound?: Audio.Sound;
   isPlaying?: boolean;
   fileExists: boolean;
+  isMusic?: boolean;
+  name?: string;
 }
 
 interface RecordingsListProps {
@@ -23,9 +25,11 @@ const RecordingsList: React.FC<RecordingsListProps> = ({
   recordings,
   onPlayRecording,
 }) => {
-  if (recordings.length === 0) {
+  if (!recordings || recordings.length === 0) {
     return null;
   }
+
+  console.log("Hiển thị danh sách bản ghi - Số lượng:", recordings.length);
 
   return (
     <View style={styles.recordingsContainer}>
@@ -37,56 +41,88 @@ const RecordingsList: React.FC<RecordingsListProps> = ({
       </View>
 
       <View style={styles.recordingsList}>
-        {recordings.map((recording) => (
-          <View key={recording.id} style={styles.recordingItem}>
-            <View style={styles.recordingInfo}>
-              <View
-                style={[
-                  styles.recordingIconContainer,
-                  recording.isPlaying && styles.recordingIconContainerActive,
-                ]}
-              >
-                <FontAwesome5
-                  name={recording.isPlaying ? "volume-up" : "music"}
-                  size={wp(4)}
-                  color={recording.isPlaying ? "#fff" : "#32B768"}
-                />
-              </View>
-              <Text style={styles.recordingTitle}>
-                Bản ghi #{recording.id + 1}
-                <Text style={styles.recordingDuration}>
-                  {" "}
-                  | {recording.duration}
-                </Text>
-              </Text>
-            </View>
+        {recordings.map((recording) => {
+          console.log(`Hiển thị bản ghi #${recording.id}:`, {
+            name: recording.name,
+            isPlaying: recording.isPlaying,
+            isMusic: recording.isMusic,
+            duration: recording.duration,
+          });
 
-            <TouchableOpacity
-              style={styles.playButton}
-              onPress={() => onPlayRecording(recording)}
-            >
-              <LinearGradient
-                colors={
-                  recording.isPlaying
-                    ? ["#ff6b6b", "#ff5252"]
-                    : ["#32B768", "#27A35A"]
-                }
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.playButtonGradient}
+          return (
+            <View key={recording.id} style={styles.recordingItem}>
+              <View style={styles.recordingInfo}>
+                <View
+                  style={[
+                    styles.recordingIconContainer,
+                    recording.isPlaying && styles.recordingIconContainerActive,
+                    recording.isMusic && styles.musicIconContainer,
+                    recording.isMusic &&
+                      recording.isPlaying &&
+                      styles.musicIconContainerActive,
+                  ]}
+                >
+                  <FontAwesome5
+                    name={
+                      recording.isPlaying
+                        ? "volume-up"
+                        : recording.isMusic
+                        ? "music"
+                        : "microphone"
+                    }
+                    size={wp(4)}
+                    color={
+                      recording.isPlaying
+                        ? "#fff"
+                        : recording.isMusic
+                        ? "#6366F1"
+                        : "#32B768"
+                    }
+                  />
+                </View>
+                <View style={styles.titleContainer}>
+                  <Text
+                    style={styles.recordingTitle}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {recording.name || `Bản ghi #${recording.id + 1}`}
+                  </Text>
+                  <Text style={styles.recordingDuration}>
+                    {recording.duration}
+                  </Text>
+                </View>
+              </View>
+
+              <TouchableOpacity
+                style={styles.playButton}
+                onPress={() => onPlayRecording(recording)}
               >
-                <FontAwesome5
-                  name={recording.isPlaying ? "pause" : "play"}
-                  size={wp(3.5)}
-                  color="#fff"
-                />
-                <Text style={styles.playButtonText}>
-                  {recording.isPlaying ? "DỪNG" : "PHÁT"}
-                </Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
-        ))}
+                <LinearGradient
+                  colors={
+                    recording.isPlaying
+                      ? ["#ff6b6b", "#ff5252"]
+                      : recording.isMusic
+                      ? ["#6366F1", "#4F46E5"]
+                      : ["#32B768", "#27A35A"]
+                  }
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.playButtonGradient}
+                >
+                  <FontAwesome5
+                    name={recording.isPlaying ? "pause" : "play"}
+                    size={wp(3.5)}
+                    color="#fff"
+                  />
+                  <Text style={styles.playButtonText}>
+                    {recording.isPlaying ? "DỪNG" : "PHÁT"}
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          );
+        })}
       </View>
     </View>
   );
@@ -146,6 +182,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
+    marginRight: wp(2),
   },
   recordingIconContainer: {
     width: wp(8),
@@ -159,10 +196,22 @@ const styles = StyleSheet.create({
   recordingIconContainerActive: {
     backgroundColor: "#ff5252",
   },
+  musicIconContainer: {
+    backgroundColor: "rgba(99, 102, 241, 0.1)",
+  },
+  musicIconContainerActive: {
+    backgroundColor: "#6366F1",
+  },
+  titleContainer: {
+    flex: 1,
+    justifyContent: "center",
+    overflow: "hidden",
+  },
   recordingTitle: {
     fontSize: wp(3.8),
     color: "#333",
     fontFamily: "Quicksand-Bold",
+    marginBottom: hp(0.3),
   },
   recordingDuration: {
     fontSize: wp(3.5),

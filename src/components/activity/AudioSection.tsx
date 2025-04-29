@@ -12,6 +12,7 @@ import { FontAwesome5, FontAwesome } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Audio } from "expo-av";
 import * as FileSystem from "expo-file-system";
+import * as DocumentPicker from "expo-document-picker";
 import { wp, hp } from "../newemoji/utils";
 
 interface RecordingInfo {
@@ -19,6 +20,8 @@ interface RecordingInfo {
   duration: string;
   file: string;
   isPlaying?: boolean;
+  isMusic?: boolean;
+  name?: string;
 }
 
 interface AudioSectionProps {
@@ -115,50 +118,77 @@ const AudioSection: React.FC<AudioSectionProps> = ({
 
   async function stopRecording() {
     console.log("Dừng ghi âm...");
+
     if (!recording) {
       console.log("Không có bản ghi âm nào đang hoạt động");
       return;
     }
 
     try {
+      setRecording(undefined);
       await recording.stopAndUnloadAsync();
+
+      // Thay đổi cấu hình Audio để phát
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        playsInSilentModeIOS: true,
+      });
+
       const uri = recording.getURI();
-      console.log("URI bản ghi (tạm thời): ", uri);
+      console.log("URI bản ghi âm vừa tạo:", uri);
 
       if (!uri) {
-        throw new Error("URI ghi âm không hợp lệ");
+        Alert.alert("Lỗi", "Không thể lưu bản ghi âm");
+        return;
       }
 
-      // Lưu file vào thư mục cố định
+      // Tạo thư mục audio nếu chưa tồn tại
       const audioDir = `${FileSystem.documentDirectory}audio/`;
+      const dirInfo = await FileSystem.getInfoAsync(audioDir);
+      if (!dirInfo.exists) {
+        await FileSystem.makeDirectoryAsync(audioDir, { intermediates: true });
+      }
+
+      // Di chuyển tệp tạm thời vào thư mục cố định
       const fileName = `recording-${Date.now()}.m4a`;
       const permanentUri = `${audioDir}${fileName}`;
+
+      // Kiểm tra xem file có tồn tại không trước khi copy
+      const fileInfo = await FileSystem.getInfoAsync(uri);
+      if (!fileInfo.exists) {
+        throw new Error("File tạm thời không tồn tại");
+      }
 
       await FileSystem.copyAsync({
         from: uri,
         to: permanentUri,
       });
 
-      console.log("URI bản ghi (cố định): ", permanentUri);
+      console.log("Đã lưu bản ghi âm tại:", permanentUri);
 
-      // Không tạo sound ở đây, chỉ lưu trữ thông tin và URI
+      // Lấy thời lượng của bản ghi
       const durationMillis = await getDurationMillis(permanentUri);
+      const formattedDuration = getDurationFormatted(durationMillis || 0);
 
+      // Thêm bản ghi mới vào danh sách
       const newRecordings = [
         ...recordings,
         {
-          duration: getDurationFormatted(durationMillis || 0),
+          duration: formattedDuration,
           file: permanentUri,
           isPlaying: false,
         },
       ];
 
       setRecordings(newRecordings);
-      setRecording(undefined);
-    } catch (err) {
-      console.error("Lỗi khi dừng ghi âm", err);
-      Alert.alert("Lỗi", "Không thể hoàn thành việc ghi âm");
-      setRecording(undefined);
+      console.log("Đã thêm bản ghi âm với URI:", permanentUri);
+
+      // Kiểm tra quyền truy cập tệp sau khi lưu
+      const permAccessInfo = await FileSystem.getInfoAsync(permanentUri);
+      console.log("Kiểm tra tệp đã lưu:", permAccessInfo);
+    } catch (error) {
+      console.error("Lỗi khi lưu tệp ghi âm:", error);
+      Alert.alert("Lỗi", "Không thể lưu bản ghi âm");
     }
   }
 
@@ -191,6 +221,93 @@ const AudioSection: React.FC<AudioSectionProps> = ({
     return seconds < 10
       ? `${minutesPart}:0${seconds}`
       : `${minutesPart}:${seconds}`;
+  }
+
+  // Hàm mới để chọn file nhạc từ thiết bị
+  async function selectMusicFile() {
+    try {
+      // Thiết lập Audio Mode
+      await Audio.setAudioModeAsync({
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: true,
+        shouldDuckAndroid: true,
+      });
+
+      // Chọn file âm thanh từ thiết bị
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ["audio/*", "audio/mpeg", "audio/mp3", "audio/m4a", "audio/wav"],
+        copyToCacheDirectory: true,
+      });
+
+      if (result.canceled) {
+        console.log("Đã hủy chọn file");
+        return;
+      }
+
+      const fileUri = result.assets[0].uri;
+      const fileName = result.assets[0].name || `music-${Date.now()}`;
+      console.log("File nhạc được chọn:", fileName);
+      console.log("URI file nhạc:", fileUri);
+
+      // Kiểm tra xem file có tồn tại không
+      const fileInfo = await FileSystem.getInfoAsync(fileUri);
+      if (!fileInfo.exists) {
+        throw new Error("File không tồn tại");
+      }
+
+      // Tạo thư mục audio nếu chưa tồn tại
+      const audioDir = `${FileSystem.documentDirectory}audio/`;
+      const dirInfo = await FileSystem.getInfoAsync(audioDir);
+      if (!dirInfo.exists) {
+        await FileSystem.makeDirectoryAsync(audioDir, { intermediates: true });
+      }
+
+      // Lưu file vào thư mục cố định
+      const permanentFileName = `music-${Date.now()}-${fileName.replace(
+        /\s+/g,
+        "_"
+      )}`;
+      const permanentUri = `${audioDir}${permanentFileName}`;
+
+      await FileSystem.copyAsync({
+        from: fileUri,
+        to: permanentUri,
+      });
+
+      console.log("URI file nhạc (cố định):", permanentUri);
+
+      // Kiểm tra file sau khi lưu
+      const savedFileInfo = await FileSystem.getInfoAsync(permanentUri);
+      console.log("Thông tin file đã lưu:", savedFileInfo);
+
+      // Lấy thời lượng của file âm thanh
+      const durationMillis = await getDurationMillis(permanentUri);
+      const formattedDuration = getDurationFormatted(durationMillis || 0);
+
+      // Thêm file nhạc vào danh sách recordings
+      const newRecordings = [
+        ...recordings,
+        {
+          duration: formattedDuration,
+          file: permanentUri,
+          isPlaying: false,
+          isMusic: true,
+          name: fileName,
+        },
+      ];
+
+      setRecordings(newRecordings);
+      console.log("Đã thêm file nhạc với thông tin:", {
+        uri: permanentUri,
+        duration: formattedDuration,
+        name: fileName,
+      });
+
+      Alert.alert("Thành công", `Đã thêm file nhạc: ${fileName}`);
+    } catch (error) {
+      console.error("Lỗi khi chọn file nhạc:", error);
+      Alert.alert("Lỗi", "Không thể thêm file nhạc");
+    }
   }
 
   async function playRecording(index: number) {
@@ -313,6 +430,20 @@ const AudioSection: React.FC<AudioSectionProps> = ({
   function getRecordingLines() {
     return recordings.map((recordingLine, index) => {
       const isPlaying = recordingLine.isPlaying || false;
+      const isMusic = recordingLine.isMusic || false;
+
+      // Xử lý tên file nhạc quá dài
+      let itemTitle = "";
+      if (isMusic) {
+        const originalName = recordingLine.name || `Nhạc #${index + 1}`;
+        // Giới hạn tên file nhạc tối đa 25 ký tự
+        itemTitle =
+          originalName.length > 25
+            ? originalName.substring(0, 22) + "..."
+            : originalName;
+      } else {
+        itemTitle = `Bản ghi #${index + 1}`;
+      }
 
       return (
         <View key={index} style={styles.recordingItem}>
@@ -321,20 +452,30 @@ const AudioSection: React.FC<AudioSectionProps> = ({
               style={[
                 styles.recordingIconContainer,
                 isPlaying && styles.recordingIconContainerActive,
+                isMusic && styles.musicIconContainer,
+                isMusic && isPlaying && styles.musicIconContainerActive,
               ]}
             >
               <FontAwesome5
-                name={isPlaying ? "volume-up" : "music"}
+                name={
+                  isMusic ? "music" : isPlaying ? "volume-up" : "microphone"
+                }
                 size={wp(4)}
-                color={isPlaying ? "#fff" : "#32B768"}
+                color={isPlaying ? "#fff" : isMusic ? "#6366F1" : "#32B768"}
               />
             </View>
-            <Text style={styles.recordingTitle}>
-              Bản ghi #{index + 1}{" "}
-              <Text style={styles.recordingDuration}>
-                | {recordingLine.duration}
+            <View style={styles.titleContainer}>
+              <Text
+                style={styles.recordingTitle}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {itemTitle}
               </Text>
-            </Text>
+              <Text style={styles.recordingDuration}>
+                {recordingLine.duration}
+              </Text>
+            </View>
           </View>
           <TouchableOpacity
             style={styles.playButton}
@@ -344,7 +485,11 @@ const AudioSection: React.FC<AudioSectionProps> = ({
           >
             <LinearGradient
               colors={
-                isPlaying ? ["#ff6b6b", "#ff5252"] : ["#32B768", "#27A35A"]
+                isPlaying
+                  ? ["#ff6b6b", "#ff5252"]
+                  : isMusic
+                  ? ["#6366F1", "#4F46E5"]
+                  : ["#32B768", "#27A35A"]
               }
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
@@ -394,7 +539,7 @@ const AudioSection: React.FC<AudioSectionProps> = ({
             </View>
           )}
         </TouchableOpacity>
-        <TouchableOpacity style={styles.mediaButton}>
+        <TouchableOpacity style={styles.mediaButton} onPress={selectMusicFile}>
           <FontAwesome5 name="music" size={wp(5)} color="#333" />
           <Text style={styles.mediaButtonText}>Add music here</Text>
         </TouchableOpacity>
@@ -541,6 +686,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
+    marginRight: wp(2),
+    overflow: "hidden",
   },
   recordingIconContainer: {
     width: wp(8),
@@ -550,26 +697,36 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginRight: wp(2.5),
+    flexShrink: 0,
+  },
+  titleContainer: {
+    flex: 1,
+    justifyContent: "center",
+    overflow: "hidden",
   },
   recordingTitle: {
-    fontSize: wp(3.8),
+    fontSize: wp(3.5),
     color: "#333",
     fontFamily: "Quicksand-Bold",
+    marginBottom: hp(0.3),
   },
   recordingDuration: {
-    fontSize: wp(3.5),
+    fontSize: wp(3.2),
     color: "#666",
     fontFamily: "Quicksand-Regular",
   },
   playButton: {
     borderRadius: wp(5),
     overflow: "hidden",
+    flexShrink: 0,
+    minWidth: wp(20),
   },
   playButtonGradient: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     paddingVertical: hp(1),
-    paddingHorizontal: wp(3.5),
+    paddingHorizontal: wp(3),
     borderRadius: wp(5),
   },
   playButtonText: {
@@ -582,6 +739,12 @@ const styles = StyleSheet.create({
   },
   recordingIconContainerActive: {
     backgroundColor: "#ff5252",
+  },
+  musicIconContainer: {
+    backgroundColor: "rgba(99, 102, 241, 0.1)",
+  },
+  musicIconContainerActive: {
+    backgroundColor: "#6366F1",
   },
 });
 
