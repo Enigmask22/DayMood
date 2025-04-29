@@ -69,6 +69,16 @@ export default function ActivityScreen() {
     }
   };
 
+  // Xử lý mở/đóng trình soạn thảo ghi chú đầy đủ
+  const handleToggleFullNote = () => {
+    setIsFullNoteOpen(!isFullNoteOpen);
+  };
+
+  // Xử lý thay đổi ghi chú
+  const handleChangeNote = (text: string) => {
+    setNote(text);
+  };
+
   // Lưu dữ liệu
   const handleSave = () => {
     // Logic lưu dữ liệu
@@ -222,9 +232,9 @@ export default function ActivityScreen() {
           {/* Note Section */}
           <NoteSection
             note={note}
-            onChangeNote={setNote}
+            onChangeNote={handleChangeNote}
             isFullNoteOpen={isFullNoteOpen}
-            onToggleFullNote={() => setIsFullNoteOpen(!isFullNoteOpen)}
+            onToggleFullNote={handleToggleFullNote}
           />
 
           {/* Image Section */}
