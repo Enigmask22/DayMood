@@ -13,10 +13,13 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
 const styles = StyleSheet.create({
   title: {
     fontSize: wp(7),
-    fontWeight: "600",
-    marginTop: hp(2),
-    marginBottom: hp(3),
+    fontWeight: "700",
+    marginTop: hp(1),
+    marginBottom: hp(2),
     color: "#333",
+    textAlign: "center",
+    fontFamily: "Quicksand-Bold",
+    width: "100%",
   },
 });
 

@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, StyleSheet, SafeAreaView, ScrollView } from "react-native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import DateTimeSelector from "@/components/newemoji/DateTimeSelector";
 import MoodSelector from "@/components/newemoji/MoodSelector";
 import ActivityButton from "@/components/newemoji/ActivityButton";
@@ -10,8 +10,25 @@ import Header from "@/components/newemoji/Header";
 import { wp, hp } from "@/components/newemoji/utils";
 
 export default function NewEmojiScreen() {
+  // Lấy tham số initialDate từ URL
+  const params = useLocalSearchParams();
+  const { initialDate } = params;
+
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
-  const [date, setDate] = useState(new Date());
+  // Sử dụng initialDate nếu có, nếu không thì sử dụng ngày hiện tại
+  const [date, setDate] = useState<Date>(() => {
+    if (initialDate && typeof initialDate === "string") {
+      return new Date(initialDate);
+    }
+    return new Date();
+  });
+
+  // Cập nhật date khi initialDate thay đổi
+  useEffect(() => {
+    if (initialDate && typeof initialDate === "string") {
+      setDate(new Date(initialDate));
+    }
+  }, [initialDate]);
 
   const handleSelectMood = (id: number) => {
     setSelectedMood(id);
@@ -20,11 +37,35 @@ export default function NewEmojiScreen() {
   const handleSave = () => {
     // Xử lý lưu trạng thái mood
     // Thêm vào hệ thống lưu trữ tại đây
-    router.back();
+    try {
+      router.push("/(main)" as any);
+    } catch (error) {
+      console.error("Navigation error:", error);
+    }
   };
 
   const handleBack = () => {
-    router.back();
+    try {
+      router.push("/(main)" as any);
+    } catch (error) {
+      console.error("Navigation error:", error);
+    }
+  };
+
+  // Xử lý khi nhấn nút chọn hoạt động
+  const handleSelectActivities = () => {
+    // Điều hướng đến trang activity với params là mood và date
+    try {
+      router.push({
+        pathname: "/(new)/activity" as any,
+        params: {
+          initialDate: date.toISOString(),
+          selectedMood: selectedMood?.toString(),
+        },
+      });
+    } catch (error) {
+      console.error("Navigation error:", error);
+    }
   };
 
   return (
@@ -37,7 +78,7 @@ export default function NewEmojiScreen() {
             selectedMood={selectedMood}
             onSelectMood={handleSelectMood}
           />
-          <ActivityButton />
+          <ActivityButton onPress={handleSelectActivities} />
           <SelectedEmoji selectedMood={selectedMood} />
           <ActionButtons onBack={handleBack} onSave={handleSave} />
         </View>

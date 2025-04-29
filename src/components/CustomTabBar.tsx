@@ -8,10 +8,14 @@ import {
   Platform,
   Animated,
   TouchableWithoutFeedback,
+  Modal,
+  Button,
 } from "react-native";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs"; // Lấy kiểu props
 import { Ionicons } from "@expo/vector-icons"; // Ví dụ sử dụng Ionicons
 import { HOME_COLOR } from "src/utils/constant";
+import { router } from "expo-router"; // Thêm router từ expo-router
+import DateTimePicker from "@react-native-community/datetimepicker";
 // Import các bộ icon khác nếu cần
 // import { FontAwesome } from '@expo/vector-icons';
 
@@ -38,6 +42,8 @@ const CustomTabBar = ({
 }: BottomTabBarProps) => {
   // Thêm state để theo dõi trạng thái hiển thị menu
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
   // Các giá trị animated
   const rotateAnimation = useRef(new Animated.Value(0)).current;
@@ -118,19 +124,105 @@ const CustomTabBar = ({
 
     // Có thể điều hướng đến màn hình tương ứng tùy vào actionType
     if (actionType === "primary") {
-      navigation.navigate("add"); // Điều hướng đến màn hình Add chính
+      router.navigate("add" as any); // Điều hướng đến màn hình Add chính
     } else if (actionType === "back") {
-      // Xử lý cho nút quay lại
+      // Tạo ngày hôm qua
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      // Điều hướng đến trang newemoj với ngày hôm qua
+      router.navigate({
+        pathname: "(new)/newemoj" as any,
+        params: { initialDate: yesterday.toISOString() },
+      });
     } else if (actionType === "clock") {
       // Xử lý cho nút đồng hồ
+      router.navigate("(new)/newemoj" as any);
     } else if (actionType === "calendar") {
-      // Điều hướng đến trang newemoj trong thư mục (new)
-      navigation.navigate("(new)/newemoj");
+      // Hiển thị DatePicker thay vì chuyển trang
+      setShowDatePicker(true);
     }
+  };
+
+  // Xử lý khi người dùng chọn ngày
+  const handleDateChange = (event: any, date?: Date) => {
+    if (date) {
+      setSelectedDate(date);
+    }
+  };
+
+  // Xử lý khi người dùng nhấn OK trên DatePicker
+  const handleConfirmDate = () => {
+    setShowDatePicker(false);
+    // Chuyển đến trang newemoj với ngày đã chọn
+    router.navigate({
+      pathname: "(new)/newemoj" as any,
+      params: { initialDate: selectedDate.toISOString() },
+    });
+  };
+
+  // Xử lý khi người dùng nhấn Cancel
+  const handleCancelDate = () => {
+    setShowDatePicker(false);
   };
 
   return (
     <View style={styles.container}>
+      {/* Modal DatePicker */}
+      {Platform.OS === "ios" ? (
+        <Modal
+          visible={showDatePicker}
+          transparent={true}
+          animationType="slide"
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.datePickerContainer}>
+              <Text style={styles.datePickerTitle}>Chọn ngày</Text>
+              <DateTimePicker
+                value={selectedDate}
+                mode="date"
+                display="spinner"
+                onChange={handleDateChange}
+              />
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                  style={[styles.dateButton, styles.cancelButton]}
+                  onPress={handleCancelDate}
+                >
+                  <Text style={styles.buttonText}>Hủy</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.dateButton, styles.confirmButton]}
+                  onPress={handleConfirmDate}
+                >
+                  <Text style={styles.buttonText}>OK</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      ) : (
+        showDatePicker && (
+          <DateTimePicker
+            testID="dateTimePicker"
+            value={selectedDate}
+            mode="date"
+            display="default"
+            onChange={(event, date) => {
+              setShowDatePicker(false);
+              if (date && event.type === "set") {
+                setSelectedDate(date);
+                // Chuyển đến trang newemoj với ngày đã chọn
+                router.navigate({
+                  pathname: "(new)/newemoj" as any,
+                  params: { initialDate: date.toISOString() },
+                });
+              }
+            }}
+          />
+        )
+      )}
+
       {/* Overlay làm mờ màn hình khi menu mở */}
       {isMenuOpen && (
         <TouchableWithoutFeedback onPress={toggleMenu}>
@@ -475,6 +567,51 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  datePickerContainer: {
+    backgroundColor: "white",
+    padding: 20,
+    borderRadius: 20,
+    width: "80%",
+    alignItems: "center",
+  },
+  datePickerTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+    fontFamily: "Quicksand-Bold",
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    width: "100%",
+    marginTop: 20,
+  },
+  dateButton: {
+    padding: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    minWidth: 100,
+    alignItems: "center",
+  },
+  cancelButton: {
+    backgroundColor: "#dc3545",
+    marginRight: 10,
+  },
+  confirmButton: {
+    backgroundColor: HOME_COLOR.HOMEPLUS,
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "white",
+    fontFamily: "Quicksand-Bold",
   },
 });
 

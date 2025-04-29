@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons"; // Hoặc thư viện icon bạn đang dùng
+import { useNavigation } from "@react-navigation/native";
 
 const { width, height } = Dimensions.get("window"); // Lấy cả width và height
 
@@ -34,6 +35,9 @@ const hp = (percentage: number) => {
 const baseFontSize = wp(4); // Ví dụ: 4% chiều rộng màn hình
 
 const MoodPromptCard = () => {
+  // Sử dụng hook useNavigation với kiểu any
+  const navigation = useNavigation() as any;
+
   // Định nghĩa màu sắc cho gradient border
   const rainbowColors = [
     "#FF00FF", // Magenta
@@ -65,7 +69,10 @@ const MoodPromptCard = () => {
           <Text style={styles.titleText}>How are you feeling today?</Text>
           <View style={styles.recordMoodContainer}>
             <Text style={styles.subtitleText}>Tap to record mood</Text>
-            <TouchableOpacity style={styles.recordButton}>
+            <TouchableOpacity
+              style={styles.recordButton}
+              onPress={() => navigation.navigate("(new)/newemoj")}
+            >
               <Ionicons
                 name="chevron-forward-outline"
                 size={wp(4)}
