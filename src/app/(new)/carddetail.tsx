@@ -541,6 +541,7 @@ export default function CardDetailScreen() {
                 size: fileInfo.size,
                 record_id: recordId,
                 user_id: 1,
+                duration: recording.duration || "00:00",
               }),
             });
           } catch (error) {

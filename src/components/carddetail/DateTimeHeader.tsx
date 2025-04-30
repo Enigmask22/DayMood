@@ -10,7 +10,7 @@ interface DateTimeHeaderProps {
   monthName: string;
   formattedTime: string;
   onBack: () => void;
-  onEdit: () => void;
+  onEdit?: () => void;
 }
 
 const DateTimeHeader: React.FC<DateTimeHeaderProps> = ({
@@ -74,22 +74,24 @@ const DateTimeHeader: React.FC<DateTimeHeaderProps> = ({
         </View>
       </LinearGradient>
 
-      <LinearGradient
-        colors={["#E0F7ED", "#B9F0DA"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[styles.buttonGradient, editPressed && styles.buttonPressed]}
-      >
-        <TouchableOpacity
-          style={styles.editButton}
-          onPress={onEdit}
-          onPressIn={() => setEditPressed(true)}
-          onPressOut={() => setEditPressed(false)}
-          activeOpacity={0.7}
+      {onEdit && (
+        <LinearGradient
+          colors={["#E0F7ED", "#B9F0DA"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.buttonGradient, editPressed && styles.buttonPressed]}
         >
-          <Feather name="edit-2" size={wp(5)} color="#32B768" />
-        </TouchableOpacity>
-      </LinearGradient>
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={onEdit}
+            onPressIn={() => setEditPressed(true)}
+            onPressOut={() => setEditPressed(false)}
+            activeOpacity={0.7}
+          >
+            <Feather name="edit-2" size={wp(5)} color="#32B768" />
+          </TouchableOpacity>
+        </LinearGradient>
+      )}
     </View>
   );
 };

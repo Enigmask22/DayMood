@@ -58,6 +58,7 @@ const RecordsList = ({ records, loading, error }: RecordsListProps) => {
           data={records}
           renderItem={({ item }) => (
             <FeelingRecord
+              id={item.id}
               date={item.date}
               emoji={item.emoji}
               feeling={item.feeling}

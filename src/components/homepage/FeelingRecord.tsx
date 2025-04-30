@@ -11,9 +11,11 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import Feather from "@expo/vector-icons/Feather";
 import { HOME_COLOR, EMOJI_COLOR } from "src/utils/constant";
 import { useState } from "react";
+import { router } from "expo-router";
 
 const { width, height } = Dimensions.get("window");
 export interface FeelingRecordProps {
+  id?: string | number;
   date: string;
   emoji: string;
   feeling: string;
@@ -30,6 +32,7 @@ const emojiMap: { [key: string]: any } = {
 };
 
 const FeelingRecord = ({
+  id,
   date = "THURSDAY, MARCH 6 20:00",
   emoji = "sad",
   feeling = "I'm feeling bad",
@@ -61,14 +64,28 @@ const FeelingRecord = ({
 
   const handleViewRecord = () => {
     setShowOptions(false);
-    // Logic để xem chi tiết record
-    console.log("Xem chi tiết record");
+    // Chuyển hướng đến trang xem chi tiết với record_id
+    if (id) {
+      router.push({
+        pathname: "/(new)/viewrecord",
+        params: { id: id.toString() },
+      });
+    } else {
+      console.log("Không có ID record để xem chi tiết");
+    }
   };
 
   const handleEditRecord = () => {
     setShowOptions(false);
-    // Logic để chỉnh sửa record
-    console.log("Chỉnh sửa record");
+    // Chuyển hướng đến trang chỉnh sửa với record_id
+    if (id) {
+      router.push({
+        pathname: "/(new)/editrecord" as any,
+        params: { id: id.toString() },
+      });
+    } else {
+      console.log("Không có ID record để chỉnh sửa");
+    }
   };
 
   return (
@@ -85,6 +102,7 @@ const FeelingRecord = ({
         {/* Button - Áp dụng màu động */}
         <TouchableOpacity
           style={[styles.button, { backgroundColor: buttonColor }]}
+          onPress={handleViewRecord}
         >
           <Text style={styles.buttonText}>{feeling}</Text>
         </TouchableOpacity>

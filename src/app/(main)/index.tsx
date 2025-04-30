@@ -6,15 +6,21 @@ import { View, Text, StyleSheet, Dimensions } from "react-native";
 import MoodPromptCard from "src/components/homepage/MoodPromptCard";
 import { useAppSelector, useAppDispatch } from "src/store";
 import { fetchRecords } from "src/store/slices/recordSlice";
+import { useFocusEffect } from "expo-router";
 
 const { width, height } = Dimensions.get("window");
 const HomePage = () => {
   const dispatch = useAppDispatch();
   const { records, loading, error } = useAppSelector((state) => state.records);
 
-  useEffect(() => {
-    dispatch(fetchRecords());
-  }, [dispatch]);
+  // Sử dụng useFocusEffect thay vì useEffect để tải lại dữ liệu mỗi khi màn hình được focus
+  useFocusEffect(
+    React.useCallback(() => {
+      // Tải dữ liệu khi màn hình được focus (khi người dùng quay lại từ màn hình khác)
+      console.log("Home screen focused, fetching records...");
+      dispatch(fetchRecords());
+    }, [dispatch])
+  );
 
   // Lấy 5 record gần nhất dựa trên date
   const recentRecords = useMemo(() => {

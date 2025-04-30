@@ -27,11 +27,13 @@ interface RecordingInfo {
 interface AudioSectionProps {
   recordings: RecordingInfo[];
   setRecordings: React.Dispatch<React.SetStateAction<RecordingInfo[]>>;
+  onClearAll?: () => Promise<void>;
 }
 
 const AudioSection: React.FC<AudioSectionProps> = ({
   recordings,
   setRecordings,
+  onClearAll,
 }) => {
   const [recording, setRecording] = useState<Audio.Recording | undefined>(
     undefined
@@ -424,7 +426,12 @@ const AudioSection: React.FC<AudioSectionProps> = ({
       setCurrentSound(null);
     }
 
-    setRecordings([]);
+    // Nếu có callback onClearAll, sử dụng nó, nếu không thì xóa recordings trực tiếp
+    if (onClearAll) {
+      onClearAll();
+    } else {
+      setRecordings([]);
+    }
   }
 
   function getRecordingLines() {
