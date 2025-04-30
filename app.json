@@ -24,7 +24,8 @@
         "foregroundImage": "./src/assets/images/react_temp/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.dkdh.DayMood"
+      "package": "com.dkdh.DayMood",
+      "permissions": ["INTERNET"]
     },
     "web": {
       "bundler": "metro",

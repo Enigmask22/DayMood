@@ -1,13 +1,37 @@
 import RecordsList from "src/components/homepage/RecordsList";
 import Greeting from "src/components/homepage/Greeting";
 import { HOME_COLOR } from "src/utils/constant";
-import React from "react";
+import React, { useEffect, useMemo } from "react";
 import { View, Text, StyleSheet, Dimensions } from "react-native";
 import MoodPromptCard from "src/components/homepage/MoodPromptCard";
-import { useAppSelector } from "src/store";
+import { useAppSelector, useAppDispatch } from "src/store";
+import { fetchRecords } from "src/store/slices/recordSlice";
+
 const { width, height } = Dimensions.get("window");
 const HomePage = () => {
-  const records = useAppSelector((state) => state.records.records);
+  const dispatch = useAppDispatch();
+  const { records, loading, error } = useAppSelector((state) => state.records);
+
+  useEffect(() => {
+    dispatch(fetchRecords());
+  }, [dispatch]);
+
+  // Lấy 5 record gần nhất dựa trên date
+  const recentRecords = useMemo(() => {
+    if (!records || records.length === 0) return [];
+
+    // Sắp xếp records theo date giảm dần (mới nhất trước)
+    const sortedRecords = [...records].sort((a, b) => {
+      // Tìm date từ trong chuỗi date (dạng WEEKDAY, MONTH DAY HH:MM)
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      return dateB.getTime() - dateA.getTime();
+    });
+
+    // Chỉ lấy 5 record đầu tiên
+    return sortedRecords.slice(0, 5);
+  }, [records]);
+
   return (
     <View style={styles.container}>
       <View style={styles.introContainer}>
@@ -15,7 +39,7 @@ const HomePage = () => {
         <MoodPromptCard />
       </View>
       <View style={styles.listContainer}>
-        <RecordsList records={records} />
+        <RecordsList records={recentRecords} loading={loading} error={error} />
       </View>
     </View>
   );

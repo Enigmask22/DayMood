@@ -4,10 +4,14 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { Image } from "expo-image";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import Feather from "@expo/vector-icons/Feather";
 import { HOME_COLOR, EMOJI_COLOR } from "src/utils/constant";
+import { useState } from "react";
+
 const { width, height } = Dimensions.get("window");
 export interface FeelingRecordProps {
   date: string;
@@ -30,6 +34,8 @@ const FeelingRecord = ({
   emoji = "sad",
   feeling = "I'm feeling bad",
 }: FeelingRecordProps) => {
+  const [showOptions, setShowOptions] = useState(false);
+
   // Use the emojiMap to get the correct image source
   const emojiSource = emojiMap[emoji] || emojiMap["normal"]; // Fallback to a default emoji if not found
 
@@ -53,6 +59,18 @@ const FeelingRecord = ({
 
   const buttonColor = getButtonColor();
 
+  const handleViewRecord = () => {
+    setShowOptions(false);
+    // Logic để xem chi tiết record
+    console.log("Xem chi tiết record");
+  };
+
+  const handleEditRecord = () => {
+    setShowOptions(false);
+    // Logic để chỉnh sửa record
+    console.log("Chỉnh sửa record");
+  };
+
   return (
     <View style={styles.container}>
       {/* Emoji Section */}
@@ -71,12 +89,49 @@ const FeelingRecord = ({
           <Text style={styles.buttonText}>{feeling}</Text>
         </TouchableOpacity>
       </View>
-      <MaterialCommunityIcons
-        name="dots-horizontal"
-        size={width * 0.06}
-        color="black"
-        style={styles.options}
-      />
+
+      {/* Menu Options Container */}
+      <View style={styles.optionsContainer}>
+        {/* Three dots button */}
+        <TouchableOpacity
+          onPress={() => setShowOptions(!showOptions)}
+          style={styles.optionsButton}
+        >
+          <MaterialCommunityIcons
+            name="dots-horizontal"
+            size={width * 0.06}
+            color="black"
+          />
+        </TouchableOpacity>
+
+        {/* Options Menu */}
+        {showOptions && (
+          <View style={styles.optionsMenu}>
+            <TouchableOpacity
+              style={styles.optionItem}
+              onPress={handleViewRecord}
+            >
+              <Feather name="eye" size={width * 0.05} color="#333" />
+              <Text style={styles.optionText}>View</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.optionItem}
+              onPress={handleEditRecord}
+            >
+              <Feather name="edit-2" size={width * 0.05} color="#333" />
+              <Text style={styles.optionText}>Edit</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+
+      {/* Invisible Touchable Overlay to close menu when clicking outside */}
+      {showOptions && (
+        <TouchableWithoutFeedback onPress={() => setShowOptions(false)}>
+          <View style={styles.touchableOverlay} />
+        </TouchableWithoutFeedback>
+      )}
     </View>
   );
 };
@@ -114,7 +169,6 @@ const styles = StyleSheet.create({
     width: width * 0.5,
     textAlign: "center",
   },
-
   imageContainer: {
     width: width * 0.18,
     height: width * 0.18,
@@ -133,10 +187,52 @@ const styles = StyleSheet.create({
     fontSize: width * 0.04,
     fontWeight: "600",
   },
-  options: {
+  optionsContainer: {
     position: "absolute",
     top: height * 0.012,
     right: width * 0.025,
+    zIndex: 10,
+  },
+  optionsButton: {
+    padding: width * 0.01,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  optionsMenu: {
+    position: "absolute",
+    top: height * 0.025, // Đặt menu bên dưới nút 3 chấm
+    right: 0,
+    backgroundColor: "white",
+    borderRadius: width * 0.03,
+    padding: width * 0.02,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    width: width * 0.35,
+    zIndex: 20,
+  },
+  optionItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: height * 0.012,
+    paddingHorizontal: width * 0.03,
+    gap: width * 0.02,
+  },
+  optionText: {
+    fontFamily: "Quicksand-Medium",
+    fontSize: width * 0.04,
+    color: "#333",
+  },
+  touchableOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "transparent",
+    zIndex: 5,
   },
 });
 

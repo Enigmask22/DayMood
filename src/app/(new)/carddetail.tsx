@@ -5,6 +5,7 @@ import {
   SafeAreaView,
   ScrollView,
   Alert,
+  Text,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { wp, hp } from "@/components/newemoji/utils";
@@ -13,6 +14,8 @@ import { Audio } from "expo-av";
 import * as FileSystem from "expo-file-system";
 import "react-native-get-random-values"; // Cần thiết cho uuid
 import { uploadFileFromBase64, uploadAudioFromUri } from "@/utils/fileService";
+import { ACTIVITIES } from "@/utils/constant";
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 
 // Import các component đã tách
 import DateTimeHeader from "@/components/carddetail/DateTimeHeader";
@@ -65,6 +68,33 @@ const extractTitleAndContent = (noteText: string) => {
   } else {
     return { title: "", content: noteText };
   }
+};
+
+// Hiển thị danh sách activities đã chọn
+const ActivitiesList = ({ activities }: { activities: number[] }) => {
+  if (!activities || activities.length === 0) return null;
+
+  return (
+    <View style={styles.activitiesContainer}>
+      <View style={styles.activitiesHeader}>
+        <FontAwesome5 name="layer-group" size={wp(4.5)} color="#16A34A" />
+        <Text style={styles.activitiesTitle}>Activities</Text>
+      </View>
+      <View style={styles.activitiesList}>
+        {activities.map((activityId) => {
+          const activity = ACTIVITIES.find((a) => a.id === activityId);
+          if (!activity) return null;
+
+          return (
+            <View key={activityId} style={styles.activityItem}>
+              <FontAwesome5 name={activity.icon} size={wp(4)} color="#16A34A" />
+              <Text style={styles.activityName}>{activity.name}</Text>
+            </View>
+          );
+        })}
+      </View>
+    </View>
+  );
 };
 
 export default function CardDetailScreen() {
@@ -417,6 +447,7 @@ export default function CardDetailScreen() {
         user_id: 1,
         activity_id: activities,
         status: "ACTIVE",
+        date: date.toISOString(),
       };
 
       console.log("Bắt đầu tạo record:", recordData);
@@ -444,7 +475,8 @@ export default function CardDetailScreen() {
       }
 
       const recordResult = await recordResponse.json();
-      const recordId = recordResult.id;
+      console.log("Đã tạo record với ID:", recordResult);
+      const recordId = recordResult.data.id;
       console.log("Đã tạo record với ID:", recordId);
 
       // Upload hình ảnh lên Supabase và lưu thông tin vào database
@@ -508,6 +540,7 @@ export default function CardDetailScreen() {
                 fkey: fileInfo.key,
                 size: fileInfo.size,
                 record_id: recordId,
+                user_id: 1,
               }),
             });
           } catch (error) {
@@ -563,6 +596,9 @@ export default function CardDetailScreen() {
           {/* Hiển thị emoji tương ứng với mood */}
           <EmojiDisplay moodId={moodId} />
 
+          {/* Hiển thị danh sách activities nếu có */}
+          {activities.length > 0 && <ActivitiesList activities={activities} />}
+
           {/* Hiển thị ghi chú - đã tách title và content trước khi truyền vào NoteCard */}
           {note && <NoteCard title={noteTitle} content={noteContent} />}
 
@@ -598,5 +634,55 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: wp(5),
+  },
+  // Styles cho phần activities
+  activitiesContainer: {
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    borderRadius: wp(4),
+    padding: wp(4),
+    marginVertical: hp(1.5),
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: "rgba(34, 197, 94, 0.1)",
+  },
+  activitiesHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: hp(1.5),
+    paddingBottom: hp(0.8),
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(34, 197, 94, 0.15)",
+  },
+  activitiesTitle: {
+    fontSize: wp(4.2),
+    fontFamily: "Quicksand-Bold",
+    color: "#16A34A",
+    marginLeft: wp(2.5),
+    letterSpacing: 0.5,
+  },
+  activitiesList: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: wp(2.5),
+  },
+  activityItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F0FDF4",
+    paddingHorizontal: wp(3.5),
+    paddingVertical: hp(0.8),
+    borderRadius: wp(10),
+    gap: wp(2),
+    borderWidth: 1,
+    borderColor: "rgba(34, 197, 94, 0.2)",
+  },
+  activityName: {
+    fontSize: wp(3.5),
+    fontFamily: "Quicksand-SemiBold",
+    color: "#166534",
   },
 });

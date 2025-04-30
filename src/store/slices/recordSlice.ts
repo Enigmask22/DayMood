@@ -1,5 +1,7 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
 import Randomstring from "randomstring";
+import { format } from "date-fns";
+import { MOODS } from "src/utils/constant";
 
 // Define Record interface
 interface Record {
@@ -9,6 +11,19 @@ interface Record {
   feeling: string;
 }
 
+// Define API record interface
+interface ApiRecord {
+  id: number;
+  title: string;
+  content: string;
+  status: string;
+  created_time: string;
+  updated_time: string;
+  date: string;
+  mood_id: number;
+  user_id: number;
+}
+
 // Define initial state
 interface RecordState {
   records: Record[];
@@ -16,39 +31,71 @@ interface RecordState {
   error: string | null;
 }
 
+// Fetch records from API
+export const fetchRecords = createAsyncThunk(
+  "records/fetchRecords",
+  async (_, { rejectWithValue }) => {
+    try {
+      console.log("Bắt đầu gọi API lấy dữ liệu...");
+      const response = await fetch(
+        "http://192.168.2.7:8000/api/v1/records?user_id=1"
+      );
+      console.log("API status:", response.status);
+
+      if (!response.ok) {
+        throw new Error("Không thể tải dữ liệu");
+      }
+
+      const data = await response.json();
+      console.log("Nhận được dữ liệu API:", JSON.stringify(data));
+
+      // Kiểm tra cấu trúc dữ liệu
+      if (
+        data &&
+        data.data &&
+        data.data.items &&
+        Array.isArray(data.data.items)
+      ) {
+        console.log("Dữ liệu có cấu trúc { data: { items: [] } }");
+        return data.data.items;
+      } else if (data && data.items && Array.isArray(data.items)) {
+        console.log("Dữ liệu có cấu trúc { items: [] }");
+        return data.items;
+      } else if (data && Array.isArray(data)) {
+        console.log("Dữ liệu là một mảng trực tiếp");
+        return data;
+      } else {
+        console.log("Cấu trúc dữ liệu không xác định:", typeof data);
+        // Trả về mảng rỗng nếu không có dữ liệu hợp lệ
+        return [];
+      }
+    } catch (error: any) {
+      console.error("Lỗi khi gọi API:", error.message);
+      return rejectWithValue(error.message || "Đã xảy ra lỗi");
+    }
+  }
+);
+
+// Chuyển đổi dữ liệu từ API sang định dạng phù hợp
+const convertApiRecordToRecord = (apiRecord: ApiRecord): Record => {
+  // Format date từ ISO format sang định dạng ngày và giờ hiển thị
+  const recordDate = new Date(apiRecord.date);
+  const formattedDate = format(recordDate, "EEEE, MMMM d HH:mm").toUpperCase();
+
+  // Tìm tên emoji dựa trên mood_id
+  const mood = MOODS.find((m) => m.id === apiRecord.mood_id);
+  const emojiName = mood ? mood.name.toLowerCase() : "normal";
+
+  return {
+    id: apiRecord.id.toString(),
+    date: formattedDate,
+    emoji: emojiName,
+    feeling: apiRecord.title || "I'm feeling something",
+  };
+};
+
 const initialState: RecordState = {
-  records: [
-    {
-      id: Randomstring.generate(7),
-      date: "THURSDAY, MARCH 6 20:00",
-      emoji: "sad",
-      feeling: "I'm feeling bad",
-    },
-    {
-      id: Randomstring.generate(7),
-      date: "FRIDAY, MARCH 7 18:00",
-      emoji: "excellent",
-      feeling: "I'm feeling great",
-    },
-    {
-      id: Randomstring.generate(7),
-      date: "SATURDAY, MARCH 8 14:00",
-      emoji: "joyful",
-      feeling: "I'm feeling joyful",
-    },
-    {
-      id: Randomstring.generate(7),
-      date: "SUNDAY, MARCH 9 12:00",
-      emoji: "normal",
-      feeling: "I'm feeling normal",
-    },
-    {
-      id: Randomstring.generate(7),
-      date: "MONDAY, MARCH 10 10:00",
-      emoji: "angry",
-      feeling: "I'm feeling angry",
-    },
-  ],
+  records: [],
   loading: false,
   error: null,
 };
@@ -58,22 +105,43 @@ export const recordSlice = createSlice({
   name: "records",
   initialState,
   reducers: {
-    addRecord: (state, action: PayloadAction<{
+    addRecord: (
+      state,
+      action: PayloadAction<{
         date: string;
         emoji: string;
         feeling: string;
-    }>) => {
-        const newRecord: Record = {
-            id: Randomstring.generate(7),
-            date: action.payload.date,
-            emoji: action.payload.emoji,
-            feeling: action.payload.feeling,
-        };
-        state.records.push(newRecord);
+      }>
+    ) => {
+      const newRecord: Record = {
+        id: Randomstring.generate(7),
+        date: action.payload.date,
+        emoji: action.payload.emoji,
+        feeling: action.payload.feeling,
+      };
+      state.records.push(newRecord);
     },
     removeRecord: (state, action: PayloadAction<{ id: string }>) => {
-        state.records = state.records.filter((record) => record.id !== action.payload.id);
+      state.records = state.records.filter(
+        (record) => record.id !== action.payload.id
+      );
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchRecords.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchRecords.fulfilled, (state, action) => {
+        state.loading = false;
+        // Chuyển đổi dữ liệu API thành định dạng record
+        state.records = action.payload.map(convertApiRecordToRecord);
+      })
+      .addCase(fetchRecords.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      });
   },
 });
 

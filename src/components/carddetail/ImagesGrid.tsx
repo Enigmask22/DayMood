@@ -24,7 +24,7 @@ const ImagesGrid: React.FC<ImagesGridProps> = ({ images }) => {
   if (!hasImages) {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>Hình ảnh</Text>
+        <Text style={styles.title}>Image</Text>
         <View style={styles.noImagesContainer}>
           <Text style={styles.noImagesText}>Không có hình ảnh nào</Text>
         </View>
@@ -55,7 +55,7 @@ const ImagesGrid: React.FC<ImagesGridProps> = ({ images }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Hình ảnh</Text>
+      <Text style={styles.title}>Image</Text>
       <View style={styles.imagesGrid}>
         {images.map((imageUri, index) => {
           console.log(
