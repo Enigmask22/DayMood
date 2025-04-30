@@ -18,8 +18,8 @@ const ImagesGrid: React.FC<ImagesGridProps> = ({ images }) => {
   // Kiểm tra xem có ảnh không
   const hasImages = images && images.length > 0;
 
-  console.log("ImagesGrid rendered - hasImages:", hasImages);
-  console.log("ImagesGrid - images:", images);
+  // console.log("ImagesGrid rendered - hasImages:", hasImages);
+  // console.log("ImagesGrid - images:", images);
 
   if (!hasImages) {
     return (

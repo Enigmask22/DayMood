@@ -2,39 +2,9 @@ import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Image } from "expo-image";
 import { wp, hp } from "./utils";
+import { MOODS } from "@/utils/constant";
 
-export const moods = [
-  {
-    id: 1,
-    name: "Sad",
-    emoji: require("@/assets/emoji/sad.gif"),
-    color: "#7E7E7E",
-  },
-  {
-    id: 2,
-    name: "Angry",
-    emoji: require("@/assets/emoji/angry.gif"),
-    color: "#EF0808",
-  },
-  {
-    id: 3,
-    name: "Normal",
-    emoji: require("@/assets/emoji/normal.gif"),
-    color: "#540BFF",
-  },
-  {
-    id: 4,
-    name: "Joyful",
-    emoji: require("@/assets/emoji/joyful.gif"),
-    color: "#FCA10C",
-  },
-  {
-    id: 5,
-    name: "Excellent",
-    emoji: require("@/assets/emoji/excellent.gif"),
-    color: "#22C55E",
-  },
-];
+export const moods = MOODS;
 
 interface MoodSelectorProps {
   selectedMood: number | null;

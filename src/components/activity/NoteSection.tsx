@@ -23,15 +23,19 @@ const NoteSection: React.FC<NoteSectionProps> = ({
   isFullNoteOpen,
   onToggleFullNote,
 }) => {
-  // Xử lý hiển thị nội dung ghi chú trong input box
-  const getPreviewText = () => {
-    if (!note) return "";
+  // Tách tiêu đề và nội dung từ note
+  const extractTitleAndContent = (noteText: string) => {
+    if (!noteText) return { title: "", content: "" };
 
-    // Giới hạn hiển thị khoảng 50 ký tự
-    const maxPreviewLength = 50;
-    if (note.length <= maxPreviewLength) return note;
-
-    return note.substring(0, maxPreviewLength) + "...";
+    const lines = noteText.split("\n");
+    if (lines.length > 1) {
+      return {
+        title: lines[0],
+        content: lines.slice(1).join("\n").trim(),
+      };
+    } else {
+      return { title: "", content: noteText };
+    }
   };
 
   const handleCloseEditor = () => {
@@ -40,6 +44,17 @@ const NoteSection: React.FC<NoteSectionProps> = ({
 
   const handleSaveNote = (newNote: string) => {
     onChangeNote(newNote);
+  };
+
+  // Lấy tiêu đề và nội dung từ note
+  const { title, content } = extractTitleAndContent(note);
+
+  // Tạo preview cho nội dung
+  const getContentPreview = (text: string) => {
+    if (!text) return "";
+    const maxPreviewLength = 50;
+    if (text.length <= maxPreviewLength) return text;
+    return text.substring(0, maxPreviewLength) + "...";
   };
 
   return (
@@ -68,15 +83,24 @@ const NoteSection: React.FC<NoteSectionProps> = ({
         onPress={onToggleFullNote}
         activeOpacity={0.9}
       >
-        <Text
-          style={[
-            styles.noteInputPreview,
-            !note && styles.noteInputPlaceholder,
-          ]}
-          numberOfLines={3}
-        >
-          {note ? getPreviewText() : "Write something..."}
-        </Text>
+        {note ? (
+          <>
+            {title ? <Text style={styles.noteTitleText}>{title}</Text> : null}
+
+            {content ? (
+              <Text style={[styles.noteInputPreview]} numberOfLines={2}>
+                {getContentPreview(content)}
+              </Text>
+            ) : null}
+          </>
+        ) : (
+          <Text
+            style={[styles.noteInputPreview, styles.noteInputPlaceholder]}
+            numberOfLines={3}
+          >
+            Write something...
+          </Text>
+        )}
       </TouchableOpacity>
 
       {/* Full Note Editor Modal */}
@@ -136,6 +160,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 1,
+  },
+  noteTitleText: {
+    fontFamily: "Quicksand-Bold",
+    fontSize: wp(4.5),
+    color: "#222",
+    marginBottom: hp(0.5),
+    fontWeight: "bold",
   },
   noteInputPreview: {
     fontFamily: "Quicksand-Regular",

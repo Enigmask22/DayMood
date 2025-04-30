@@ -88,7 +88,7 @@ export default function ActivityScreen() {
       activities: selectedActivities,
       note,
       recordings,
-      images,
+      // images,
     });
 
     // Chuẩn bị dữ liệu recordings để truyền qua params
@@ -126,10 +126,10 @@ export default function ActivityScreen() {
       "Số lượng ảnh trước khi chuyển sang carddetail:",
       images.length
     );
-    console.log("Nội dung mảng images:", images);
+    // console.log("Nội dung mảng images:", images);
 
     const imagesJson = images.length > 0 ? JSON.stringify(images) : "";
-    console.log("Images JSON đã chuyển đổi:", imagesJson);
+    // console.log("Images JSON đã chuyển đổi:", imagesJson);
 
     // Chuyển đổi dữ liệu recordings sang JSON
     const recordingsJson =
@@ -147,7 +147,7 @@ export default function ActivityScreen() {
         images: imagesJson,
       };
 
-      console.log("Params truyền sang carddetail:", params);
+      // console.log("Params truyền sang carddetail:", params);
 
       router.push({
         pathname: "/(new)/carddetail" as any,

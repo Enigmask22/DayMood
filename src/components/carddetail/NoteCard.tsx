@@ -12,19 +12,16 @@ const moodTitles: { [key: number]: string } = {
 };
 
 interface NoteCardProps {
-  moodId: number;
-  note: string;
+  title: string;
+  content: string;
 }
 
-const NoteCard: React.FC<NoteCardProps> = ({ moodId, note }) => {
-  // Lấy tiêu đề tương ứng với mood
-  const title = moodTitles[moodId] || "How I feel today";
-
+const NoteCard: React.FC<NoteCardProps> = ({ title, content }) => {
   return (
     <View style={styles.noteCard}>
       <Text style={styles.noteTitle}>{title}</Text>
       <View style={styles.titleUnderline} />
-      <Text style={styles.noteText}>{note}</Text>
+      <Text style={styles.noteText}>{content}</Text>
     </View>
   );
 };

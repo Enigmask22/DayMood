@@ -2,27 +2,9 @@ import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { wp, hp } from "../newemoji/utils";
-
+import { ACTIVITIES } from "@/utils/constant";
 // Định nghĩa các hoạt động
-const activities = [
-  { id: 1, name: "Work", icon: "briefcase" },
-  { id: 2, name: "Sport", icon: "running" },
-  { id: 3, name: "Walking", icon: "walking" },
-  { id: 4, name: "Exercise", icon: "bicycle" },
-  { id: 5, name: "Music", icon: "headphones" },
-  { id: 6, name: "Dishes", icon: "utensils" },
-  { id: 7, name: "Reading", icon: "book-open" },
-  { id: 8, name: "Study", icon: "book" },
-  { id: 9, name: "Sleep", icon: "bed" },
-  { id: 10, name: "Camping", icon: "campground" },
-  { id: 11, name: "Shopping", icon: "shopping-cart" },
-  { id: 12, name: "Travel", icon: "map-marker-alt" },
-  { id: 13, name: "Chat", icon: "comments" },
-  { id: 14, name: "Coffee", icon: "coffee" },
-  { id: 15, name: "Swimming", icon: "swimmer" },
-  { id: 16, name: "More", icon: "plus" },
-];
-
+const activities = ACTIVITIES;
 interface ActivitiesSelectorProps {
   selectedActivities: number[];
   onActivitySelect: (activityId: number) => void;

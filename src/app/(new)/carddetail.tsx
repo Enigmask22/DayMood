@@ -11,6 +11,8 @@ import { wp, hp } from "@/components/newemoji/utils";
 import { format } from "date-fns";
 import { Audio } from "expo-av";
 import * as FileSystem from "expo-file-system";
+import "react-native-get-random-values"; // Cần thiết cho uuid
+import { uploadFileFromBase64, uploadAudioFromUri } from "@/utils/fileService";
 
 // Import các component đã tách
 import DateTimeHeader from "@/components/carddetail/DateTimeHeader";
@@ -50,6 +52,21 @@ interface RecordingData {
   name?: string;
 }
 
+// Hàm trích xuất tiêu đề và nội dung từ ghi chú
+const extractTitleAndContent = (noteText: string) => {
+  if (!noteText) return { title: "", content: "" };
+
+  const lines = noteText.split("\n");
+  if (lines.length > 1) {
+    return {
+      title: lines[0],
+      content: lines.slice(1).join("\n").trim(),
+    };
+  } else {
+    return { title: "", content: noteText };
+  }
+};
+
 export default function CardDetailScreen() {
   // Nhận các tham số từ navigation
   const params = useLocalSearchParams();
@@ -67,14 +84,14 @@ export default function CardDetailScreen() {
   // Tải dữ liệu hình ảnh từ params
   useEffect(() => {
     try {
-      console.log("params.images:", params.images);
+      // console.log("params.images:", params.images);
       if (
         params.images &&
         typeof params.images === "string" &&
         params.images !== ""
       ) {
         const parsedImages = JSON.parse(params.images);
-        console.log("Ảnh đã parse:", parsedImages);
+        // console.log("Ảnh đã parse:", parsedImages);
 
         // Đơn giản hóa cách xử lý - chỉ cần mảng URI hợp lệ
         if (Array.isArray(parsedImages)) {
@@ -88,7 +105,7 @@ export default function CardDetailScreen() {
                 uri.startsWith("http"))
           );
 
-          console.log("Đường dẫn ảnh hợp lệ:", validImages);
+          // console.log("Đường dẫn ảnh hợp lệ:", validImages);
           setImages(validImages);
           console.log("Số lượng ảnh đã set:", validImages.length);
         }
@@ -357,6 +374,12 @@ export default function CardDetailScreen() {
     }
   }, [params.activities]);
 
+  // Extract title and content from note
+  const { title: extractedTitle, content: noteContent } =
+    extractTitleAndContent(note);
+  // Use title from note if available, otherwise use default from mood
+  const noteTitle = extractedTitle || moodTitles[moodId] || "How I feel today";
+
   // Dữ liệu card
   const cardData = {
     date: formattedTime,
@@ -374,11 +397,139 @@ export default function CardDetailScreen() {
   };
 
   // Xử lý quay về trang chính
-  const handleBackToHome = () => {
+  const handleBackToHome = async () => {
     try {
+      // Hiển thị loading alert
+      Alert.alert("Đang xử lý", "Đang lưu dữ liệu và tải lên file media...", [
+        { text: "OK", style: "default" },
+      ]);
+
+      // Lấy tiêu đề từ note nếu có, hoặc sử dụng tiêu đề từ mood
+      const { title: extractedTitle } = extractTitleAndContent(note);
+      const noteTitle =
+        extractedTitle || moodTitles[moodId] || "How I feel today";
+
+      // Chuẩn bị dữ liệu record với dữ liệu từ params - theo cấu trúc API mới
+      const recordData = {
+        title: noteTitle,
+        content: noteContent,
+        mood_id: moodId,
+        user_id: 1,
+        activity_id: activities,
+        status: "ACTIVE",
+      };
+
+      console.log("Bắt đầu tạo record:", recordData);
+
+      // Tạo record với activities đã đính kèm
+      const recordResponse = await fetch(
+        "http://192.168.2.7:8000/api/v1/records",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(recordData),
+        }
+      );
+
+      if (!recordResponse.ok) {
+        const responseText = await recordResponse.text();
+        console.log("Response status:", recordResponse.status);
+        console.log("Response text:", responseText);
+        throw new Error(
+          "Không thể tạo record. Status: " +
+            recordResponse.status +
+            " - " +
+            responseText
+        );
+      }
+
+      const recordResult = await recordResponse.json();
+      const recordId = recordResult.id;
+      console.log("Đã tạo record với ID:", recordId);
+
+      // Upload hình ảnh lên Supabase và lưu thông tin vào database
+      if (images.length > 0) {
+        console.log(`Đang tải lên ${images.length} hình ảnh`);
+
+        // Upload từng hình ảnh lên Supabase
+        for (const imageBase64 of images) {
+          try {
+            // Upload lên Supabase Storage
+            const fileInfo = await uploadFileFromBase64(
+              imageBase64,
+              "image/jpeg",
+              "images",
+              `user_1` // thay bằng user ID thực
+            );
+
+            console.log("File đã upload:", fileInfo);
+
+            // Lưu thông tin file vào database
+            await fetch("http://192.168.2.7:8000/api/v1/files", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                fname: fileInfo.fileName,
+                type: fileInfo.fileType,
+                url: fileInfo.url,
+                fkey: fileInfo.key,
+                size: fileInfo.size,
+                record_id: recordId,
+                user_id: 1,
+              }),
+            });
+          } catch (error) {
+            console.error("Lỗi khi upload hình ảnh:", error);
+          }
+        }
+      }
+
+      // Upload recordings
+      if (recordings.length > 0) {
+        console.log(`Đang tải lên ${recordings.length} bản ghi âm`);
+
+        for (const recording of recordings) {
+          try {
+            // Upload lên Supabase Storage
+            const fileInfo = await uploadAudioFromUri(
+              recording.uri,
+              recording.isMusic ? "audio/mpeg" : "audio/m4a",
+              `user_1` // thay bằng user ID thực
+            );
+
+            // Lưu thông tin file vào database
+            await fetch("http://192.168.2.7:8000/api/v1/files", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                fname: recording.name || `Recording ${recording.id}`,
+                type: recording.isMusic ? "audio/mpeg" : "audio/m4a",
+                url: fileInfo.url,
+                fkey: fileInfo.key,
+                size: fileInfo.size,
+                record_id: recordId,
+              }),
+            });
+          } catch (error) {
+            console.error("Lỗi khi upload bản ghi âm:", error);
+          }
+        }
+      }
+
+      // Hiển thị thông báo thành công
+      Alert.alert("Thành công", "Đã lưu ghi chú và tải lên media thành công!", [
+        { text: "OK", style: "default" },
+      ]);
+
+      // Điều hướng về trang chủ
       router.push("/(main)" as any);
     } catch (error) {
-      console.error("Navigation error:", error);
+      console.error("Lỗi khi lưu dữ liệu:", error);
+      Alert.alert(
+        "Lỗi",
+        "Không thể lưu dữ liệu. Vui lòng thử lại sau. " + error,
+        [{ text: "OK", style: "cancel" }]
+      );
     }
   };
 
@@ -412,8 +563,8 @@ export default function CardDetailScreen() {
           {/* Hiển thị emoji tương ứng với mood */}
           <EmojiDisplay moodId={moodId} />
 
-          {/* Hiển thị ghi chú */}
-          {note && <NoteCard moodId={moodId} note={note} />}
+          {/* Hiển thị ghi chú - đã tách title và content trước khi truyền vào NoteCard */}
+          {note && <NoteCard title={noteTitle} content={noteContent} />}
 
           {/* Hiển thị hình ảnh nếu có */}
           {images.length > 0 && <ImagesGrid images={images} />}
