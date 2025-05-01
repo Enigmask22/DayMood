@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, SafeAreaView, ScrollView } from "react-native";
+import {
+  View,
+  StyleSheet,
+  SafeAreaView,
+  ScrollView,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import DateTimeSelector from "@/components/newemoji/DateTimeSelector";
 import MoodSelector from "@/components/newemoji/MoodSelector";
@@ -8,6 +15,7 @@ import SelectedEmoji from "@/components/newemoji/SelectedEmoji";
 import ActionButtons from "@/components/newemoji/ActionButtons";
 import Header from "@/components/newemoji/Header";
 import { wp, hp } from "@/components/newemoji/utils";
+import { API_ENDPOINTS, DEFAULT_USER_ID } from "@/utils/config";
 
 export default function NewEmojiScreen() {
   // Lấy tham số initialDate từ URL
@@ -22,6 +30,7 @@ export default function NewEmojiScreen() {
     }
     return new Date();
   });
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // Cập nhật date khi initialDate thay đổi
   useEffect(() => {
@@ -34,13 +43,59 @@ export default function NewEmojiScreen() {
     setSelectedMood(id);
   };
 
-  const handleSave = () => {
-    // Xử lý lưu trạng thái mood
-    // Thêm vào hệ thống lưu trữ tại đây
+  const handleSave = async () => {
+    // Kiểm tra xem mood đã được chọn hay chưa
+    if (!selectedMood) {
+      Alert.alert("Thông báo", "Vui lòng chọn tâm trạng trước khi lưu");
+      return;
+    }
+
     try {
-      router.push("/(main)" as any);
-    } catch (error) {
-      console.error("Navigation error:", error);
+      setIsLoading(true);
+
+      // Chuẩn bị dữ liệu gửi đi
+      const recordData = {
+        date: date.toISOString(),
+        mood_id: selectedMood,
+        user_id: DEFAULT_USER_ID,
+        status: "ACTIVE",
+      };
+
+      console.log("Gửi dữ liệu:", recordData);
+
+      // Gọi API để lưu record
+      const response = await fetch(API_ENDPOINTS.RECORDS, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(recordData),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `Lỗi khi lưu dữ liệu: ${response.status} - ${errorText}`
+        );
+      }
+
+      const result = await response.json();
+      console.log("Kết quả từ API:", result);
+
+      // Hiển thị thông báo thành công
+      Alert.alert("Thành công", "Đã lưu cảm xúc thành công!", [
+        {
+          text: "OK",
+          onPress: () => {
+            router.push("/(main)" as any);
+          },
+        },
+      ]);
+    } catch (error: any) {
+      console.error("Lỗi khi lưu dữ liệu:", error);
+      Alert.alert("Lỗi", `Không thể lưu dữ liệu: ${error.message}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -80,7 +135,11 @@ export default function NewEmojiScreen() {
           />
           <ActivityButton onPress={handleSelectActivities} />
           <SelectedEmoji selectedMood={selectedMood} />
-          <ActionButtons onBack={handleBack} onSave={handleSave} />
+          <ActionButtons
+            onBack={handleBack}
+            onSave={handleSave}
+            isLoading={isLoading}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>

@@ -16,6 +16,7 @@ import "react-native-get-random-values"; // Cần thiết cho uuid
 import { uploadFileFromBase64, uploadAudioFromUri } from "@/utils/fileService";
 import { ACTIVITIES } from "@/utils/constant";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
+import { API_ENDPOINTS, DEFAULT_USER_ID } from "@/utils/config";
 
 // Import các component đã tách
 import DateTimeHeader from "@/components/carddetail/DateTimeHeader";
@@ -444,7 +445,7 @@ export default function CardDetailScreen() {
         title: noteTitle,
         content: noteContent,
         mood_id: moodId,
-        user_id: 1,
+        user_id: DEFAULT_USER_ID,
         activity_id: activities,
         status: "ACTIVE",
         date: date.toISOString(),
@@ -453,14 +454,11 @@ export default function CardDetailScreen() {
       console.log("Bắt đầu tạo record:", recordData);
 
       // Tạo record với activities đã đính kèm
-      const recordResponse = await fetch(
-        "http://192.168.2.7:8000/api/v1/records",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(recordData),
-        }
-      );
+      const recordResponse = await fetch(API_ENDPOINTS.RECORDS, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(recordData),
+      });
 
       if (!recordResponse.ok) {
         const responseText = await recordResponse.text();
@@ -491,13 +489,13 @@ export default function CardDetailScreen() {
               imageBase64,
               "image/jpeg",
               "images",
-              `user_1` // thay bằng user ID thực
+              `user_${DEFAULT_USER_ID}` // Sử dụng biến DEFAULT_USER_ID
             );
 
             console.log("File đã upload:", fileInfo);
 
             // Lưu thông tin file vào database
-            await fetch("http://192.168.2.7:8000/api/v1/files", {
+            await fetch(`${API_ENDPOINTS.FILES}`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -507,7 +505,7 @@ export default function CardDetailScreen() {
                 fkey: fileInfo.key,
                 size: fileInfo.size,
                 record_id: recordId,
-                user_id: 1,
+                user_id: DEFAULT_USER_ID,
               }),
             });
           } catch (error) {
@@ -526,11 +524,11 @@ export default function CardDetailScreen() {
             const fileInfo = await uploadAudioFromUri(
               recording.uri,
               recording.isMusic ? "audio/mpeg" : "audio/m4a",
-              `user_1` // thay bằng user ID thực
+              `user_${DEFAULT_USER_ID}` // Sử dụng biến DEFAULT_USER_ID
             );
 
             // Lưu thông tin file vào database
-            await fetch("http://192.168.2.7:8000/api/v1/files", {
+            await fetch(`${API_ENDPOINTS.FILES}`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -540,7 +538,7 @@ export default function CardDetailScreen() {
                 fkey: fileInfo.key,
                 size: fileInfo.size,
                 record_id: recordId,
-                user_id: 1,
+                user_id: DEFAULT_USER_ID,
                 duration: recording.duration || "00:00",
               }),
             });
@@ -584,13 +582,13 @@ export default function CardDetailScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
-          {/* Hiển thị ngày và thời gian */}
+          {/* Hiển thị ngày và thời gian - cập nhật tên prop từ onBack sang onSubmit */}
           <DateTimeHeader
             dayName={dayName}
             dayNumber={dayNumber}
             monthName={monthName}
             formattedTime={formattedTime}
-            onBack={handleBackToHome}
+            onSubmit={handleBackToHome}
             onEdit={handleEdit}
           />
 

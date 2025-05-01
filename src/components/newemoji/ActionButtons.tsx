@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { wp, hp } from "./utils";
 import { LinearGradient } from "expo-linear-gradient";
@@ -7,9 +13,14 @@ import { LinearGradient } from "expo-linear-gradient";
 interface ActionButtonsProps {
   onBack: () => void;
   onSave: () => void;
+  isLoading?: boolean;
 }
 
-const ActionButtons: React.FC<ActionButtonsProps> = ({ onBack, onSave }) => {
+const ActionButtons: React.FC<ActionButtonsProps> = ({
+  onBack,
+  onSave,
+  isLoading = false,
+}) => {
   const [backPressed, setBackPressed] = useState(false);
   const [savePressed, setSavePressed] = useState(false);
 
@@ -28,6 +39,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ onBack, onSave }) => {
             onPressIn={() => setBackPressed(true)}
             onPressOut={() => setBackPressed(false)}
             activeOpacity={0.7}
+            disabled={isLoading}
           >
             <Ionicons name="arrow-back" size={wp(8)} color="white" />
           </TouchableOpacity>
@@ -40,7 +52,11 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ onBack, onSave }) => {
           colors={["#2AAB73", "#1E8F5E"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={[styles.gradientButton, savePressed && styles.buttonPressed]}
+          style={[
+            styles.gradientButton,
+            savePressed && styles.buttonPressed,
+            isLoading && styles.buttonDisabled,
+          ]}
         >
           <TouchableOpacity
             style={styles.circleButton}
@@ -48,11 +64,18 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ onBack, onSave }) => {
             onPressIn={() => setSavePressed(true)}
             onPressOut={() => setSavePressed(false)}
             activeOpacity={0.7}
+            disabled={isLoading}
           >
-            <Ionicons name="checkmark" size={wp(8)} color="white" />
+            {isLoading ? (
+              <ActivityIndicator size="large" color="white" />
+            ) : (
+              <Ionicons name="checkmark" size={wp(8)} color="white" />
+            )}
           </TouchableOpacity>
         </LinearGradient>
-        <Text style={styles.buttonLabel}>Save</Text>
+        <Text style={styles.buttonLabel}>
+          {isLoading ? "Saving..." : "Save"}
+        </Text>
       </View>
     </View>
   );
@@ -98,6 +121,9 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 4,
     borderColor: "rgba(255, 255, 255, 0.4)",
+  },
+  buttonDisabled: {
+    opacity: 0.7,
   },
   buttonLabel: {
     color: "#333",

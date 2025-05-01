@@ -46,6 +46,7 @@
       },
       "supabaseUrl": "https://zhmofktoopgfsqgzpwpe.supabase.co",
       "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpobW9ma3Rvb3BnZnNxZ3pwd3BlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU2NzAxMDQsImV4cCI6MjA2MTI0NjEwNH0.Ev-R5yv2UQ0JjAg8b_z4Gracxr9o6pnURFeJ1aPsZ_4",
+      "apiUrl": "http://192.168.2.7:8000",
       "dev": {
         "enableExpoProxyServer": true
       }

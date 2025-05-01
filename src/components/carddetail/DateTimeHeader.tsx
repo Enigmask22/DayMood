@@ -9,7 +9,7 @@ interface DateTimeHeaderProps {
   dayNumber: string;
   monthName: string;
   formattedTime: string;
-  onBack: () => void;
+  onSubmit: () => void;
   onEdit?: () => void;
 }
 
@@ -18,10 +18,10 @@ const DateTimeHeader: React.FC<DateTimeHeaderProps> = ({
   dayNumber,
   monthName,
   formattedTime,
-  onBack,
+  onSubmit,
   onEdit,
 }) => {
-  const [backPressed, setBackPressed] = useState(false);
+  const [submitPressed, setSubmitPressed] = useState(false);
   const [editPressed, setEditPressed] = useState(false);
 
   return (
@@ -30,16 +30,16 @@ const DateTimeHeader: React.FC<DateTimeHeaderProps> = ({
         colors={["#E0F7ED", "#B9F0DA"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={[styles.buttonGradient, backPressed && styles.buttonPressed]}
+        style={[styles.buttonGradient, submitPressed && styles.buttonPressed]}
       >
         <TouchableOpacity
-          style={styles.backButton}
-          onPress={onBack}
-          onPressIn={() => setBackPressed(true)}
-          onPressOut={() => setBackPressed(false)}
+          style={styles.submitButton}
+          onPress={onSubmit}
+          onPressIn={() => setSubmitPressed(true)}
+          onPressOut={() => setSubmitPressed(false)}
           activeOpacity={0.7}
         >
-          <Ionicons name="chevron-back" size={wp(6)} color="#32B768" />
+          <Ionicons name="checkmark" size={wp(6)} color="#32B768" />
         </TouchableOpacity>
       </LinearGradient>
 
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
     elevation: 1,
     borderColor: "rgba(50, 183, 104, 0.4)",
   },
-  backButton: {
+  submitButton: {
     width: wp(10),
     height: wp(10),
     borderRadius: wp(5),

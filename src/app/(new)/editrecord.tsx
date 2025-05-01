@@ -15,6 +15,7 @@ import { wp, hp } from "@/components/newemoji/utils";
 import { Audio } from "expo-av";
 import * as ImagePicker from "expo-image-picker";
 import { uploadFileFromBase64, uploadAudioFromUri } from "@/utils/fileService";
+import { API_ENDPOINTS, DEFAULT_USER_ID } from "@/utils/config";
 
 // Import thêm MoodSelector từ newemoj
 import MoodSelector from "@/components/newemoji/MoodSelector";
@@ -69,9 +70,9 @@ export default function EditRecordScreen() {
       setIsLoading(true);
       setError(null);
 
-      // Sử dụng fetch API thay vì Supabase
+      // Sử dụng fetch API với API_ENDPOINTS
       const response = await fetch(
-        `http://192.168.2.7:8000/api/v1/records/${id}?user_id=1`
+        `${API_ENDPOINTS.RECORDS}/${id}?user_id=${DEFAULT_USER_ID}`
       );
 
       if (!response.ok) {
@@ -220,9 +221,9 @@ export default function EditRecordScreen() {
     try {
       const fileToDelete = images[index];
       if (fileToDelete && fileToDelete.id) {
-        // Gọi API xóa file
+        // Gọi API xóa file với API_ENDPOINTS
         const response = await fetch(
-          `http://192.168.2.7:8000/api/v1/files/${fileToDelete.id}`,
+          `${API_ENDPOINTS.FILES}/${fileToDelete.id}`,
           {
             method: "DELETE",
           }
@@ -276,7 +277,7 @@ export default function EditRecordScreen() {
                 if (recording.id) {
                   try {
                     const response = await fetch(
-                      `http://192.168.2.7:8000/api/v1/files/${recording.id}`,
+                      `${API_ENDPOINTS.FILES}/${recording.id}`,
                       {
                         method: "DELETE",
                       }
@@ -404,23 +405,20 @@ export default function EditRecordScreen() {
       }
 
       // Cập nhật record thông qua API với phương thức PATCH
-      const response = await fetch(
-        `http://192.168.2.7:8000/api/v1/records/${id}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            title: title, // Sử dụng biến title đã tách riêng
-            content: content, // Sử dụng biến content đã tách riêng
-            mood_id: moodId,
-            date: date.toISOString(),
-            activity_ids: selectedActivities,
-            new_files: newFiles,
-          }),
-        }
-      );
+      const response = await fetch(`${API_ENDPOINTS.RECORDS}/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: title,
+          content: content,
+          mood_id: moodId,
+          date: date.toISOString(),
+          activity_ids: selectedActivities,
+          new_files: newFiles,
+        }),
+      });
 
       if (!response.ok) {
         throw new Error(
@@ -450,12 +448,9 @@ export default function EditRecordScreen() {
         onPress: async () => {
           try {
             // Xóa record qua API
-            const response = await fetch(
-              `http://192.168.2.7:8000/api/v1/records/${id}`,
-              {
-                method: "DELETE",
-              }
-            );
+            const response = await fetch(`${API_ENDPOINTS.RECORDS}/${id}`, {
+              method: "DELETE",
+            });
 
             if (!response.ok) {
               throw new Error(

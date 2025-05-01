@@ -13,6 +13,7 @@ import { wp, hp } from "@/components/newemoji/utils";
 import { format } from "date-fns";
 import { Audio } from "expo-av";
 import * as FileSystem from "expo-file-system";
+import { API_ENDPOINTS, DEFAULT_USER_ID } from "@/utils/config";
 
 // Import các component đã tách
 import DateTimeHeader from "@/components/carddetail/DateTimeHeader";
@@ -134,7 +135,7 @@ export default function ViewRecordScreen() {
         setError(null);
 
         const response = await fetch(
-          `http://192.168.2.7:8000/api/v1/records/${recordId}?user_id=1`
+          `${API_ENDPOINTS.RECORDS}/${recordId}?user_id=${DEFAULT_USER_ID}`
         );
 
         if (!response.ok) {
@@ -295,8 +296,8 @@ export default function ViewRecordScreen() {
     }
   };
 
-  // Xử lý quay về trang chính
-  const handleBackToHome = () => {
+  // Xử lý quay về trang trước
+  const handleGoBack = () => {
     router.back();
   };
 
@@ -325,7 +326,7 @@ export default function ViewRecordScreen() {
           <Text style={styles.errorText}>
             {error || "Không tìm thấy dữ liệu"}
           </Text>
-          <Text style={styles.backLink} onPress={handleBackToHome}>
+          <Text style={styles.backLink} onPress={handleGoBack}>
             Quay lại
           </Text>
         </View>
@@ -355,7 +356,7 @@ export default function ViewRecordScreen() {
             dayNumber={dayNumber}
             monthName={monthName}
             formattedTime={formattedTime}
-            onBack={handleBackToHome}
+            onSubmit={handleGoBack}
             // Không có nút Edit
           />
 

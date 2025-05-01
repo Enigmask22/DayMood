@@ -2,6 +2,7 @@ import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
 import Randomstring from "randomstring";
 import { format } from "date-fns";
 import { MOODS } from "src/utils/constant";
+import { API_ENDPOINTS, DEFAULT_USER_ID } from "@/utils/config";
 
 // Define Record interface
 interface Record {
@@ -38,7 +39,7 @@ export const fetchRecords = createAsyncThunk(
     try {
       console.log("Bắt đầu gọi API lấy dữ liệu...");
       const response = await fetch(
-        "http://192.168.2.7:8000/api/v1/records?user_id=1"
+        `${API_ENDPOINTS.RECORDS}?user_id=${DEFAULT_USER_ID}`
       );
       console.log("API status:", response.status);
 
@@ -90,7 +91,7 @@ const convertApiRecordToRecord = (apiRecord: ApiRecord): Record => {
     id: apiRecord.id.toString(),
     date: formattedDate,
     emoji: emojiName,
-    feeling: apiRecord.title || "I'm feeling something",
+    feeling: apiRecord.title || "",
   };
 };
 
