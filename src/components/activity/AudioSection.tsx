@@ -20,6 +20,7 @@ interface RecordingInfo {
   duration: string;
   file: string;
   isPlaying?: boolean;
+  isPaused?: boolean;
   isMusic?: boolean;
   name?: string;
   currentPosition?: string; // Vị trí phát hiện tại (định dạng mm:ss)
@@ -182,6 +183,8 @@ const AudioSection: React.FC<AudioSectionProps> = ({
           duration: formattedDuration,
           file: permanentUri,
           isPlaying: false,
+          isPaused: false,
+          name: `Bản ghi ${recordings.length + 1}`,
         },
       ];
 
@@ -296,6 +299,7 @@ const AudioSection: React.FC<AudioSectionProps> = ({
           duration: formattedDuration,
           file: permanentUri,
           isPlaying: false,
+          isPaused: false,
           isMusic: true,
           name: fileName,
         },
@@ -362,6 +366,7 @@ const AudioSection: React.FC<AudioSectionProps> = ({
         prevRecordings.map((rec, idx) => ({
           ...rec,
           isPlaying: idx === index,
+          isPaused: false,
           // Thêm thông tin thời gian
           durationMillis: idx === index ? durationMillis : rec.durationMillis,
           currentMillis: idx === index ? 0 : rec.currentMillis,
@@ -374,43 +379,8 @@ const AudioSection: React.FC<AudioSectionProps> = ({
       await newSound.playAsync();
       setCurrentSound(newSound);
 
-      // Cài đặt callback khi âm thanh kết thúc
-      newSound.setOnPlaybackStatusUpdate(async (status) => {
-        console.log("Cập nhật trạng thái phát:", status);
-
-        // Nếu đang phát, cập nhật vị trí hiện tại
-        if (status.isLoaded && status.isPlaying) {
-          const currentMillis = status.positionMillis;
-          const formattedPosition = formatTime(currentMillis);
-
-          // Cập nhật vị trí hiện tại trong recordings
-          setRecordings((prevRecordings) =>
-            prevRecordings.map((rec, idx) =>
-              idx === index
-                ? {
-                    ...rec,
-                    currentMillis: currentMillis,
-                    currentPosition: formattedPosition,
-                  }
-                : rec
-            )
-          );
-        }
-
-        if (status.isLoaded && !status.isPlaying && status.didJustFinish) {
-          console.log("Âm thanh đã phát xong");
-          // Đặt lại trạng thái khi phát xong
-          setRecordings((prevRecordings) =>
-            prevRecordings.map((rec) => ({
-              ...rec,
-              isPlaying: false,
-              currentPosition: "00:00",
-            }))
-          );
-          await newSound.unloadAsync();
-          setCurrentSound(null);
-        }
-      });
+      // Thiết lập sự kiện cập nhật trạng thái phát
+      setupPlaybackEvents(newSound, index);
     } catch (error) {
       console.error("Lỗi khi phát âm thanh", error);
       Alert.alert("Lỗi", "Không thể phát bản ghi âm");
@@ -420,31 +390,122 @@ const AudioSection: React.FC<AudioSectionProps> = ({
         prevRecordings.map((rec) => ({
           ...rec,
           isPlaying: false,
+          isPaused: false,
         }))
       );
       setCurrentSound(null);
     }
   }
 
-  async function stopPlayback(index: number) {
+  // Hàm tạm dừng phát âm thanh (Pause)
+  async function pauseRecording(index: number) {
     try {
-      console.log("Dừng phát âm thanh", index);
+      console.log("Tạm dừng âm thanh", index);
       if (currentSound) {
         await currentSound.pauseAsync();
-        await currentSound.unloadAsync();
+        // Cập nhật trạng thái
+        setRecordings((prevRecordings) =>
+          prevRecordings.map((rec, idx) => ({
+            ...rec,
+            isPlaying: false,
+            isPaused: idx === index,
+          }))
+        );
+      }
+    } catch (error) {
+      console.error("Lỗi khi tạm dừng âm thanh", error);
+      Alert.alert("Lỗi", "Không thể tạm dừng âm thanh");
+    }
+  }
+
+  // Hàm tiếp tục phát âm thanh (Resume)
+  async function resumeRecording(index: number) {
+    try {
+      console.log("Tiếp tục phát âm thanh", index);
+      if (currentSound) {
+        await currentSound.playAsync();
+        // Cập nhật trạng thái
+        setRecordings((prevRecordings) =>
+          prevRecordings.map((rec, idx) => ({
+            ...rec,
+            isPlaying: idx === index,
+            isPaused: false,
+          }))
+        );
+      }
+    } catch (error) {
+      console.error("Lỗi khi tiếp tục phát âm thanh", error);
+      Alert.alert("Lỗi", "Không thể tiếp tục phát âm thanh");
+    }
+  }
+
+  // Hàm dừng hoàn toàn âm thanh (Stop)
+  async function stopPlayback(index: number) {
+    try {
+      console.log("Dừng hoàn toàn âm thanh", index);
+      if (currentSound) {
+        await currentSound.stopAsync();
+        await currentSound.setPositionAsync(0);
+        // Cập nhật trạng thái
+        setRecordings((prevRecordings) =>
+          prevRecordings.map((rec, idx) => ({
+            ...rec,
+            isPlaying: false,
+            isPaused: false,
+            currentPosition: "00:00",
+            currentMillis: 0,
+          }))
+        );
         setCurrentSound(null);
       }
-
-      // Cập nhật trạng thái isPlaying
-      setRecordings((prevRecordings) =>
-        prevRecordings.map((rec) => ({
-          ...rec,
-          isPlaying: false,
-        }))
-      );
     } catch (error) {
       console.error("Lỗi khi dừng phát âm thanh", error);
+      Alert.alert("Lỗi", "Không thể dừng âm thanh");
     }
+  }
+
+  // Hàm thiết lập sự kiện cập nhật trạng thái phát
+  function setupPlaybackEvents(sound: Audio.Sound, index: number) {
+    sound.setOnPlaybackStatusUpdate((status) => {
+      console.log("Cập nhật trạng thái phát:", status);
+
+      // Nếu đang phát, cập nhật vị trí hiện tại
+      if (status.isLoaded && status.isPlaying) {
+        const currentMillis = status.positionMillis;
+        const formattedPosition = formatTime(currentMillis);
+
+        // Cập nhật vị trí hiện tại trong recordings
+        setRecordings((prevRecordings) =>
+          prevRecordings.map((rec, idx) =>
+            idx === index
+              ? {
+                  ...rec,
+                  currentMillis: currentMillis,
+                  currentPosition: formattedPosition,
+                }
+              : rec
+          )
+        );
+      }
+
+      if (status.isLoaded && !status.isPlaying && status.didJustFinish) {
+        console.log("Âm thanh đã phát xong");
+        // Đặt lại trạng thái khi phát xong
+        setRecordings((prevRecordings) =>
+          prevRecordings.map((rec) => ({
+            ...rec,
+            isPlaying: false,
+            isPaused: false,
+            currentPosition: "00:00",
+            currentMillis: 0,
+          }))
+        );
+        sound
+          .unloadAsync()
+          .catch((err) => console.error("Lỗi khi unload sound:", err));
+        setCurrentSound(null);
+      }
+    });
   }
 
   function clearRecordings() {
@@ -478,6 +539,7 @@ const AudioSection: React.FC<AudioSectionProps> = ({
   function getRecordingLines() {
     return recordings.map((recordingLine, index) => {
       const isPlaying = recordingLine.isPlaying || false;
+      const isPaused = recordingLine.isPaused || false;
       const isMusic = recordingLine.isMusic || false;
 
       // Xử lý tên file nhạc quá dài
@@ -490,7 +552,7 @@ const AudioSection: React.FC<AudioSectionProps> = ({
             ? originalName.substring(0, 22) + "..."
             : originalName;
       } else {
-        itemTitle = `Bản ghi #${index + 1}`;
+        itemTitle = recordingLine.name || `Bản ghi #${index + 1}`;
       }
 
       return (
@@ -500,16 +562,32 @@ const AudioSection: React.FC<AudioSectionProps> = ({
               style={[
                 styles.recordingIconContainer,
                 isPlaying && styles.recordingIconContainerActive,
+                isPaused && styles.recordingIconContainerPaused,
                 isMusic && styles.musicIconContainer,
                 isMusic && isPlaying && styles.musicIconContainerActive,
+                isMusic && isPaused && styles.musicIconContainerPaused,
               ]}
             >
               <FontAwesome5
                 name={
-                  isMusic ? "music" : isPlaying ? "volume-up" : "microphone"
+                  isPlaying
+                    ? "volume-up"
+                    : isPaused
+                    ? "volume-down"
+                    : isMusic
+                    ? "music"
+                    : "microphone"
                 }
                 size={wp(4)}
-                color={isPlaying ? "#fff" : isMusic ? "#6366F1" : "#32B768"}
+                color={
+                  isPlaying
+                    ? "#fff"
+                    : isPaused
+                    ? "#ffa726"
+                    : isMusic
+                    ? "#6366F1"
+                    : "#32B768"
+                }
               />
             </View>
             <View style={styles.titleContainer}>
@@ -522,43 +600,106 @@ const AudioSection: React.FC<AudioSectionProps> = ({
               </Text>
               <Text
                 style={
-                  isPlaying ? styles.playingDuration : styles.recordingDuration
+                  isPlaying || isPaused
+                    ? styles.playingDuration
+                    : styles.recordingDuration
                 }
               >
-                {isPlaying && recordingLine.currentPosition
+                {(isPlaying || isPaused) && recordingLine.currentPosition
                   ? `${recordingLine.currentPosition}/${recordingLine.duration}`
                   : recordingLine.duration}
               </Text>
             </View>
           </View>
-          <TouchableOpacity
-            style={styles.playButton}
-            onPress={() =>
-              isPlaying ? stopPlayback(index) : playRecording(index)
-            }
-          >
-            <LinearGradient
-              colors={
-                isPlaying
-                  ? ["#ff6b6b", "#ff5252"]
-                  : isMusic
-                  ? ["#6366F1", "#4F46E5"]
-                  : ["#32B768", "#27A35A"]
-              }
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.playButtonGradient}
-            >
-              <FontAwesome5
-                name={isPlaying ? "pause" : "play"}
-                size={wp(3.5)}
-                color="#fff"
-              />
-              <Text style={styles.playButtonText}>
-                {isPlaying ? "STOP" : "PLAY"}
-              </Text>
-            </LinearGradient>
-          </TouchableOpacity>
+
+          <View style={styles.controlsContainer}>
+            {isPlaying && (
+              <>
+                <TouchableOpacity
+                  style={styles.controlButton}
+                  onPress={() => pauseRecording(index)}
+                >
+                  <LinearGradient
+                    colors={["#ffa726", "#fb8c00"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.buttonGradient}
+                  >
+                    <FontAwesome5 name="pause" size={wp(3.5)} color="#fff" />
+                    <Text style={styles.buttonText}>PAUSE</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.controlButton}
+                  onPress={() => stopPlayback(index)}
+                >
+                  <LinearGradient
+                    colors={["#ff6b6b", "#ff5252"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.buttonGradient}
+                  >
+                    <FontAwesome5 name="stop" size={wp(3.5)} color="#fff" />
+                    <Text style={styles.buttonText}>STOP</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </>
+            )}
+
+            {isPaused && (
+              <>
+                <TouchableOpacity
+                  style={styles.controlButton}
+                  onPress={() => resumeRecording(index)}
+                >
+                  <LinearGradient
+                    colors={["#4CAF50", "#2E7D32"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.buttonGradient}
+                  >
+                    <FontAwesome5 name="play" size={wp(3.5)} color="#fff" />
+                    <Text style={styles.buttonText}>RESUME</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.controlButton}
+                  onPress={() => stopPlayback(index)}
+                >
+                  <LinearGradient
+                    colors={["#ff6b6b", "#ff5252"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.buttonGradient}
+                  >
+                    <FontAwesome5 name="stop" size={wp(3.5)} color="#fff" />
+                    <Text style={styles.buttonText}>STOP</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </>
+            )}
+
+            {!isPlaying && !isPaused && (
+              <TouchableOpacity
+                style={styles.playButton}
+                onPress={() => playRecording(index)}
+              >
+                <LinearGradient
+                  colors={
+                    isMusic ? ["#6366F1", "#4F46E5"] : ["#32B768", "#27A35A"]
+                  }
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.playButtonGradient}
+                >
+                  <FontAwesome5 name="play" size={wp(3.5)} color="#fff" />
+                  <Text style={styles.playButtonText}>PLAY</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
       );
     });
@@ -774,11 +915,16 @@ const styles = StyleSheet.create({
     color: "#32B768",
     fontFamily: "Quicksand-Medium",
   },
+  controlsContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: wp(2),
+    flexShrink: 0,
+  },
   playButton: {
     borderRadius: wp(5),
     overflow: "hidden",
     flexShrink: 0,
-    minWidth: wp(20),
   },
   playButtonGradient: {
     flexDirection: "row",
@@ -799,11 +945,36 @@ const styles = StyleSheet.create({
   recordingIconContainerActive: {
     backgroundColor: "#ff5252",
   },
+  recordingIconContainerPaused: {
+    backgroundColor: "#ffa726",
+  },
   musicIconContainer: {
     backgroundColor: "rgba(99, 102, 241, 0.1)",
   },
   musicIconContainerActive: {
     backgroundColor: "#6366F1",
+  },
+  musicIconContainerPaused: {
+    backgroundColor: "#7e57c2",
+  },
+  controlButton: {
+    borderRadius: wp(5),
+    overflow: "hidden",
+  },
+  buttonGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: hp(0.8),
+    paddingHorizontal: wp(2.5),
+    borderRadius: wp(5),
+  },
+  buttonText: {
+    fontSize: wp(3),
+    color: "#fff",
+    fontWeight: "bold",
+    marginLeft: wp(1),
+    fontFamily: "Quicksand-Bold",
+    letterSpacing: 0.5,
   },
 });
 

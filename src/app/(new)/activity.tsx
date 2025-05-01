@@ -24,6 +24,7 @@ export default function ActivityScreen() {
       duration: string;
       file: string;
       isPlaying?: boolean;
+      isPaused?: boolean;
       isMusic?: boolean;
       name?: string;
       currentPosition?: string;
@@ -84,22 +85,22 @@ export default function ActivityScreen() {
 
   // Lưu dữ liệu
   const handleSave = () => {
-    // Logic lưu dữ liệu
     console.log("Saving data:", {
       date,
       mood: moodId,
       activities: selectedActivities,
       note,
-      recordings,
-      // images,
+      recordingsCount: recordings.length,
+      imagesCount: images.length,
     });
 
-    // Chuẩn bị dữ liệu recordings để truyền qua params
+    // Chuẩn bị dữ liệu âm thanh (recordings)
     type RecordingData = {
       id: number;
       uri: string;
       duration: string;
       isMusic?: boolean;
+      isPaused?: boolean;
       name?: string;
     };
 
@@ -110,34 +111,34 @@ export default function ActivityScreen() {
         uri: recording.file,
         duration: recording.duration,
         isMusic: recording.isMusic || false,
+        isPaused: recording.isPaused || false,
         name: recording.name || `Bản ghi #${index + 1}`,
       }));
-
-      // Kiểm tra và log dữ liệu recordings để debug
       console.log("Recordings data được chuẩn bị:", recordingsData);
-      console.log(
-        "File URIs:",
-        recordingsData.map((r) => r.uri)
-      );
     }
 
-    // Định dạng và chuẩn bị dữ liệu
+    // Chuẩn bị dữ liệu hình ảnh
+    type ImageData = {
+      id: number;
+      uri: string;
+    };
+
+    let imagesData: ImageData[] = [];
+    if (images.length > 0) {
+      imagesData = images.map((uri, index) => ({
+        id: index,
+        uri: uri,
+      }));
+      console.log("Số lượng ảnh:", images.length);
+    }
+
+    // Định dạng ngày giờ
     const formattedDate = date.toISOString();
 
-    // Kiểm tra dữ liệu hình ảnh
-    console.log(
-      "Số lượng ảnh trước khi chuyển sang carddetail:",
-      images.length
-    );
-    // console.log("Nội dung mảng images:", images);
-
-    const imagesJson = images.length > 0 ? JSON.stringify(images) : "";
-    // console.log("Images JSON đã chuyển đổi:", imagesJson);
-
-    // Chuyển đổi dữ liệu recordings sang JSON
+    // Chuyển đổi dữ liệu sang JSON
     const recordingsJson =
       recordings.length > 0 ? JSON.stringify(recordingsData) : "";
-    console.log("Recordings JSON đã chuyển đổi:", recordingsJson);
+    const imagesJson = images.length > 0 ? JSON.stringify(imagesData) : "";
 
     // Chuyển hướng đến trang card detail với tham số
     try {
@@ -149,8 +150,6 @@ export default function ActivityScreen() {
         recordings: recordingsJson,
         images: imagesJson,
       };
-
-      // console.log("Params truyền sang carddetail:", params);
 
       router.push({
         pathname: "/(new)/carddetail" as any,

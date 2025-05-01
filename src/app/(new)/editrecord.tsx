@@ -52,6 +52,7 @@ export default function EditRecordScreen() {
       duration: string;
       file: string;
       isPlaying?: boolean;
+      isPaused?: boolean;
       isMusic?: boolean;
       name?: string;
       id?: number;

@@ -11,6 +11,7 @@ interface RecordingData {
   duration: string;
   sound?: Audio.Sound;
   isPlaying?: boolean;
+  isPaused?: boolean;
   fileExists: boolean;
   isMusic?: boolean;
   name?: string;
@@ -23,31 +24,22 @@ interface RecordingsListProps {
   recordings: RecordingData[];
   onPlayRecording: (recording: RecordingData) => Promise<void>;
   onPauseRecording?: (recording: RecordingData) => Promise<void>;
+  onStopRecording?: (recording: RecordingData) => Promise<void>;
+  onResumeRecording?: (recording: RecordingData) => Promise<void>;
 }
 
 const RecordingsList: React.FC<RecordingsListProps> = ({
   recordings,
   onPlayRecording,
   onPauseRecording,
+  onStopRecording,
+  onResumeRecording,
 }) => {
   if (!recordings || recordings.length === 0) {
     return null;
   }
 
   console.log("Hiển thị danh sách bản ghi - Số lượng:", recordings.length);
-
-  // Xử lý sự kiện khi người dùng nhấn nút play/pause
-  const handlePlayPausePress = (recording: RecordingData) => {
-    if (recording.isPlaying) {
-      // Nếu đang phát, dừng lại
-      if (onPauseRecording) {
-        onPauseRecording(recording);
-      }
-    } else {
-      // Nếu đang dừng, phát
-      onPlayRecording(recording);
-    }
-  };
 
   return (
     <View style={styles.recordingsContainer}>
@@ -63,6 +55,7 @@ const RecordingsList: React.FC<RecordingsListProps> = ({
           console.log(`Hiển thị bản ghi #${recording.id}:`, {
             name: recording.name,
             isPlaying: recording.isPlaying,
+            isPaused: recording.isPaused,
             isMusic: recording.isMusic,
             duration: recording.duration,
           });
@@ -74,16 +67,22 @@ const RecordingsList: React.FC<RecordingsListProps> = ({
                   style={[
                     styles.recordingIconContainer,
                     recording.isPlaying && styles.recordingIconContainerActive,
+                    recording.isPaused && styles.recordingIconContainerPaused,
                     recording.isMusic && styles.musicIconContainer,
                     recording.isMusic &&
                       recording.isPlaying &&
                       styles.musicIconContainerActive,
+                    recording.isMusic &&
+                      recording.isPaused &&
+                      styles.musicIconContainerPaused,
                   ]}
                 >
                   <FontAwesome5
                     name={
                       recording.isPlaying
                         ? "volume-up"
+                        : recording.isPaused
+                        ? "volume-down"
                         : recording.isMusic
                         ? "music"
                         : "microphone"
@@ -92,6 +91,8 @@ const RecordingsList: React.FC<RecordingsListProps> = ({
                     color={
                       recording.isPlaying
                         ? "#fff"
+                        : recording.isPaused
+                        ? "#ffa726"
                         : recording.isMusic
                         ? "#6366F1"
                         : "#32B768"
@@ -108,44 +109,121 @@ const RecordingsList: React.FC<RecordingsListProps> = ({
                   </Text>
                   <Text
                     style={
-                      recording.isPlaying
+                      recording.isPlaying || recording.isPaused
                         ? styles.playingDuration
                         : styles.recordingDuration
                     }
                   >
-                    {recording.isPlaying && recording.currentPosition
+                    {(recording.isPlaying || recording.isPaused) &&
+                    recording.currentPosition
                       ? `${recording.currentPosition}/${recording.duration}`
                       : recording.duration}
                   </Text>
                 </View>
               </View>
 
-              <TouchableOpacity
-                style={styles.playButton}
-                onPress={() => handlePlayPausePress(recording)}
-              >
-                <LinearGradient
-                  colors={
-                    recording.isPlaying
-                      ? ["#ff6b6b", "#ff5252"]
-                      : recording.isMusic
-                      ? ["#6366F1", "#4F46E5"]
-                      : ["#32B768", "#27A35A"]
-                  }
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.playButtonGradient}
-                >
-                  <FontAwesome5
-                    name={recording.isPlaying ? "pause" : "play"}
-                    size={wp(3.5)}
-                    color="#fff"
-                  />
-                  <Text style={styles.playButtonText}>
-                    {recording.isPlaying ? "STOP" : "PLAY"}
-                  </Text>
-                </LinearGradient>
-              </TouchableOpacity>
+              <View style={styles.controlsContainer}>
+                {recording.isPlaying && (
+                  <>
+                    <TouchableOpacity
+                      style={styles.controlButton}
+                      onPress={() =>
+                        onPauseRecording && onPauseRecording(recording)
+                      }
+                    >
+                      <LinearGradient
+                        colors={["#ffa726", "#fb8c00"]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.buttonGradient}
+                      >
+                        <FontAwesome5
+                          name="pause"
+                          size={wp(3.5)}
+                          color="#fff"
+                        />
+                        <Text style={styles.buttonText}>PAUSE</Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.controlButton}
+                      onPress={() =>
+                        onStopRecording && onStopRecording(recording)
+                      }
+                    >
+                      <LinearGradient
+                        colors={["#ff6b6b", "#ff5252"]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.buttonGradient}
+                      >
+                        <FontAwesome5 name="stop" size={wp(3.5)} color="#fff" />
+                        <Text style={styles.buttonText}>STOP</Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  </>
+                )}
+
+                {recording.isPaused && (
+                  <>
+                    <TouchableOpacity
+                      style={styles.controlButton}
+                      onPress={() =>
+                        onResumeRecording && onResumeRecording(recording)
+                      }
+                    >
+                      <LinearGradient
+                        colors={["#4CAF50", "#2E7D32"]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.buttonGradient}
+                      >
+                        <FontAwesome5 name="play" size={wp(3.5)} color="#fff" />
+                        <Text style={styles.buttonText}>RESUME</Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.controlButton}
+                      onPress={() =>
+                        onStopRecording && onStopRecording(recording)
+                      }
+                    >
+                      <LinearGradient
+                        colors={["#ff6b6b", "#ff5252"]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.buttonGradient}
+                      >
+                        <FontAwesome5 name="stop" size={wp(3.5)} color="#fff" />
+                        <Text style={styles.buttonText}>STOP</Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  </>
+                )}
+
+                {!recording.isPlaying && !recording.isPaused && (
+                  <TouchableOpacity
+                    style={styles.playButton}
+                    onPress={() => onPlayRecording(recording)}
+                  >
+                    <LinearGradient
+                      colors={
+                        recording.isMusic
+                          ? ["#6366F1", "#4F46E5"]
+                          : ["#32B768", "#27A35A"]
+                      }
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.playButtonGradient}
+                    >
+                      <FontAwesome5 name="play" size={wp(3.5)} color="#fff" />
+                      <Text style={styles.playButtonText}>PLAY</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
           );
         })}
@@ -222,11 +300,17 @@ const styles = StyleSheet.create({
   recordingIconContainerActive: {
     backgroundColor: "#ff5252",
   },
+  recordingIconContainerPaused: {
+    backgroundColor: "#ffa726",
+  },
   musicIconContainer: {
     backgroundColor: "rgba(99, 102, 241, 0.1)",
   },
   musicIconContainerActive: {
     backgroundColor: "#6366F1",
+  },
+  musicIconContainerPaused: {
+    backgroundColor: "#7e57c2",
   },
   titleContainer: {
     flex: 1,
@@ -249,7 +333,16 @@ const styles = StyleSheet.create({
     color: "#32B768",
     fontFamily: "Quicksand-Medium",
   },
+  controlsContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: wp(2),
+  },
   playButton: {
+    borderRadius: wp(5),
+    overflow: "hidden",
+  },
+  controlButton: {
     borderRadius: wp(5),
     overflow: "hidden",
   },
@@ -260,11 +353,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: wp(3.5),
     borderRadius: wp(5),
   },
+  buttonGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: hp(0.8),
+    paddingHorizontal: wp(2.5),
+    borderRadius: wp(5),
+  },
   playButtonText: {
     fontSize: wp(3.3),
     color: "#fff",
     fontWeight: "bold",
     marginLeft: wp(1.5),
+    fontFamily: "Quicksand-Bold",
+    letterSpacing: 0.5,
+  },
+  buttonText: {
+    fontSize: wp(3),
+    color: "#fff",
+    fontWeight: "bold",
+    marginLeft: wp(1),
     fontFamily: "Quicksand-Bold",
     letterSpacing: 0.5,
   },

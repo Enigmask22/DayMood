@@ -57,6 +57,7 @@ interface RecordingData {
   duration: string;
   sound?: Audio.Sound;
   isPlaying?: boolean;
+  isPaused?: boolean;
   fileExists: boolean;
   isMusic?: boolean;
   name?: string;
@@ -256,6 +257,7 @@ export default function ViewRecordScreen() {
                     duration: file.duration || "00:00",
                     sound,
                     isPlaying: false,
+                    isPaused: false,
                     fileExists: true,
                     name: file.fname,
                     isMusic: file.type === "audio/mpeg",
@@ -332,13 +334,174 @@ export default function ViewRecordScreen() {
         shouldDuckAndroid: true,
       });
 
+      // Tìm đối tượng sound từ recordings
+      const currentRecording = recordings.find(
+        (rec) => rec.id === recording.id
+      );
+
+      if (!currentRecording) {
+        console.log("Không tìm thấy bản ghi");
+        Alert.alert("Lỗi", "Không thể phát âm thanh");
+        return;
+      }
+
       // Dừng bản ghi đang phát (nếu có)
-      if (currentSound) {
+      if (currentSound && currentSound !== currentRecording.sound) {
         console.log("Dừng âm thanh hiện tại");
         await currentSound.stopAsync();
         await currentSound.unloadAsync();
         setCurrentSound(null);
       }
+
+      // Nếu sound chưa được tạo hoặc đã bị unload, tạo mới
+      if (!currentRecording.sound) {
+        console.log("Tạo mới đối tượng sound");
+        try {
+          const { sound } = await Audio.Sound.createAsync(
+            { uri: recording.uri },
+            { shouldPlay: false }
+          );
+
+          // Cập nhật sound vào recordings
+          setRecordings((prev) =>
+            prev.map((rec) =>
+              rec.id === recording.id ? { ...rec, sound } : rec
+            )
+          );
+
+          // Sử dụng sound mới tạo
+          const soundToPlay = sound;
+
+          // Lấy trạng thái hiện tại để có thông tin về tổng thời lượng
+          const status = await soundToPlay.getStatusAsync();
+          const durationMillis = status.isLoaded
+            ? status.durationMillis || 0
+            : 0;
+
+          // Đánh dấu tất cả các bản ghi là không đang phát, trừ bản ghi hiện tại
+          setRecordings((prev) =>
+            prev.map((rec) => ({
+              ...rec,
+              isPlaying: rec.id === recording.id,
+              isPaused: false,
+              durationMillis:
+                rec.id === recording.id ? durationMillis : rec.durationMillis,
+              currentMillis: rec.id === recording.id ? 0 : rec.currentMillis,
+              currentPosition:
+                rec.id === recording.id ? "00:00" : rec.currentPosition,
+            }))
+          );
+
+          // Phát bản ghi đã chọn
+          console.log("Đang phát âm thanh...");
+          await soundToPlay.playAsync();
+          setCurrentSound(soundToPlay);
+
+          // Thiết lập các sự kiện cập nhật vị trí
+          setupPlaybackEvents(soundToPlay, recording);
+        } catch (err) {
+          console.error("Không thể tạo đối tượng sound:", err);
+          Alert.alert("Lỗi", "Không thể phát âm thanh");
+          return;
+        }
+      } else {
+        // Sử dụng sound hiện có
+        const soundToPlay = currentRecording.sound;
+
+        // Lấy trạng thái hiện tại để có thông tin về tổng thời lượng
+        const status = await soundToPlay.getStatusAsync();
+        const durationMillis = status.isLoaded ? status.durationMillis || 0 : 0;
+
+        // Đánh dấu tất cả các bản ghi là không đang phát, trừ bản ghi hiện tại
+        setRecordings((prev) =>
+          prev.map((rec) => ({
+            ...rec,
+            isPlaying: rec.id === recording.id,
+            isPaused: false,
+            durationMillis:
+              rec.id === recording.id ? durationMillis : rec.durationMillis,
+            currentMillis: rec.id === recording.id ? 0 : rec.currentMillis,
+            currentPosition:
+              rec.id === recording.id ? "00:00" : rec.currentPosition,
+          }))
+        );
+
+        // Phát bản ghi đã chọn
+        console.log("Đang phát âm thanh...");
+        await soundToPlay.setPositionAsync(0);
+        await soundToPlay.playAsync();
+        setCurrentSound(soundToPlay);
+
+        // Thiết lập các sự kiện cập nhật vị trí
+        setupPlaybackEvents(soundToPlay, recording);
+      }
+    } catch (error) {
+      console.error("Lỗi khi phát âm thanh:", error);
+      Alert.alert("Lỗi", "Không thể phát âm thanh");
+    }
+  };
+
+  // Hàm dừng tạm thời âm thanh
+  const pauseRecording = async (recording: RecordingData) => {
+    try {
+      console.log("Tạm dừng âm thanh", recording.id);
+
+      // Kiểm tra nếu đang có sound đang phát
+      if (currentSound) {
+        // Dừng âm thanh đang phát
+        await currentSound.pauseAsync();
+
+        // Cập nhật trạng thái isPlaying và isPaused
+        setRecordings((prev) =>
+          prev.map((rec) =>
+            rec.id === recording.id
+              ? { ...rec, isPlaying: false, isPaused: true }
+              : rec
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Lỗi khi tạm dừng âm thanh:", error);
+      Alert.alert("Lỗi", "Không thể tạm dừng âm thanh");
+    }
+  };
+
+  // Hàm dừng hoàn toàn âm thanh
+  const stopRecording = async (recording: RecordingData) => {
+    try {
+      console.log("Dừng hoàn toàn âm thanh", recording.id);
+
+      // Kiểm tra nếu đang có sound đang phát
+      if (currentSound) {
+        // Dừng âm thanh đang phát
+        await currentSound.stopAsync();
+        await currentSound.setPositionAsync(0);
+
+        // Cập nhật trạng thái isPlaying và isPaused
+        setRecordings((prev) =>
+          prev.map((rec) =>
+            rec.id === recording.id
+              ? {
+                  ...rec,
+                  isPlaying: false,
+                  isPaused: false,
+                  currentPosition: "00:00",
+                  currentMillis: 0,
+                }
+              : rec
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Lỗi khi dừng âm thanh:", error);
+      Alert.alert("Lỗi", "Không thể dừng âm thanh");
+    }
+  };
+
+  // Hàm tiếp tục phát âm thanh sau khi tạm dừng
+  const resumeRecording = async (recording: RecordingData) => {
+    try {
+      console.log("Tiếp tục phát âm thanh", recording.id);
 
       // Tìm đối tượng sound từ recordings
       const currentRecording = recordings.find(
@@ -347,115 +510,74 @@ export default function ViewRecordScreen() {
 
       if (!currentRecording || !currentRecording.sound) {
         console.log("Không tìm thấy bản ghi hoặc sound không tồn tại");
-        Alert.alert("Lỗi", "Không thể phát âm thanh");
+        Alert.alert("Lỗi", "Không thể tiếp tục phát âm thanh");
         return;
       }
 
-      const soundToPlay = currentRecording.sound;
+      // Tiếp tục phát âm thanh từ vị trí đã dừng
+      await currentRecording.sound.playAsync();
+      setCurrentSound(currentRecording.sound);
 
-      // Lấy trạng thái hiện tại để có thông tin về tổng thời lượng
-      const status = await soundToPlay.getStatusAsync();
-      const durationMillis = status.isLoaded ? status.durationMillis || 0 : 0;
-
-      // Đánh dấu tất cả các bản ghi là không đang phát
+      // Cập nhật trạng thái isPaused và isPlaying
       setRecordings((prev) =>
-        prev.map((rec) => ({
-          ...rec,
-          isPlaying: rec.id === recording.id,
-          // Đặt thời lượng và vị trí cho bản ghi đang phát
-          durationMillis:
-            rec.id === recording.id ? durationMillis : rec.durationMillis,
-          currentMillis: rec.id === recording.id ? 0 : rec.currentMillis,
-          currentPosition:
-            rec.id === recording.id ? "00:00" : rec.currentPosition,
-        }))
+        prev.map((rec) =>
+          rec.id === recording.id
+            ? { ...rec, isPlaying: true, isPaused: false }
+            : rec
+        )
       );
-
-      // Phát bản ghi đã chọn
-      console.log("Đang phát âm thanh...");
-      await soundToPlay.setPositionAsync(0);
-      await soundToPlay.playAsync();
-      setCurrentSound(soundToPlay);
-
-      // Thiết lập hàm cập nhật vị trí phát
-      const updateInterval = 1000; // Cập nhật mỗi giây
-
-      // Lắng nghe sự kiện cập nhật trạng thái
-      soundToPlay.setOnPlaybackStatusUpdate((status) => {
-        // Nếu đang phát, cập nhật vị trí hiện tại
-        if (status.isLoaded && status.isPlaying) {
-          const currentMillis = status.positionMillis;
-          const formattedPosition = formatTime(currentMillis);
-
-          // Cập nhật vị trí hiện tại trong recordings
-          setRecordings((prev) =>
-            prev.map((rec) =>
-              rec.id === recording.id
-                ? {
-                    ...rec,
-                    currentMillis: currentMillis,
-                    currentPosition: formattedPosition,
-                  }
-                : rec
-            )
-          );
-        }
-
-        // Khi phát xong
-        if (status.isLoaded && !status.isPlaying && status.didJustFinish) {
-          console.log("Âm thanh đã phát xong");
-          // Đặt lại trạng thái isPlaying
-          setRecordings((prev) =>
-            prev.map((rec) =>
-              rec.id === recording.id
-                ? {
-                    ...rec,
-                    isPlaying: false,
-                    currentPosition: "00:00",
-                    currentMillis: 0,
-                  }
-                : rec
-            )
-          );
-          setCurrentSound(null);
-        }
-      });
     } catch (error) {
-      console.error("Lỗi khi phát âm thanh:", error);
-      Alert.alert("Lỗi", "Không thể phát âm thanh");
+      console.error("Lỗi khi tiếp tục phát âm thanh:", error);
+      Alert.alert("Lỗi", "Không thể tiếp tục phát âm thanh");
     }
   };
 
-  // Hàm dừng âm thanh
-  const pauseRecording = async (recording: RecordingData) => {
-    try {
-      console.log("Tạm dừng âm thanh", recording.id);
+  // Hàm thiết lập sự kiện cập nhật trạng thái phát
+  const setupPlaybackEvents = (
+    sound: Audio.Sound,
+    recording: RecordingData
+  ) => {
+    // Lắng nghe sự kiện cập nhật trạng thái
+    sound.setOnPlaybackStatusUpdate((status) => {
+      // Nếu đang phát, cập nhật vị trí hiện tại
+      if (status.isLoaded && status.isPlaying) {
+        const currentMillis = status.positionMillis;
+        const formattedPosition = formatTime(currentMillis);
 
-      // Kiểm tra nếu đang có sound đang phát
-      if (currentSound) {
-        // Kiểm tra xem sound đang phát có phải là sound của recording này không
-        const currentRecording = recordings.find(
-          (rec) => rec.id === recording.id
-        );
-        if (!currentRecording || !currentRecording.sound) {
-          console.log("Không tìm thấy bản ghi âm thanh để dừng");
-          return;
-        }
-
-        // Dừng âm thanh đang phát
-        await currentSound.pauseAsync();
-
-        // Cập nhật trạng thái isPlaying
+        // Cập nhật vị trí hiện tại trong recordings
         setRecordings((prev) =>
           prev.map((rec) =>
-            rec.id === recording.id ? { ...rec, isPlaying: false } : rec
+            rec.id === recording.id
+              ? {
+                  ...rec,
+                  currentMillis: currentMillis,
+                  currentPosition: formattedPosition,
+                }
+              : rec
           )
         );
       }
-    } catch (error) {
-      console.error("Lỗi khi tạm dừng âm thanh:", error);
-      Alert.alert("Lỗi", "Không thể tạm dừng âm thanh");
-    }
+
+      // Khi phát xong
+      if (status.isLoaded && !status.isPlaying && status.didJustFinish) {
+        console.log("Âm thanh đã phát xong");
+        // Đặt lại trạng thái isPlaying
+        setRecordings((prev) =>
+          prev.map((rec) =>
+            rec.id === recording.id
+              ? {
+                  ...rec,
+                  isPlaying: false,
+                  isPaused: false,
+                  currentPosition: "00:00",
+                  currentMillis: 0,
+                }
+              : rec
+          )
+        );
+        setCurrentSound(null);
+      }
+    });
   };
 
   // Thêm hàm định dạng thời gian
@@ -554,6 +676,8 @@ export default function ViewRecordScreen() {
               recordings={recordings}
               onPlayRecording={playRecording}
               onPauseRecording={pauseRecording}
+              onStopRecording={stopRecording}
+              onResumeRecording={resumeRecording}
             />
           )}
         </View>
