@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
+  Modal,
+  Dimensions,
 } from "react-native";
 import { MaterialIcons, FontAwesome } from "@expo/vector-icons";
 import { wp, hp } from "../newemoji/utils";
@@ -17,12 +19,54 @@ interface ImageSectionProps {
   onDeleteImage?: (index: number) => void;
 }
 
+// Component để hiển thị ảnh phóng to
+const ImageViewer = ({
+  visible,
+  imageUrl,
+  onClose,
+}: {
+  visible: boolean;
+  imageUrl: string;
+  onClose: () => void;
+}) => {
+  if (!visible) return null;
+
+  const screenWidth = Dimensions.get("window").width;
+  const screenHeight = Dimensions.get("window").height;
+
+  return (
+    <Modal visible={visible} transparent={true} animationType="fade">
+      <TouchableOpacity
+        style={styles.imageViewerContainer}
+        activeOpacity={1}
+        onPress={onClose}
+      >
+        <Image
+          source={{ uri: imageUrl }}
+          style={styles.fullSizeImage}
+          resizeMode="contain"
+        />
+      </TouchableOpacity>
+    </Modal>
+  );
+};
+
 const ImageSection: React.FC<ImageSectionProps> = ({
   images = [],
   onTakePhoto,
   onPickFromGallery,
   onDeleteImage,
 }) => {
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  const handleImagePress = (imageUri: string) => {
+    setSelectedImage(imageUri);
+  };
+
+  const handleCloseViewer = () => {
+    setSelectedImage(null);
+  };
+
   return (
     <View style={styles.mediaSection}>
       <View style={styles.mediaTitleContainer}>
@@ -36,7 +80,9 @@ const ImageSection: React.FC<ImageSectionProps> = ({
           {images.length === 1 ? (
             // Hiển thị một ảnh duy nhất ở giữa với nút xóa
             <View style={styles.imageWrapper}>
-              <Image source={{ uri: images[0] }} style={styles.singleImage} />
+              <TouchableOpacity onPress={() => handleImagePress(images[0])}>
+                <Image source={{ uri: images[0] }} style={styles.singleImage} />
+              </TouchableOpacity>
               {onDeleteImage && (
                 <TouchableOpacity
                   style={styles.deleteButton}
@@ -51,7 +97,12 @@ const ImageSection: React.FC<ImageSectionProps> = ({
             <View style={styles.imageGrid}>
               {images.map((imageUri, index) => (
                 <View key={index} style={styles.imageWrapper}>
-                  <Image source={{ uri: imageUri }} style={styles.gridImage} />
+                  <TouchableOpacity onPress={() => handleImagePress(imageUri)}>
+                    <Image
+                      source={{ uri: imageUri }}
+                      style={styles.gridImage}
+                    />
+                  </TouchableOpacity>
                   {onDeleteImage && (
                     <TouchableOpacity
                       style={styles.deleteButton}
@@ -81,6 +132,13 @@ const ImageSection: React.FC<ImageSectionProps> = ({
           <Text style={styles.mediaButtonText}>From Gallery</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Image Viewer Modal */}
+      <ImageViewer
+        visible={!!selectedImage}
+        imageUrl={selectedImage || ""}
+        onClose={handleCloseViewer}
+      />
     </View>
   );
 };
@@ -160,6 +218,17 @@ const styles = StyleSheet.create({
     fontSize: wp(3.5),
     color: "#333",
     fontFamily: "Quicksand-Regular",
+  },
+  // Thêm styles mới cho phần hiển thị ảnh phóng to
+  imageViewerContainer: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.9)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  fullSizeImage: {
+    width: "100%",
+    height: "80%",
   },
 });
 

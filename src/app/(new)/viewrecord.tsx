@@ -7,6 +7,10 @@ import {
   Alert,
   ActivityIndicator,
   Text,
+  Modal,
+  Image,
+  TouchableOpacity,
+  Dimensions,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { wp, hp } from "@/components/newemoji/utils";
@@ -116,6 +120,74 @@ const extractTitleAndContent = (noteText: string) => {
   } else {
     return { title: "", content: noteText };
   }
+};
+
+// Thêm ImageViewer component để hiển thị ảnh phóng to
+const ImageViewer = ({
+  visible,
+  imageUrl,
+  onClose,
+}: {
+  visible: boolean;
+  imageUrl: string;
+  onClose: () => void;
+}) => {
+  if (!visible) return null;
+
+  const screenWidth = Dimensions.get("window").width;
+  const screenHeight = Dimensions.get("window").height;
+
+  return (
+    <Modal visible={visible} transparent={true} animationType="fade">
+      <TouchableOpacity
+        style={styles.imageViewerContainer}
+        activeOpacity={1}
+        onPress={onClose}
+      >
+        <Image
+          source={{ uri: imageUrl }}
+          style={styles.fullSizeImage}
+          resizeMode="contain"
+        />
+      </TouchableOpacity>
+    </Modal>
+  );
+};
+
+// Cập nhật ImagesGrid để hỗ trợ phóng to ảnh
+const EnhancedImagesGrid = ({ images }: { images: string[] }) => {
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  if (!images || images.length === 0) return null;
+
+  const handleImagePress = (imageUrl: string) => {
+    setSelectedImage(imageUrl);
+  };
+
+  const handleCloseViewer = () => {
+    setSelectedImage(null);
+  };
+
+  return (
+    <View style={styles.imageContainer}>
+      <View style={styles.imageGrid}>
+        {images.map((imageUrl, index) => (
+          <TouchableOpacity
+            key={index}
+            style={styles.imageWrapper}
+            onPress={() => handleImagePress(imageUrl)}
+          >
+            <Image source={{ uri: imageUrl }} style={styles.image} />
+          </TouchableOpacity>
+        ))}
+      </View>
+      <ImageViewer
+        visible={!!selectedImage}
+        imageUrl={selectedImage || ""}
+        onClose={handleCloseViewer}
+      />
+    </View>
+  );
 };
 
 export default function ViewRecordScreen() {
@@ -474,7 +546,7 @@ export default function ViewRecordScreen() {
           )}
 
           {/* Hiển thị hình ảnh nếu có */}
-          {images.length > 0 && <ImagesGrid images={images} />}
+          {images.length > 0 && <EnhancedImagesGrid images={images} />}
 
           {/* Hiển thị danh sách bản ghi âm */}
           {recordings.length > 0 && (
@@ -579,5 +651,47 @@ const styles = StyleSheet.create({
     fontSize: wp(3.5),
     fontFamily: "Quicksand-SemiBold",
     color: "#166534",
+  },
+  // Thêm styles mới cho phần hiển thị ảnh phóng to
+  imageViewerContainer: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.9)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  fullSizeImage: {
+    width: "100%",
+    height: "80%",
+  },
+
+  // Thêm styles cho ImagesGrid (nếu không có sẵn)
+  imageContainer: {
+    marginVertical: hp(1.5),
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    borderRadius: wp(4),
+    padding: wp(3),
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: "rgba(34, 197, 94, 0.1)",
+  },
+  imageGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+  },
+  imageWrapper: {
+    width: "32%",
+    aspectRatio: 1,
+    marginBottom: wp(1),
+    borderRadius: wp(2),
+    overflow: "hidden",
+  },
+  image: {
+    width: "100%",
+    height: "100%",
   },
 });

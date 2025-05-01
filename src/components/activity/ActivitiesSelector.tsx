@@ -3,8 +3,10 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { wp, hp } from "../newemoji/utils";
 import { ACTIVITIES } from "@/utils/constant";
-// Định nghĩa các hoạt động
-const activities = ACTIVITIES;
+// Định nghĩa các hoạt động (loại bỏ nút "More" khỏi danh sách các activity có thể chọn)
+const activities = ACTIVITIES.filter((activity) => activity.id !== 16);
+const moreButton = ACTIVITIES.find((activity) => activity.id === 16);
+
 interface ActivitiesSelectorProps {
   selectedActivities: number[];
   onActivitySelect: (activityId: number) => void;
@@ -14,6 +16,13 @@ const ActivitiesSelector: React.FC<ActivitiesSelectorProps> = ({
   selectedActivities,
   onActivitySelect,
 }) => {
+  const handleMorePress = () => {
+    console.log(
+      "More button pressed - functionality will be implemented later"
+    );
+    // Hiện tại chỉ hiển thị console log theo yêu cầu
+  };
+
   return (
     <View style={styles.activitiesSection}>
       <View style={styles.sectionTitleContainer}>
@@ -49,6 +58,18 @@ const ActivitiesSelector: React.FC<ActivitiesSelectorProps> = ({
             </Text>
           </TouchableOpacity>
         ))}
+
+        {/* Nút More đặc biệt */}
+        {moreButton && (
+          <TouchableOpacity
+            key="more-button"
+            style={[styles.activityItem, styles.moreButton]}
+            onPress={handleMorePress}
+          >
+            <FontAwesome5 name={moreButton.icon} size={wp(5)} color="#fff" />
+            <Text style={styles.activityName}>{moreButton.name}</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <View style={styles.selectActivitiesContainer}>
@@ -109,6 +130,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 2,
     elevation: 3,
+  },
+  moreButton: {
+    backgroundColor: "rgba(255, 255, 255, 0.25)", // Màu nền hơi khác để phân biệt
   },
   activityName: {
     fontSize: wp(2.8),

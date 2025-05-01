@@ -30,47 +30,49 @@ const RecordsList = ({ records, loading, error }: RecordsListProps) => {
         <AntDesign name="rightcircleo" size={width * 0.06} color="black" />
       </View>
 
-      {/* Hiển thị loading */}
-      {loading && (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#0000ff" />
-          <Text style={styles.messageText}>Đang tải dữ liệu...</Text>
-        </View>
-      )}
+      <View style={styles.contentWrapper}>
+        {/* Hiển thị loading */}
+        {loading && (
+          <View style={styles.centerContainer}>
+            <ActivityIndicator size="large" color="#0000ff" />
+            <Text style={styles.messageText}>Đang tải dữ liệu...</Text>
+          </View>
+        )}
 
-      {/* Hiển thị lỗi */}
-      {error && (
-        <View style={styles.centerContainer}>
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      )}
+        {/* Hiển thị lỗi */}
+        {error && (
+          <View style={styles.centerContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        )}
 
-      {/* Hiển thị khi không có dữ liệu */}
-      {!loading && !error && records.length === 0 && (
-        <View style={styles.centerContainer}>
-          <Text style={styles.messageText}>Không có bản ghi nào</Text>
-        </View>
-      )}
+        {/* Hiển thị khi không có dữ liệu */}
+        {!loading && !error && records.length === 0 && (
+          <View style={styles.centerContainer}>
+            <Text style={styles.messageText}>Không có bản ghi nào</Text>
+          </View>
+        )}
 
-      {/* Scrollable List */}
-      {!loading && !error && records.length > 0 && (
-        <FlatList
-          data={records}
-          renderItem={({ item }) => (
-            <FeelingRecord
-              id={item.id}
-              date={item.date}
-              emoji={item.emoji}
-              feeling={item.feeling}
-            />
-          )}
-          keyExtractor={(item, index) => item.id || index.toString()}
-          style={styles.scrollContainer}
-          contentContainerStyle={styles.contentContainer}
-          showsVerticalScrollIndicator={true}
-          scrollIndicatorInsets={{ right: 1 }} // Optional: Adjust the position of the scroll indicator
-        />
-      )}
+        {/* Scrollable List */}
+        {!loading && !error && records.length > 0 && (
+          <FlatList
+            data={records}
+            renderItem={({ item }) => (
+              <FeelingRecord
+                id={item.id}
+                date={item.date}
+                emoji={item.emoji}
+                feeling={item.feeling}
+              />
+            )}
+            keyExtractor={(item, index) => item.id || index.toString()}
+            style={styles.scrollContainer}
+            contentContainerStyle={styles.contentContainer}
+            showsVerticalScrollIndicator={true}
+            scrollIndicatorInsets={{ right: 1 }} // Optional: Adjust the position of the scroll indicator
+          />
+        )}
+      </View>
     </View>
   );
 };
@@ -79,13 +81,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingBottom: height * 0.12,
+    width: width * 0.9,
+    alignSelf: "center",
+  },
+  contentWrapper: {
+    flex: 1,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: width * 0.05,
     paddingBottom: height * 0.02,
+    width: "100%",
+    paddingHorizontal: width * 0.02,
   },
   headerTitle: {
     fontFamily: "Quicksand-Bold",
@@ -101,6 +109,7 @@ const styles = StyleSheet.create({
     alignItems: "stretch",
     gap: height * 0.015,
     paddingBottom: height * 0.015,
+    marginLeft: width * 0.03,
   },
   centerContainer: {
     flex: 1,
