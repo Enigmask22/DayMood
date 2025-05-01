@@ -14,22 +14,40 @@ interface RecordingData {
   fileExists: boolean;
   isMusic?: boolean;
   name?: string;
+  currentPosition?: string;
+  durationMillis?: number;
+  currentMillis?: number;
 }
 
 interface RecordingsListProps {
   recordings: RecordingData[];
   onPlayRecording: (recording: RecordingData) => Promise<void>;
+  onPauseRecording?: (recording: RecordingData) => Promise<void>;
 }
 
 const RecordingsList: React.FC<RecordingsListProps> = ({
   recordings,
   onPlayRecording,
+  onPauseRecording,
 }) => {
   if (!recordings || recordings.length === 0) {
     return null;
   }
 
   console.log("Hiển thị danh sách bản ghi - Số lượng:", recordings.length);
+
+  // Xử lý sự kiện khi người dùng nhấn nút play/pause
+  const handlePlayPausePress = (recording: RecordingData) => {
+    if (recording.isPlaying) {
+      // Nếu đang phát, dừng lại
+      if (onPauseRecording) {
+        onPauseRecording(recording);
+      }
+    } else {
+      // Nếu đang dừng, phát
+      onPlayRecording(recording);
+    }
+  };
 
   return (
     <View style={styles.recordingsContainer}>
@@ -88,15 +106,23 @@ const RecordingsList: React.FC<RecordingsListProps> = ({
                   >
                     {recording.name || `Bản ghi #${recording.id + 1}`}
                   </Text>
-                  <Text style={styles.recordingDuration}>
-                    {recording.duration}
+                  <Text
+                    style={
+                      recording.isPlaying
+                        ? styles.playingDuration
+                        : styles.recordingDuration
+                    }
+                  >
+                    {recording.isPlaying && recording.currentPosition
+                      ? `${recording.currentPosition}/${recording.duration}`
+                      : recording.duration}
                   </Text>
                 </View>
               </View>
 
               <TouchableOpacity
                 style={styles.playButton}
-                onPress={() => onPlayRecording(recording)}
+                onPress={() => handlePlayPausePress(recording)}
               >
                 <LinearGradient
                   colors={
@@ -116,7 +142,7 @@ const RecordingsList: React.FC<RecordingsListProps> = ({
                     color="#fff"
                   />
                   <Text style={styles.playButtonText}>
-                    {recording.isPlaying ? "DỪNG" : "PHÁT"}
+                    {recording.isPlaying ? "STOP" : "PLAY"}
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>
@@ -217,6 +243,11 @@ const styles = StyleSheet.create({
     fontSize: wp(3.5),
     color: "#666",
     fontFamily: "Quicksand-Regular",
+  },
+  playingDuration: {
+    fontSize: wp(3.5),
+    color: "#32B768",
+    fontFamily: "Quicksand-Medium",
   },
   playButton: {
     borderRadius: wp(5),

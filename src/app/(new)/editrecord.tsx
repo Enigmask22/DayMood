@@ -55,6 +55,9 @@ export default function EditRecordScreen() {
       isMusic?: boolean;
       name?: string;
       id?: number;
+      currentPosition?: string;
+      durationMillis?: number;
+      currentMillis?: number;
     }[]
   >([]);
 

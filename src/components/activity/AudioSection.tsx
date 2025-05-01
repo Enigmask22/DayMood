@@ -22,6 +22,9 @@ interface RecordingInfo {
   isPlaying?: boolean;
   isMusic?: boolean;
   name?: string;
+  currentPosition?: string; // Vị trí phát hiện tại (định dạng mm:ss)
+  durationMillis?: number; // Tổng thời lượng tính bằng milliseconds
+  currentMillis?: number; // Vị trí hiện tại tính bằng milliseconds
 }
 
 interface AudioSectionProps {
@@ -351,11 +354,18 @@ const AudioSection: React.FC<AudioSectionProps> = ({
         return;
       }
 
+      // Lấy tổng thời lượng
+      const durationMillis = status.durationMillis || 0;
+
       // Cập nhật trạng thái isPlaying
       setRecordings((prevRecordings) =>
         prevRecordings.map((rec, idx) => ({
           ...rec,
           isPlaying: idx === index,
+          // Thêm thông tin thời gian
+          durationMillis: idx === index ? durationMillis : rec.durationMillis,
+          currentMillis: idx === index ? 0 : rec.currentMillis,
+          currentPosition: idx === index ? "00:00" : rec.currentPosition,
         }))
       );
 
@@ -367,6 +377,26 @@ const AudioSection: React.FC<AudioSectionProps> = ({
       // Cài đặt callback khi âm thanh kết thúc
       newSound.setOnPlaybackStatusUpdate(async (status) => {
         console.log("Cập nhật trạng thái phát:", status);
+
+        // Nếu đang phát, cập nhật vị trí hiện tại
+        if (status.isLoaded && status.isPlaying) {
+          const currentMillis = status.positionMillis;
+          const formattedPosition = formatTime(currentMillis);
+
+          // Cập nhật vị trí hiện tại trong recordings
+          setRecordings((prevRecordings) =>
+            prevRecordings.map((rec, idx) =>
+              idx === index
+                ? {
+                    ...rec,
+                    currentMillis: currentMillis,
+                    currentPosition: formattedPosition,
+                  }
+                : rec
+            )
+          );
+        }
+
         if (status.isLoaded && !status.isPlaying && status.didJustFinish) {
           console.log("Âm thanh đã phát xong");
           // Đặt lại trạng thái khi phát xong
@@ -374,6 +404,7 @@ const AudioSection: React.FC<AudioSectionProps> = ({
             prevRecordings.map((rec) => ({
               ...rec,
               isPlaying: false,
+              currentPosition: "00:00",
             }))
           );
           await newSound.unloadAsync();
@@ -434,6 +465,16 @@ const AudioSection: React.FC<AudioSectionProps> = ({
     }
   }
 
+  // Thêm hàm định dạng thời gian ngay sau các hàm khác
+  function formatTime(milliseconds: number): string {
+    const totalSeconds = Math.floor(milliseconds / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes.toString().padStart(2, "0")}:${seconds
+      .toString()
+      .padStart(2, "0")}`;
+  }
+
   function getRecordingLines() {
     return recordings.map((recordingLine, index) => {
       const isPlaying = recordingLine.isPlaying || false;
@@ -479,8 +520,14 @@ const AudioSection: React.FC<AudioSectionProps> = ({
               >
                 {itemTitle}
               </Text>
-              <Text style={styles.recordingDuration}>
-                {recordingLine.duration}
+              <Text
+                style={
+                  isPlaying ? styles.playingDuration : styles.recordingDuration
+                }
+              >
+                {isPlaying && recordingLine.currentPosition
+                  ? `${recordingLine.currentPosition}/${recordingLine.duration}`
+                  : recordingLine.duration}
               </Text>
             </View>
           </View>
@@ -508,7 +555,7 @@ const AudioSection: React.FC<AudioSectionProps> = ({
                 color="#fff"
               />
               <Text style={styles.playButtonText}>
-                {isPlaying ? "DỪNG" : "PHÁT"}
+                {isPlaying ? "STOP" : "PLAY"}
               </Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -721,6 +768,11 @@ const styles = StyleSheet.create({
     fontSize: wp(3.2),
     color: "#666",
     fontFamily: "Quicksand-Regular",
+  },
+  playingDuration: {
+    fontSize: wp(3.2),
+    color: "#32B768",
+    fontFamily: "Quicksand-Medium",
   },
   playButton: {
     borderRadius: wp(5),

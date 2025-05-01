@@ -17,6 +17,15 @@ import Header from "@/components/newemoji/Header";
 import { wp, hp } from "@/components/newemoji/utils";
 import { API_ENDPOINTS, DEFAULT_USER_ID } from "@/utils/config";
 
+// Map mood IDs to titles
+const moodTitles: { [key: number]: string } = {
+  1: "Not feeling good today",
+  2: "I'm feeling angry",
+  3: "Just an ordinary day",
+  4: "It's a good day",
+  5: "Today is so good",
+};
+
 export default function NewEmojiScreen() {
   // Lấy tham số initialDate từ URL
   const params = useLocalSearchParams();
@@ -53,12 +62,16 @@ export default function NewEmojiScreen() {
     try {
       setIsLoading(true);
 
-      // Chuẩn bị dữ liệu gửi đi
+      // Lấy title từ moodTitles dựa vào selectedMood
+      const moodTitle = moodTitles[selectedMood] || "How I feel today";
+
+      // Chuẩn bị dữ liệu gửi đi với title từ mood
       const recordData = {
         date: date.toISOString(),
         mood_id: selectedMood,
         user_id: DEFAULT_USER_ID,
         status: "ACTIVE",
+        title: moodTitle, // Thêm title dựa vào mood
       };
 
       console.log("Gửi dữ liệu:", recordData);

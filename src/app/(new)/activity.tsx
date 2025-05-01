@@ -26,6 +26,9 @@ export default function ActivityScreen() {
       isPlaying?: boolean;
       isMusic?: boolean;
       name?: string;
+      currentPosition?: string;
+      durationMillis?: number;
+      currentMillis?: number;
     }[]
   >([]);
   const [date, setDate] = useState<Date>(() => {
