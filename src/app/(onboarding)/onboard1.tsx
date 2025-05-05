@@ -9,16 +9,19 @@ import {
   StatusBar,
   Dimensions,
   Animated,
+  Easing,
   PanResponder,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { APP_COLOR } from "src/utils/constant";
-import AsyncStorage from "@react-native-async-storage/async-storage"; // Bỏ comment dòng này
 
 const { width } = Dimensions.get("window");
 
-const OnboardScreen3 = () => {
+// Giả sử chúng ta import từ file constant.ts
+const ONBOARDINGTEXT3 = "#79BF5D";
+
+const OnboardScreen1 = () => {
   const router = useRouter();
+  const rotateValue = new Animated.Value(0);
   const pan = new Animated.ValueXY();
 
   const panResponder = React.useRef(
@@ -29,18 +32,10 @@ const OnboardScreen3 = () => {
       onPanResponderMove: (_, gestureState) => {
         pan.x.setValue(gestureState.dx);
       },
-      onPanResponderRelease: async (_, gestureState) => {
+      onPanResponderRelease: (_, gestureState) => {
         if (gestureState.dx < -50) {
-          // Vuốt sang trái -> chuyển đến login
-          try {
-            await AsyncStorage.setItem("hasCompletedOnboarding", "true");
-            router.replace("/(auth)/login");
-          } catch (e) {
-            console.error("Failed to save onboarding status or navigate:", e);
-          }
-        } else if (gestureState.dx > 50) {
-          // Vuốt sang phải -> quay lại màn hình trước
-          router.back();
+          // Nếu vuốt sang trái đủ xa (hơn 50 đơn vị)
+          router.push("/onboard2" as any);
         }
         // Reset vị trí về 0
         Animated.spring(pan.x, {
@@ -51,13 +46,35 @@ const OnboardScreen3 = () => {
     })
   ).current;
 
-  const handleFinish = () => {
-    router.replace("/(auth)/login");
-  };
+  React.useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(rotateValue, {
+          toValue: 1,
+          duration: 1000,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }),
+        Animated.timing(rotateValue, {
+          toValue: 0,
+          duration: 1000,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, []);
+
+  const rotate = rotateValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["-20deg", "20deg"],
+  });
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
+
+      {/* Main Content */}
       <Animated.View
         style={[
           styles.contentContainer,
@@ -67,39 +84,42 @@ const OnboardScreen3 = () => {
         ]}
         {...panResponder.panHandlers}
       >
-        {/* Thay thế bằng hình ảnh và nội dung của bạn cho Onboard 3 */}
         <Image
-          source={require("@/assets/images/onboard/onboard3.png")} // Placeholder image
+          source={require("@/assets/images/onboard/onboard1.png")}
           style={styles.image}
-          resizeMode="contain"
+          resizeMode="cover"
         />
+
         <View style={styles.titleContainer}>
-          <Text style={styles.titleText}>See through your emotion </Text>
-          <Text style={styles.subtitleText}>
-            With statistical charts, we will offer some features such as advice,
-            music,... to help improve your mood
+          <Text style={styles.welcomeText}>
+            Welcome to{"\n"}
+            <Text style={styles.brandText}>DayMood</Text>
           </Text>
+          <Text style={styles.subtitleText}>Let's make your day better</Text>
+          {/* Biểu tượng vẫy tay */}
+          <Animated.Text style={[styles.waveHand, { transform: [{ rotate }] }]}>
+            👋
+          </Animated.Text>
         </View>
 
-        {/* Pagination */}
+        {/* Chỉ báo trang (pagination) */}
         <View style={styles.paginationContainer}>
           <View style={styles.paginationWrapper}>
-            <View style={[styles.paginationDot, styles.inactiveDot]} />
-            <View style={[styles.paginationDot, styles.inactiveDot]} />
             <View style={styles.paginationDot} />
+            <View style={[styles.paginationDot, styles.inactiveDot]} />
+            <View style={[styles.paginationDot, styles.inactiveDot]} />
           </View>
         </View>
 
-        {/* Nút Finish */}
-        <TouchableOpacity style={styles.button} onPress={handleFinish}>
-          <Text style={styles.buttonText}>Start</Text>
+        {/* Nút Getting Started */}
+        <TouchableOpacity style={styles.button}>
+          <Text style={styles.buttonText}>Getting Started</Text>
         </TouchableOpacity>
       </Animated.View>
     </SafeAreaView>
   );
 };
 
-// --- Style tương tự Onboard 1 & 2 ---
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -108,32 +128,39 @@ const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
     paddingHorizontal: 17,
-    marginTop: 64,
+    marginTop: 64, // Để tránh StatusBar
   },
   image: {
-    width: width - 34,
-    height: width - 34,
+    width: width - 34, // Trừ đi padding 2 bên
+    height: width - 34, // Để giữ tỷ lệ 1:1
     alignSelf: "center",
-    // marginBottom: 33,
   },
   titleContainer: {
     alignItems: "center",
     marginTop: 33,
   },
-  titleText: {
+  welcomeText: {
     fontFamily: "Poppins-Bold",
-    fontSize: 24,
-    fontWeight: "bold",
+    color: "#000000",
+    fontSize: 28,
     textAlign: "center",
-    lineHeight: 32,
-    marginBottom: 12,
+    lineHeight: 36,
+  },
+  brandText: {
+    fontFamily: "Poppins-Bold",
+    fontSize: 28,
+    color: ONBOARDINGTEXT3,
   },
   subtitleText: {
-    fontFamily: "Inter-Light",
-    fontSize: 18,
+    fontFamily: "Poppins-Light",
+    fontSize: 20,
     color: "#666666",
+    marginTop: 12,
     textAlign: "center",
-    paddingHorizontal: 20,
+  },
+  waveHand: {
+    fontSize: 30,
+    marginTop: 16,
   },
   paginationContainer: {
     marginTop: "auto",
@@ -149,20 +176,17 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: APP_COLOR.ONBOARDING,
+    backgroundColor: "#007AFF", // Màu xanh iOS
   },
   inactiveDot: {
-    backgroundColor: "#D9D9D9",
+    backgroundColor: "#D9D9D9", // Màu xám nhạt
   },
   button: {
-    backgroundColor: APP_COLOR.ONBOARDING,
+    backgroundColor: "#007AFF",
     borderRadius: 14,
     paddingVertical: 15,
-    paddingHorizontal: 20, // Thêm padding ngang để button không quá sát text
     alignItems: "center",
     marginBottom: 10,
-    minWidth: 200, // Đảm bảo button có chiều rộng tối thiểu
-    alignSelf: "center", // Căn giữa button theo chiều ngang
   },
   buttonText: {
     fontFamily: "Inter-ExtraBold",
@@ -172,4 +196,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default OnboardScreen3;
+export default OnboardScreen1;

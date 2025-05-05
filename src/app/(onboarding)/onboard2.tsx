@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
   StatusBar,
   Dimensions,
+  Animated,
+  PanResponder,
 } from "react-native";
 import { useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -17,9 +19,35 @@ const { width } = Dimensions.get("window");
 
 const OnboardScreen2 = () => {
   const router = useRouter();
+  const pan = new Animated.ValueXY();
 
-  const handlePrevious = () => {
-    router.push("/(main)"); // Điều hướng sang onboard3
+  const panResponder = React.useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return Math.abs(gestureState.dx) > 10;
+      },
+      onPanResponderMove: (_, gestureState) => {
+        pan.x.setValue(gestureState.dx);
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dx < -50) {
+          // Vuốt sang trái -> chuyển đến onboard3
+          router.push("/onboard3");
+        } else if (gestureState.dx > 50) {
+          // Vuốt sang phải -> quay lại màn hình trước
+          router.back();
+        }
+        // Reset vị trí về 0
+        Animated.spring(pan.x, {
+          toValue: 0,
+          useNativeDriver: false,
+        }).start();
+      },
+    })
+  ).current;
+
+  const handleSkip = () => {
+    router.push("/(auth)/login"); // Điều hướng sang onboard3
   };
 
   const handleNext = () => {
@@ -29,7 +57,15 @@ const OnboardScreen2 = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
-      <View style={styles.contentContainer}>
+      <Animated.View
+        style={[
+          styles.contentContainer,
+          {
+            transform: [{ translateX: pan.x }],
+          },
+        ]}
+        {...panResponder.panHandlers}
+      >
         {/* Thay thế bằng hình ảnh và nội dung của bạn cho Onboard 2 */}
         <Image
           source={require("@/assets/images/onboard/onboard2.png")} // Placeholder image
@@ -56,7 +92,7 @@ const OnboardScreen2 = () => {
 
         <View style={styles.navContainer}>
           {/* Nút Skip */}
-          <TouchableOpacity onPress={handlePrevious}>
+          <TouchableOpacity onPress={handleSkip}>
             <Text style={styles.skipText}>Skip</Text>
           </TouchableOpacity>
 
@@ -65,7 +101,7 @@ const OnboardScreen2 = () => {
             <Ionicons name="arrow-forward" size={24} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
-      </View>
+      </Animated.View>
     </SafeAreaView>
   );
 };
