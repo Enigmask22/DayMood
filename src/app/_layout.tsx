@@ -35,7 +35,8 @@ const RootLayout = () => {
         );
 
         if (hasCompletedOnboarding === "true") {
-          router.replace("/(main)");
+          router.replace("/");
+          // router.replace("/(main)");
         } else {
           router.replace("/");
         }
@@ -62,6 +63,7 @@ const RootLayout = () => {
         <Stack.Screen name="index" />
         <Stack.Screen name="(main)" />
         <Stack.Screen name="(onboarding)" />
+        <Stack.Screen name="(auth)" />
       </Stack>
     </Provider>
   );
