@@ -35,7 +35,7 @@ const RecordsList = ({ records, loading, error }: RecordsListProps) => {
         {loading && (
           <View style={styles.centerContainer}>
             <ActivityIndicator size="large" color="#0000ff" />
-            <Text style={styles.messageText}>Đang tải dữ liệu...</Text>
+            <Text style={styles.messageText}>Loading...</Text>
           </View>
         )}
 
@@ -49,7 +49,7 @@ const RecordsList = ({ records, loading, error }: RecordsListProps) => {
         {/* Hiển thị khi không có dữ liệu */}
         {!loading && !error && records.length === 0 && (
           <View style={styles.centerContainer}>
-            <Text style={styles.messageText}>Không có bản ghi nào</Text>
+            {/* <Text style={styles.messageText}>No Recording</Text> */}
           </View>
         )}
 

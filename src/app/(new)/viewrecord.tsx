@@ -601,7 +601,7 @@ export default function ViewRecordScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#16A34A" />
-          <Text style={styles.loadingText}>Đang tải dữ liệu...</Text>
+          <Text style={styles.loadingText}>Loading...</Text>
         </View>
       </SafeAreaView>
     );
