@@ -6,11 +6,8 @@ import {
   View,
   ActivityIndicator,
 } from "react-native";
-import FeelingRecord from "src/components/homepage/FeelingRecord";
+import FeelingRecord from "./FeelingRecord";
 import { FeelingRecordProps } from "src/components/homepage/FeelingRecord";
-import AntDesign from "@expo/vector-icons/AntDesign";
-import { TouchableOpacity } from "react-native";
-import { useRouter } from "expo-router";
 const { width, height } = Dimensions.get("window");
 
 interface RecordItem extends FeelingRecordProps {
@@ -24,17 +21,8 @@ interface RecordsListProps {
 }
 
 const RecordsList = ({ records, loading, error }: RecordsListProps) => {
-  const router = useRouter();
   return (
     <View style={styles.container}>
-      {/* Navigation Bar */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Recent Records</Text>
-        <TouchableOpacity onPress={() => router.push("/(user)/postlist")}>
-          <AntDesign name="rightcircleo" size={width * 0.06} color="black" />
-        </TouchableOpacity>
-      </View>
-
       <View style={styles.contentWrapper}>
         {/* Hiển thị loading */}
         {loading && (
@@ -54,7 +42,7 @@ const RecordsList = ({ records, loading, error }: RecordsListProps) => {
         {/* Hiển thị khi không có dữ liệu */}
         {!loading && !error && records.length === 0 && (
           <View style={styles.centerContainer}>
-            {/* <Text style={styles.messageText}>No Recording</Text> */}
+            <Text style={styles.messageText}>No Recording</Text>
           </View>
         )}
 
@@ -86,7 +74,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingBottom: height * 0.12,
-    width: width * 0.9,
+    width: width * 0.9, 
     alignSelf: "center",
   },
   contentWrapper: {

@@ -10,6 +10,7 @@ interface Record {
   date: string;
   emoji: string;
   feeling: string;
+  rawDate: string; // Optional raw date for future use
 }
 
 // Define API record interface
@@ -92,6 +93,7 @@ const convertApiRecordToRecord = (apiRecord: ApiRecord): Record => {
     date: formattedDate,
     emoji: emojiName,
     feeling: apiRecord.title || "",
+    rawDate: apiRecord.date, // Lưu trữ ngày gốc nếu cần
   };
 };
 
@@ -119,6 +121,7 @@ export const recordSlice = createSlice({
         date: action.payload.date,
         emoji: action.payload.emoji,
         feeling: action.payload.feeling,
+        rawDate: action.payload.date, // Lưu trữ ngày gốc nếu cần
       };
       state.records.push(newRecord);
     },
