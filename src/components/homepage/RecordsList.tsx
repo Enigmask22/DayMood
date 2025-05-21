@@ -30,7 +30,9 @@ const RecordsList = ({ records, loading, error }: RecordsListProps) => {
       {/* Navigation Bar */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Recent Records</Text>
-        <TouchableOpacity onPress={() => router.push("/(user)/postlist")}>
+        <TouchableOpacity
+          onPress={() => router.push("/(user)/postlist" as any)}
+        >
           <AntDesign name="rightcircleo" size={width * 0.06} color="black" />
         </TouchableOpacity>
       </View>

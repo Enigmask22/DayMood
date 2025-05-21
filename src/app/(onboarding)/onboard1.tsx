@@ -112,7 +112,10 @@ const OnboardScreen1 = () => {
         </View>
 
         {/* Nút Getting Started */}
-        <TouchableOpacity style={styles.button}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => router.push("/onboard2" as any)}
+        >
           <Text style={styles.buttonText}>Getting Started</Text>
         </TouchableOpacity>
       </Animated.View>
