@@ -25,7 +25,7 @@ const SettingPage = () => {
   const userProfile = {
     name: "Alex Johnson",
     email: "alex.johnson@example.com",
-    memberSince: "January 2023",
+    memberSince: "January 2025",
     level: "Premium"
   };
   
