@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, Dimensions, TouchableOpacity, ScrollView } from
 import { Ionicons } from "@expo/vector-icons";
 import { format, addMonths, subMonths } from "date-fns";
 import EmotionPage from "@/components/stats/emotion";
-import ActivityPage from "@/components/stats/activity";
 
 const { width, height } = Dimensions.get("window");
 
@@ -15,7 +14,7 @@ const tabs = [
 ];
 
 const StatsPage = () => {
-  const [selectedTab, setSelectedTab] = useState("general");
+  const [selectedTab, setSelectedTab] = useState("emotion");
   const [currentDate, setCurrentDate] = useState(new Date());
 
   // Function to handle month navigation
@@ -83,10 +82,11 @@ const StatsPage = () => {
             );
           case "activity":
             return (
-              <ActivityPage
-                currentDate={currentDate}
-                setCurrentDate={setCurrentDate}
-              />
+              <View style={styles.otherTabContent}>
+                <Text style={styles.comingSoonText}>
+                  Activity tab content coming soon
+                </Text>
+              </View>
             );
           default:
             return (
