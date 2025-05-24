@@ -35,8 +35,12 @@ const RootLayout = () => {
         );
 
         if (hasCompletedOnboarding === "true") {
-          router.replace("/");
-          // router.replace("/(main)");
+          const access_token = await AsyncStorage.getItem("access_token");
+          if (access_token) {
+            router.replace("/(main)");
+          } else {
+            router.replace("/(auth)/login");
+          }
         } else {
           router.replace("/");
         }

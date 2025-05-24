@@ -3,11 +3,11 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 interface CalendarHeaderProps {
-  todayString: string;
+  dateString: string;
   onAddPress: () => void;
 }
 
-const CalendarHeader = ({ todayString, onAddPress }: CalendarHeaderProps) => {
+const CalendarHeader = ({ dateString, onAddPress }: CalendarHeaderProps) => {
   return (
     <>
       <View style={styles.header}>
@@ -20,7 +20,7 @@ const CalendarHeader = ({ todayString, onAddPress }: CalendarHeaderProps) => {
         <Text style={styles.headerText}>Calendar</Text>
       </View>
       <View style={styles.rowBox}>
-        <Text style={styles.dateText}>{todayString}</Text>
+        <Text style={styles.dateText}>{dateString}</Text>
         <TouchableOpacity style={styles.addBtn} onPress={onAddPress}>
           <Text style={styles.addText}>ADD</Text>
           <Ionicons

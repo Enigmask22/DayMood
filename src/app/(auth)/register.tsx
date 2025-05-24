@@ -1,6 +1,7 @@
 import ButtonAuth from "@/components/authpage/ButtonAuth";
 import InputPasswordBox from "@/components/authpage/InputPasswordBox";
 import InputUserNameBox from "@/components/authpage/InputUserNameBox";
+import { API_URL } from "@/utils/config";
 import { Ionicons } from "@expo/vector-icons";
 import { Redirect, useRouter } from "expo-router";
 import { useState } from "react";
@@ -13,21 +14,96 @@ import {
   Dimensions,
   StyleSheet,
 } from "react-native";
+import CustomAlert from "@/components/common/CustomAlert";
+
 const { width, height } = Dimensions.get("window");
 
 export default function Register() {
-  const router = useRouter(); // Hook điều hướng
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [username, setUserName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [alertConfig, setAlertConfig] = useState({
+    visible: false,
+    title: "",
+    message: "",
+    type: "info" as "success" | "error" | "info",
+    onConfirm: () => {},
+  });
+
+  const showAlert = (
+    title: string,
+    message: string,
+    type: "success" | "error" | "info",
+    onConfirm?: () => void
+  ) => {
+    setAlertConfig({
+      visible: true,
+      title,
+      message,
+      type,
+      onConfirm:
+        onConfirm ||
+        (() => setAlertConfig((prev) => ({ ...prev, visible: false }))),
+    });
+  };
 
   const handleReturnToLogin = () => {
     router.back();
   };
 
-  const handleSignUp = () => {
-    console.log("Sign up");
+  const handleSignUp = async () => {
+    try {
+      if (password !== confirmPassword) {
+        showAlert(
+          "Error",
+          "Password and confirm password do not match",
+          "error"
+        );
+        return;
+      }
+      if (!email || !username || !password || !confirmPassword) {
+        showAlert("Error", "Please fill in all fields", "error");
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/api/v1/auth/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, username, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.statusCode === 201) {
+        showAlert(
+          "Success",
+          "Registration successful! Please login to continue.",
+          "success",
+          () => {
+            setAlertConfig((prev) => ({ ...prev, visible: false }));
+            router.replace("/login");
+          }
+        );
+      } else {
+        showAlert(
+          "Registration Failed",
+          data.message ||
+            "An error occurred during registration. Please try again.",
+          "error"
+        );
+      }
+    } catch (error) {
+      console.error("Error during sign up:", error);
+      showAlert(
+        "Error",
+        "An unexpected error occurred. Please try again later.",
+        "error"
+      );
+    }
   };
 
   return (
@@ -88,6 +164,16 @@ export default function Register() {
           </View>
         </View>
       </View>
+
+      <CustomAlert
+        visible={alertConfig.visible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        onClose={() => setAlertConfig((prev) => ({ ...prev, visible: false }))}
+        onConfirm={alertConfig.onConfirm}
+        showConfirmButton={alertConfig.type === "success"}
+      />
     </ScrollView>
   );
 }

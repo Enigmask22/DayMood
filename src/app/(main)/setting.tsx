@@ -1,18 +1,19 @@
 import React, { useState } from "react";
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  TouchableOpacity, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
   Switch,
-  Alert
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { HOME_COLOR } from "@/utils/constant";
-import Avatar from "@/components/settingpage/Avatar";
-import SettingOption from "@/components/settingpage/SettingOption";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+// import Avatar from "@/components/settingpage/Avatar";
+// import SettingOption from "@/components/settingpage/SettingOption";
 
 const SettingPage = () => {
   // Sample state for settings toggles
@@ -20,15 +21,15 @@ const SettingPage = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [dataSync, setDataSync] = useState(true);
-  
+
   // Profile information
   const userProfile = {
     name: "Alex Johnson",
     email: "alex.johnson@example.com",
     memberSince: "January 2025",
-    level: "Premium"
+    level: "Premium",
   };
-  
+
   // Sample languages
   const languages = [
     { code: "en", name: "English" },
@@ -39,35 +40,47 @@ const SettingPage = () => {
     { code: "ja", name: "Japanese" },
     { code: "ar", name: "Arabic" },
   ];
-  
+
   // Currently selected language
   const [selectedLanguage, setSelectedLanguage] = useState("en");
-  
+
   // Logout handler
-  const handleLogout = () => {
-    Alert.alert(
-      "Logout",
-      "Are you sure you want to logout?",
-      [
-        { text: "Cancel", style: "cancel" },
-        { 
-          text: "Logout", 
-          onPress: () => {
-            // Perform logout operations
+  const handleLogout = async () => {
+    Alert.alert("Logout", "Are you sure you want to logout?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Logout",
+        onPress: async () => {
+          try {
+            // Remove all stored data
+            await AsyncStorage.multiRemove([
+              "access_token",
+              "refresh_token",
+              "user",
+            ]);
+
+            // Navigate to login screen
             router.replace("/login");
-          },
-          style: "destructive" 
-        }
-      ]
-    );
+          } catch (error) {
+            console.error("Error during logout:", error);
+            Alert.alert(
+              "Error",
+              "An error occurred during logout. Please try again.",
+              [{ text: "OK" }]
+            );
+          }
+        },
+        style: "destructive",
+      },
+    ]);
   };
-  
+
   // Handle language selection
   const handleLanguageChange = (langCode: string) => {
     setSelectedLanguage(langCode);
     // Implementation for language change
   };
-  
+
   // Handle theme change
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
@@ -78,10 +91,10 @@ const SettingPage = () => {
     <ScrollView style={styles.container}>
       {/* Profile Section */}
       <View style={styles.profileContainer}>
-        <Avatar 
+        {/* <Avatar 
           size={80} 
           source={{ uri: "https://randomuser.me/api/portraits/people/42.jpg" }}
-        />
+        /> */}
         <View style={styles.profileInfo}>
           <Text style={styles.profileName}>{userProfile.name}</Text>
           <Text style={styles.profileEmail}>{userProfile.email}</Text>
@@ -90,24 +103,24 @@ const SettingPage = () => {
             <Text style={styles.membershipText}>{userProfile.level}</Text>
           </View>
         </View>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.editButton}
           onPress={() => router.push("/")}
         >
           <Text style={styles.editButtonText}>Edit</Text>
         </TouchableOpacity>
       </View>
-      
+
       {/* Account Settings */}
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>Account</Text>
-        <SettingOption
+        {/* <SettingOption
           icon="person-outline"
           title="Personal Information"
           onPress={() => router.push("/")}
           showChevron
-        />
-        <SettingOption
+        /> */}
+        {/* <SettingOption
           icon="notifications-outline"
           title="Notifications"
           rightElement={
@@ -118,19 +131,19 @@ const SettingPage = () => {
               thumbColor={notificationsEnabled ? HOME_COLOR.HOMETABBAR : "#F4F3F4"}
             />
           }
-        />
-        <SettingOption
+        /> */}
+        {/* <SettingOption
           icon="lock-closed-outline"
           title="Privacy & Security"
           onPress={() => router.push("/")}
           showChevron
-        />
+        /> */}
       </View>
-      
+
       {/* Preferences */}
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>Preferences</Text>
-        <SettingOption
+        {/* <SettingOption
           icon="moon-outline"
           title="Dark Mode"
           rightElement={
@@ -141,15 +154,15 @@ const SettingPage = () => {
               thumbColor={darkMode ? HOME_COLOR.HOMETABBAR : "#F4F3F4"}
             />
           }
-        />
-        <SettingOption
+        /> */}
+        {/* <SettingOption
           icon="language-outline"
           title="Language"
           subtitle={languages.find(l => l.code === selectedLanguage)?.name || "English"}
           onPress={() => router.push("/")}
           showChevron
-        />
-        <SettingOption
+        /> */}
+        {/* <SettingOption
           icon="color-palette-outline"
           title="Appearance"
           onPress={() => router.push("/")}
@@ -166,13 +179,13 @@ const SettingPage = () => {
               thumbColor={soundEnabled ? HOME_COLOR.HOMETABBAR : "#F4F3F4"}
             />
           }
-        />
+        /> */}
       </View>
-      
+
       {/* Data Management */}
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>Data</Text>
-        <SettingOption
+        {/* <SettingOption
           icon="cloud-upload-outline"
           title="Sync Data"
           subtitle="Last synced: Today, 10:45 AM"
@@ -184,25 +197,25 @@ const SettingPage = () => {
               thumbColor={dataSync ? HOME_COLOR.HOMETABBAR : "#F4F3F4"}
             />
           }
-        />
-        <SettingOption
+        /> */}
+        {/* <SettingOption
           icon="download-outline"
           title="Export Your Data"
           onPress={() => router.push("/")}
           showChevron
-        />
+        /> */}
       </View>
-      
+
       {/* Support and About */}
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>Support</Text>
-        <SettingOption
+        {/* <SettingOption
           icon="help-circle-outline"
           title="Help Center"
           onPress={() => router.push("/")}
           showChevron
-        />
-        <SettingOption
+        /> */}
+        {/* <SettingOption
           icon="information-circle-outline"
           title="About DayMood"
           subtitle="Version 1.2.3"
@@ -214,15 +227,15 @@ const SettingPage = () => {
           title="Feedback"
           onPress={() => router.push("/")}
           showChevron
-        />
+        /> */}
       </View>
-      
+
       {/* Logout Button */}
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
         <Ionicons name="log-out-outline" size={20} color="#FF3B30" />
         <Text style={styles.logoutText}>Log Out</Text>
       </TouchableOpacity>
-      
+
       {/* Footer with copyright */}
       <Text style={styles.copyrightText}>
         © {new Date().getFullYear()} DayMood App. All rights reserved.
@@ -331,7 +344,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#999",
     marginBottom: 30,
-  }
+  },
 });
 
 export default SettingPage;
