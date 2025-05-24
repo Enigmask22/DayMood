@@ -114,9 +114,11 @@ export default function NewEmojiScreen() {
 
   const handleBack = () => {
     try {
-      router.push("/(main)" as any);
+      router.back();
     } catch (error) {
       console.error("Navigation error:", error);
+      // Fallback to main screen if back navigation fails
+      router.push("/(main)" as any);
     }
   };
 

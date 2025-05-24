@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -10,26 +10,100 @@ import {
 } from "react-native";
 import { Link, router, useRouter } from "expo-router";
 import InputUserNameBox from "@/components/authpage/InputUserNameBox";
-import { useState } from "react";
 import InputPasswordBox from "@/components/authpage/InputPasswordBox";
 import { Checkbox } from "react-native-paper";
 import ButtonAuth from "@/components/authpage/ButtonAuth";
 import ButtonLoginGoogle from "@/components/authpage/ButtonLoginGoogle";
+import { API_URL } from "@/utils/config";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import CustomAlert from "@/components/common/CustomAlert";
 
 const { width, height } = Dimensions.get("window");
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const router = useRouter(); // Hook điều hướng
-  const [checked, setChecked] = useState(false); // State cho checkbox
+  const router = useRouter();
+  const [checked, setChecked] = useState(false);
+  const [alertConfig, setAlertConfig] = useState({
+    visible: false,
+    title: "",
+    message: "",
+    type: "info" as "success" | "error" | "info",
+    onConfirm: () => {},
+  });
 
-  const handleCheckboxPress = () => {
-    setChecked((prev) => !prev); // Đảo ngược trạng thái checkbox
+  const showAlert = (
+    title: string,
+    message: string,
+    type: "success" | "error" | "info",
+    onConfirm?: () => void
+  ) => {
+    setAlertConfig({
+      visible: true,
+      title,
+      message,
+      type,
+      onConfirm:
+        onConfirm ||
+        (() => setAlertConfig((prev) => ({ ...prev, visible: false }))),
+    });
   };
 
-  const handleLogin = () => {
-    router.push("/(main)");
-    // console.log("Login");
+  const handleCheckboxPress = () => {
+    setChecked((prev) => !prev);
+  };
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      showAlert(
+        "Missing Information",
+        "Please enter both email and password",
+        "error"
+      );
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/api/v1/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (data.statusCode === 201) {
+        await AsyncStorage.setItem("access_token", data.data.access_token);
+        await AsyncStorage.setItem("user", JSON.stringify(data.data.user));
+
+        const cookies = response.headers.get("set-cookie");
+        if (cookies) {
+          const refreshToken = cookies.split(";")[0].split("=")[1];
+          await AsyncStorage.setItem("refresh_token", refreshToken);
+        }
+
+        showAlert("Success", "Login successful!", "success", () => {
+          setAlertConfig((prev) => ({ ...prev, visible: false }));
+          router.push("/(main)");
+        });
+      } else {
+        showAlert(
+          "Error",
+          data.message || "Login failed. Please try again.",
+          "error"
+        );
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      showAlert(
+        "Error",
+        "An error occurred during login. Please try again.",
+        "error"
+      );
+    }
   };
 
   return (
@@ -136,6 +210,16 @@ export default function Login() {
           </View>
         </View>
       </View>
+
+      <CustomAlert
+        visible={alertConfig.visible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        onClose={() => setAlertConfig((prev) => ({ ...prev, visible: false }))}
+        onConfirm={alertConfig.onConfirm}
+        showConfirmButton={alertConfig.type === "success"}
+      />
     </>
   );
 }

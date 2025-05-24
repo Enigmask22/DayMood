@@ -6,6 +6,7 @@ import CalendarHeader from "../../components/calendar/CalendarHeader";
 import CustomCalendarHeader from "../../components/calendar/CustomCalendarHeader";
 import MonthPickerModal from "../../components/calendar/MonthPickerModal";
 import YearPickerModal from "../../components/calendar/YearPickerModal";
+import { router } from "expo-router";
 
 // Cấu hình ngôn ngữ
 LocaleConfig.locales["en"] = LocaleConfig.locales[""];
@@ -50,6 +51,12 @@ const CalendarPage = () => {
     const dd = String(today.getDate()).padStart(2, "0");
     return `${yyyy}-${mm}-${dd}`;
   });
+
+  // Format selected date for display
+  const formatSelectedDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return formatDate(date);
+  };
 
   // Demo: các ngày có sự kiện
   const eventDates: Record<string, any> = {
@@ -178,13 +185,19 @@ const CalendarPage = () => {
       }
     }
   };
+  console.log(todayString);
 
   return (
     <View style={styles.screen}>
       <CalendarHeader
-        todayString={todayString}
+        dateString={formatSelectedDate(selected)}
         onAddPress={() => {
-          // Handle add event
+          router.navigate({
+            pathname: "(new)/newemoj" as any,
+            params: {
+              initialDate: new Date(selected).toISOString(),
+            },
+          });
         }}
       />
 
