@@ -1,3 +1,4 @@
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   FlatList,
@@ -5,495 +6,377 @@ import {
   Dimensions,
   Text,
   ActivityIndicator,
-  ImageSourcePropType,
-  TouchableOpacity,
-  Modal,
-  ScrollView,
-} from "react-native";
-import { useState, useRef, useEffect } from "react";
-import { format } from "date-fns";
-import { MOODS, moodAdviceMap } from "@/utils/constant";
-import { API_ENDPOINTS } from "@/utils/config";
-import { BarChart } from "react-native-gifted-charts";
-import { ScreenItem, StatisticData } from "@/types/stats";
-import { renderSlideCard } from "./renderSlideCard";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useAppSelector } from "@/store";
+} from 'react-native';
+import { format, parseISO } from 'date-fns';
+import { MOODS, moodAdviceMap } from '@/utils/constant';
+import { API_ENDPOINTS } from '@/utils/config';
+import { ScreenItem, StatisticData } from '@/types/stats';
+import { renderSlideCard } from './renderSlideCard';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAppSelector } from '@/store';
 
-const { width, height } = Dimensions.get("window");
+// Import our new components
+import MoodChart from './MoodChart';
+import WeekNavigation from './WeekNavigation';
+import MoodTooltip from './MoodTooltip';
 
-const EmotionPage = ({
-  currentDate,
-  setCurrentDate,
-}: {
+// Import types
+import { ChartWeekData, DayData, TooltipData, DailyMoodStat } from './types';
+
+const { width, height } = Dimensions.get('window');
+
+// Number of days to show per week
+const DAYS_PER_WEEK = 7;
+
+interface EmotionPageProps {
   currentDate: Date;
   setCurrentDate: (date: Date) => void;
+}
+
+const EmotionPage: React.FC<EmotionPageProps> = ({
+  currentDate,
+  setCurrentDate,
 }) => {
+  // State management
   const [currentScreenIndex, setCurrentScreenIndex] = useState(0);
-  const flatListRef = useRef<FlatList>(null);
   const [screens, setScreens] = useState<ScreenItem[]>([]);
   const [statistic, setStatistic] = useState<StatisticData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [barData, setBarData] = useState<any[]>([]);
-  const [weeklyData, setWeeklyData] = useState<any[][]>([]);
   const [currentWeekIndex, setCurrentWeekIndex] = useState(0);
   const [user, setUser] = useState<any>(null);
+  const [chartWeeks, setChartWeeks] = useState<ChartWeekData[]>([]);
+  const [tooltipData, setTooltipData] = useState<TooltipData>({
+    visible: false,
+    date: '',
+    day: '',
+    position: { x: 0, y: 0 },
+    moods: [],
+    totalCount: 0
+  });
 
-  // Get records from Redux store
+  // Refs
+  const flatListRef = useRef<FlatList>(null);
+
+  // Redux store
   const { records } = useAppSelector((state) => state.records);
 
-  /* OPENING: Handle data for the line chart */
-  // Function to handle month change
-  function getDaysInMonthFromDate(date: Date): number {
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1; // getMonth() trả về 0-11, nên cộng 1
-    return new Date(year, month, 0).getDate();
-  }
-  // Generate x-axis labels for the chart based on the current month
-  const xAxisLabels = Array.from(
-    { length: getDaysInMonthFromDate(currentDate) },
-    (_, i) => {
-      // đưa về số có 2 chữ số
-      const day = (i + 1).toString().padStart(2, "0");
-      return day;
+  // Process the API data into weekly charts data
+  const processChartData = () => {
+    if (!statistic || !statistic.monthly || !statistic.monthly.dailyMoodStats) {
+      return [];
     }
-  );
-  // Create data for the stacked bar chart divided by weeks
-  function createDataForChart() {
-    const arr = statistic?.monthly?.dailyMoodStats;
-    if (!arr) return;
 
-    const chartData = arr.map((dayData, index) => {
-      const day = (index + 1).toString().padStart(2, "0");
-
-      // Create stacked data for each mood - include all moods for consistent structure
-      const stackData = MOODS.map((mood) => {
-        const foundMoodStat = dayData.moodStats.find(
-          (moodStat) => moodStat.moodId === mood.id
-        );
-        const count = foundMoodStat ? foundMoodStat.count : 0;
-
-        return {
-          value: count,
-          color: mood.color,
-          label: count > 0 ? count.toString() : "",
-          moodName: mood.name, // Add mood name for reference
-        };
+    const { dailyMoodStats } = statistic.monthly;
+    const daysInMonth = dailyMoodStats.length;
+    
+    // Group days into weeks
+    const weeks: ChartWeekData[] = [];
+    
+    for (let startIdx = 0; startIdx < daysInMonth; startIdx += DAYS_PER_WEEK) {
+      const weekDays: DayData[] = [];
+      const endIdx = Math.min(startIdx + DAYS_PER_WEEK, daysInMonth);
+      
+      let startDate = '';
+      let endDate = '';
+      
+      for (let i = startIdx; i < endIdx; i++) {
+        const dailyStat = dailyMoodStats[i];
+        const date = dailyStat.date;
+        
+        if (i === startIdx) startDate = date;
+        if (i === endIdx - 1) endDate = date;
+        
+        // Get day of month number
+        const day = date.split('-')[2];
+        
+        // Create mood counts object
+        const moodCounts: {[key: number]: number} = {};
+        let hasData = false;
+        
+        dailyStat.moodStats.forEach(stat => {
+          moodCounts[stat.moodId] = stat.count;
+          if (stat.count > 0) hasData = true;
+        });
+        
+        weekDays.push({
+          date,
+          day,
+          moodCounts,
+          totalRecords: dailyStat.totalRecords,
+          hasData
+        });
+      }
+      
+      // Format date range for this week
+      const formattedStartDate = format(parseISO(startDate), 'MMM d');
+      const formattedEndDate = format(parseISO(endDate), 'MMM d');
+      const weekDateRange = `${formattedStartDate} - ${formattedEndDate}`;
+      
+      weeks.push({
+        days: weekDays,
+        startDate,
+        endDate
       });
-
-      return {
-        label: day,
-        stacks: stackData,
-        spacing: 2,
-      };
-    });
-
-    // Divide data into weeks (7 days each)
-    const weeks: any[][] = [];
-    for (let i = 0; i < chartData.length; i += 7) {
-      weeks.push(chartData.slice(i, i + 7));
     }
+    
+    return weeks;
+  };
 
-    setBarData(chartData);
-    setWeeklyData(weeks);
-    setCurrentWeekIndex(0); // Reset to first week
-  }
-  /* ENDING: Handle data for the line chart */
-
-  /* OPENING: Handle data for the slide cards */
-  // Create screens data based on the statistic
-  function createScreens() {
+  // Create the data for the slide cards
+  const createScreensData = () => {
     const weeklyStats = statistic?.weekly;
     const monthlyStats = statistic?.monthly;
 
     if (!weeklyStats || !monthlyStats) return;
 
-    // Debug log to check data structure
-    console.log("Weekly stats:", weeklyStats);
-    console.log("Monthly stats:", monthlyStats);
-    console.log("Weekly mostFrequentMood:", weeklyStats.mostFrequentMood);
-    console.log("Monthly mostFrequentMood:", monthlyStats.mostFrequentMood);
+    const findMoodById = (moodId: number) => 
+      MOODS.find(mood => mood.id === moodId);
 
-    // Helper function to get percentage safely
-    const getPercentage = (moodData: any, isWeekly: boolean = true) => {
-      if (
-        moodData.percentage !== undefined &&
-        moodData.percentage !== null &&
-        !isNaN(moodData.percentage)
-      ) {
+    const getPercentage = (moodData: any, totalRecords: number) => {
+      // If percentage is already provided in the data
+      if (moodData.percentage !== undefined) {
         return Math.round(moodData.percentage);
       }
-      // Fallback: calculate percentage if not provided
-      const totalRecords = isWeekly
-        ? weeklyStats.totalRecords
-        : monthlyStats.totalRecords;
-      if (moodData.count && totalRecords && totalRecords > 0) {
+      
+      // Otherwise calculate it from count and total records
+      if (totalRecords > 0 && moodData.count !== undefined) {
         return Math.round((moodData.count / totalRecords) * 100);
       }
+      
       return 0;
     };
 
     const screensData: ScreenItem[] = [
       {
-        title: "This week",
+        title: 'This week',
         content: (
-          <Text>
-            Your highest % mood is{" "}
+          <Text style={styles.screenContentText}>
+            Your highest % mood is{' '}
             <Text
               style={{
-                color: MOODS.find(
-                  (mood) => mood.id === weeklyStats.mostFrequentMood.moodId
-                )?.color,
-                fontWeight: "bold",
+                color: findMoodById(weeklyStats.mostFrequentMood.moodId)?.color,
+                fontWeight: 'bold',
               }}
             >
-              {
-                MOODS.find(
-                  (mood) => mood.id === weeklyStats.mostFrequentMood.moodId
-                )?.name
-              }
+              {findMoodById(weeklyStats.mostFrequentMood.moodId)?.name}
             </Text>
-            {` (${getPercentage(weeklyStats.mostFrequentMood, true)}%)`}
+            {` (${getPercentage(weeklyStats.mostFrequentMood, weeklyStats.totalRecords)}%)`}
           </Text>
         ),
-        emoji:
-          MOODS.find((mood) => mood.id === weeklyStats.mostFrequentMood.moodId)
-            ?.emoji || null,
+        emoji: findMoodById(weeklyStats.mostFrequentMood.moodId)?.emoji || null,
         indicator: [true, false, false],
       },
       {
-        title: "This month",
+        title: 'This month',
         content: (
-          <Text>
-            Your highest % mood is{" "}
+          <Text style={styles.screenContentText}>
+            Your highest % mood is{' '}
             <Text
               style={{
-                color: MOODS.find(
-                  (mood) => mood.id === monthlyStats.mostFrequentMood.moodId
-                )?.color,
-                fontWeight: "bold",
+                color: findMoodById(monthlyStats.mostFrequentMood.moodId)?.color,
+                fontWeight: 'bold',
               }}
             >
-              {
-                MOODS.find(
-                  (mood) => mood.id === monthlyStats.mostFrequentMood.moodId
-                )?.name
-              }
+              {findMoodById(monthlyStats.mostFrequentMood.moodId)?.name}
             </Text>
-            {` (${getPercentage(monthlyStats.mostFrequentMood, false)}%)`}
+            {` (${getPercentage(monthlyStats.mostFrequentMood, monthlyStats.totalRecords)}%)`}
           </Text>
         ),
-        emoji:
-          MOODS.find((mood) => mood.id === monthlyStats.mostFrequentMood.moodId)
-            ?.emoji || null,
+        emoji: findMoodById(monthlyStats.mostFrequentMood.moodId)?.emoji || null,
         indicator: [false, true, false],
       },
+      // Keep the advice slide the same
       {
-        title: "Advice for this month",
-        content:
-          moodAdviceMap[monthlyStats.mostFrequentMood.moodId] ||
-          "Keep up the good work!",
+        title: 'Advice for this month',
+        content: (
+          <Text style={styles.screenContentText}>
+            {moodAdviceMap[monthlyStats.mostFrequentMood.moodId] ||
+              'Keep up the good work!'}
+          </Text>
+        ),
         emoji: undefined,
         indicator: [false, false, true],
       },
     ];
+    
     setScreens(screensData);
-  }
-  // Handle slide change
+  };
+
+  // Handle user tapping on a day bar in the chart
+  const handleDayPress = (dayData: DayData, dayIndex: number) => {
+    // Create tooltip data from the day data
+    const moodDetails = MOODS.map(mood => {
+      const count = dayData.moodCounts[mood.id] || 0;
+      const percentage = dayData.totalRecords ? 
+        Math.round((count / dayData.totalRecords) * 100) : 0;
+      
+      return {
+        moodId: mood.id,
+        moodName: mood.name,
+        moodColor: mood.color,
+        count,
+        percentage
+      };
+    }).filter(mood => mood.count > 0);
+
+    setTooltipData({
+      visible: true,
+      date: dayData.date,
+      day: dayData.day,
+      position: { x: dayIndex * 40, y: 100 }, // Approximate position
+      moods: moodDetails,
+      totalCount: dayData.totalRecords
+    });
+  };
+
+  // Handle slide card navigation
   const handleSlideChange = (index: number) => {
     setCurrentScreenIndex(index);
   };
-  // Render indicator bar based on the current slide
+
+  // Event Handlers
+  const closeTooltip = () => {
+    setTooltipData(prev => ({ ...prev, visible: false }));
+  };
+
+  const handleWeekChange = (weekIndex: number) => {
+    setCurrentWeekIndex(weekIndex);
+  };
+
+  // Render helper functions
   const renderIndicator = () => {
-    if (currentScreenIndex === 0) {
+    return (
+      <View style={styles.indicatorContainer}>
+        {[0, 1, 2].map(index => (
+          <View
+            key={index}
+            style={[
+              styles.indicator,
+              currentScreenIndex === index && styles.indicatorActive
+            ]}
+          />
+        ))}
+      </View>
+    );
+  };
+
+  const renderChartSection = () => {
+    if (loading) {
       return (
-        <View style={styles.indicatorContainer}>
-          <View style={[styles.indicator, styles.indicatorActive]} />
-          <View style={styles.indicator} />
-          <View style={styles.indicator} />
-        </View>
-      );
-    } else if (currentScreenIndex === 1) {
-      return (
-        <View style={styles.indicatorContainer}>
-          <View style={styles.indicator} />
-          <View style={[styles.indicator, styles.indicatorActive]} />
-          <View style={styles.indicator} />
-        </View>
-      );
-    } else {
-      return (
-        <View style={styles.indicatorContainer}>
-          <View style={styles.indicator} />
-          <View style={styles.indicator} />
-          <View style={[styles.indicator, styles.indicatorActive]} />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#3b82f6" />
         </View>
       );
     }
-  };
-  /* ENDING: Handle data for the slide cards */
 
-  // Load user data on component mount
+    if (!chartWeeks.length) {
+      return (
+        <View style={styles.noDataContainer}>
+          <Text style={styles.noDataText}>No mood data for this period</Text>
+        </View>
+      );
+    }
+
+    const currentWeek = chartWeeks[currentWeekIndex];
+    
+    // Format week date range for display
+    const startDate = parseISO(currentWeek.startDate);
+    const endDate = parseISO(currentWeek.endDate);
+    const weekDateRange = `${format(startDate, 'MMM d')} - ${format(endDate, 'MMM d')}`;
+
+    return (
+      <View>
+        <WeekNavigation
+          currentWeek={currentWeekIndex}
+          totalWeeks={chartWeeks.length}
+          weekDateRange={weekDateRange}
+          onWeekChange={handleWeekChange}
+        />
+        
+        <MoodChart
+          weekData={currentWeek}
+          onDayPress={handleDayPress}
+        />
+      </View>
+    );
+  };
+
+  // Effects
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const userData = await AsyncStorage.getItem("user");
+        const userData = await AsyncStorage.getItem('user');
         if (userData) {
           setUser(JSON.parse(userData));
         }
       } catch (err) {
-        console.error("Failed to load user data:", err);
+        console.error('Failed to load user data:', err);
       }
     };
 
     loadUser();
   }, []);
 
-  // Fetch statistic data when user or currentDate changes
   useEffect(() => {
     const fetchStatistic = async () => {
-      if (!user) return; // Skip if no user loaded yet
+      if (!user) return;
 
       setLoading(true);
       try {
         const month = currentDate.getMonth() + 1;
         const year = currentDate.getFullYear();
-        const res = await fetch(
+        
+        const response = await fetch(
           `${API_ENDPOINTS.RECORDS}/statistic/mood?user_id=${user.id}&month=${month}&year=${year}`
         );
-        const data = await res.json();
-        console.log("Statistic data:", data);
-        setStatistic(data.data);
+        
+        const data = await response.json();
+        
+        if (response.ok && data.statusCode === 200) {
+          setStatistic(data.data);
+        } else {
+          setStatistic(null);
+        }
       } catch (err) {
+        console.error('Failed to fetch statistics:', err);
         setStatistic(null);
       }
       setLoading(false);
     };
+    
     fetchStatistic();
   }, [currentDate, user, records]);
 
-  // Create data for the chart when statistic data is available
   useEffect(() => {
     if (statistic) {
-      createDataForChart();
-      createScreens();
+      const weeks = processChartData();
+      setChartWeeks(weeks);
+      createScreensData();
+      
+      // Set current week to the week that includes today
+      const today = new Date();
+      const todayDay = today.getDate();
+      const approxWeek = Math.floor((todayDay - 1) / 7);
+      setCurrentWeekIndex(Math.min(approxWeek, weeks.length - 1));
     }
   }, [statistic]);
 
-  // Add new state for tooltip/modal
-  const [selectedPointInfo, setSelectedPointInfo] = useState<{
-    day: string;
-    values: Array<{ moodName: string; moodColor: string; value: number }>;
-    x: number;
-    y: number;
-  } | null>(null);
-
-  // Function to handle bar press
-  const handleBarPress = (item: any, index: number) => {
-    const day = item.label;
-
-    // Collect all mood values for this day from stacks
-    const values = item.stacks
-      .filter((stack: any) => stack.value > 0) // Only get stacks with values > 0
-      .map((stack: any) => ({
-        moodName: stack.moodName,
-        moodColor: stack.color,
-        value: stack.value,
-      }));
-
-    if (values.length > 0) {
-      setSelectedPointInfo({
-        day,
-        values,
-        x: index,
-        y: Math.max(...values.map((v: any) => v.value)),
-      });
-    }
-  };
-
-  // Function to dismiss the tooltip/modal
-  const dismissPointInfo = () => {
-    setSelectedPointInfo(null);
-  };
-
-  // Render tooltip overlay
-  const renderPointInfoOverlay = () => {
-    if (!selectedPointInfo) return null;
-
-    return (
-      <Modal
-        transparent={true}
-        visible={!!selectedPointInfo}
-        onRequestClose={dismissPointInfo}
-        animationType="fade"
-      >
-        <TouchableOpacity
-          style={styles.tooltipModalOverlay}
-          activeOpacity={1}
-          onPress={dismissPointInfo}
-        >
-          <View style={styles.tooltipContainer}>
-            <Text style={styles.tooltipTitle}>Day {selectedPointInfo.day}</Text>
-            {selectedPointInfo.values.map((item, idx) => (
-              <View key={idx} style={styles.tooltipRow}>
-                <View
-                  style={[
-                    styles.tooltipColorDot,
-                    { backgroundColor: item.moodColor },
-                  ]}
-                />
-                <Text style={styles.tooltipMoodName}>{item.moodName}: </Text>
-                <Text style={styles.tooltipValue}>{item.value}</Text>
-              </View>
-            ))}
-          </View>
-        </TouchableOpacity>
-      </Modal>
-    );
-  };
-
+  // Main render
   return (
-    <View style={{ paddingBottom: height * 0.15 }}>
+    <View style={styles.container}>
+      {/* Chart Section */}
       <View style={styles.chartCard}>
         <Text style={styles.chartTitle}>Mood Chart</Text>
         <Text style={styles.chartSubtitle}>
-          Your mood statistic in {format(currentDate, "MMMM")}
+          {format(currentDate, 'MMMM yyyy')}
         </Text>
-        <View style={{ overflow: "hidden" }}>
-          {weeklyData.length > 0 ? (
-            <View style={styles.weeklyChartContainer}>
-              {/* Week Navigation */}
-              <View style={styles.weekNavigationContainer}>
-                <TouchableOpacity
-                  style={[
-                    styles.weekNavButton,
-                    currentWeekIndex === 0 && styles.weekNavButtonDisabled,
-                  ]}
-                  onPress={() =>
-                    setCurrentWeekIndex(Math.max(0, currentWeekIndex - 1))
-                  }
-                  disabled={currentWeekIndex === 0}
-                >
-                  <Text style={styles.weekNavButtonText}>←</Text>
-                </TouchableOpacity>
-
-                <Text style={styles.weekIndicatorText}>
-                  Page {currentWeekIndex + 1} of {weeklyData.length}
-                </Text>
-
-                <TouchableOpacity
-                  style={[
-                    styles.weekNavButton,
-                    currentWeekIndex === weeklyData.length - 1 &&
-                      styles.weekNavButtonDisabled,
-                  ]}
-                  onPress={() =>
-                    setCurrentWeekIndex(
-                      Math.min(weeklyData.length - 1, currentWeekIndex + 1)
-                    )
-                  }
-                  disabled={currentWeekIndex === weeklyData.length - 1}
-                >
-                  <Text style={styles.weekNavButtonText}>→</Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Chart Container */}
-              <View style={styles.customChartContainer}>
-                <View style={styles.yAxisContainer}>
-                  {[10, 8, 6, 4, 2, 0].map((value) => (
-                    <Text key={value} style={styles.yAxisLabel}>
-                      {value}
-                    </Text>
-                  ))}
-                </View>
-
-                <View style={styles.chartContentWrapper}>
-                  <View style={styles.chartContent}>
-                    <View style={styles.barsContainer}>
-                      {weeklyData[currentWeekIndex]?.map(
-                        (dayData, dayIndex) => (
-                          <TouchableOpacity
-                            key={dayIndex}
-                            style={styles.barColumn}
-                            onPress={() => handleBarPress(dayData, dayIndex)}
-                          >
-                            <View style={styles.stackedBar}>
-                              {dayData.stacks
-                                .filter((stack: any) => stack.value > 0)
-                                .map((stack: any, stackIndex: number) => {
-                                  const barHeight =
-                                    (stack.value / 10) * (height * 0.22);
-                                  return (
-                                    <View
-                                      key={stackIndex}
-                                      style={[
-                                        styles.stackSegment,
-                                        {
-                                          height: Math.max(barHeight, 12),
-                                          backgroundColor: stack.color,
-                                        },
-                                      ]}
-                                    >
-                                      <Text style={styles.stackLabel}>
-                                        {stack.value}
-                                      </Text>
-                                    </View>
-                                  );
-                                })}
-                            </View>
-                          </TouchableOpacity>
-                        )
-                      )}
-                    </View>
-                  </View>
-
-                  {/* X-Axis Labels */}
-                  <View style={styles.xAxisLabelsContainer}>
-                    {weeklyData[currentWeekIndex]?.map((dayData, dayIndex) => (
-                      <Text key={dayIndex} style={styles.xAxisLabel}>
-                        {dayData.label}
-                      </Text>
-                    ))}
-                  </View>
-                </View>
-              </View>
-            </View>
-          ) : (
-            <Text>None of Data to show</Text>
-          )}
-          {loading && (
-            <View
-              style={{
-                flex: 1,
-                justifyContent: "center",
-                alignItems: "center",
-                paddingVertical: 20,
-              }}
-            >
-              <ActivityIndicator size="large" color="#00A36C" />
-            </View>
-          )}
-          <View style={styles.legendContainer}>
-            {MOODS.map((mood, index) => (
-              <View
-                key={index}
-                style={{ flexDirection: "row", alignItems: "center" }}
-              >
-                <View
-                  style={{
-                    width: 10,
-                    height: 10,
-                    backgroundColor: mood.color,
-                    borderRadius: 5,
-                  }}
-                />
-                <Text style={{ marginLeft: 5 }}>{mood.name}</Text>
-              </View>
-            ))}
-          </View>
+        
+        <View style={styles.chartWrapper}>
+          {renderChartSection()}
         </View>
       </View>
+
+      {/* Slides Section */}
       <View style={styles.slideContainer}>
         <FlatList
           ref={flatListRef}
@@ -515,51 +398,62 @@ const EmotionPage = ({
         {renderIndicator()}
       </View>
 
-      {/* Add tooltip overlay */}
-      {renderPointInfoOverlay()}
+      {/* Tooltip for mood details */}
+      <MoodTooltip
+        data={tooltipData}
+        onClose={closeTooltip}
+      />
     </View>
   );
 };
+
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: width * 0.05,
-    paddingTop: height * 0.02,
-    paddingBottom: height * 0.02,
+  container: {
+    paddingBottom: height * 0.15,
   },
-  monthText: {
-    fontSize: width * 0.05,
-    fontWeight: "700",
-    color: "#000",
-  },
-  navButton: {
-    padding: 10,
-  },
-  tabsContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    paddingHorizontal: width * 0.05,
+  chartCard: {
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    padding: 16,
     marginBottom: height * 0.02,
+    marginHorizontal: width * 0.04,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 4,
   },
-  tabButton: {
-    paddingVertical: height * 0.01,
-    paddingHorizontal: width * 0.04,
-    marginHorizontal: width * 0.01,
-    borderRadius: 20,
-    backgroundColor: "#f1f1f1",
+  chartTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1e293b',
+    textAlign: 'center',
+    marginBottom: 4,
   },
-  selectedTabButton: {
-    backgroundColor: "#4CAF50",
+  chartSubtitle: {
+    fontSize: 14,
+    color: '#64748b',
+    textAlign: 'center',
+    marginBottom: 16,
   },
-  tabText: {
-    fontSize: width * 0.035,
-    color: "#555",
+  chartWrapper: {
+    overflow: 'hidden',
+    borderRadius: 12,
   },
-  selectedTabText: {
-    color: "#fff",
-    fontWeight: "500",
+  loadingContainer: {
+    height: 240,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noDataContainer: {
+    height: 200,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noDataText: {
+    fontSize: 16,
+    color: '#94a3b8',
+    textAlign: 'center',
   },
   slideContainer: {
     flex: 1,
@@ -567,252 +461,29 @@ const styles = StyleSheet.create({
   slidesList: {
     width: width,
   },
-  chartCard: {
-    backgroundColor: "#fff",
-    borderRadius: width * 0.05,
-    padding: width * 0.05,
-    marginBottom: height * 0.02,
-    marginHorizontal: width * 0.05,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  chartTitle: {
-    fontSize: width * 0.045,
-    fontWeight: "bold",
-    marginBottom: 5,
-  },
-  chartSubtitle: {
-    fontSize: width * 0.035,
-    color: "#777",
-    marginBottom: 10,
-  },
   indicatorContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 16,
   },
   indicator: {
-    width: width * 0.02,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "#ddd",
-    marginHorizontal: width * 0.01,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#e2e8f0',
+    marginHorizontal: 4,
   },
   indicatorActive: {
-    width: width * 0.05,
-    backgroundColor: "#4CAF50",
+    width: 20,
+    backgroundColor: '#4CAF50',
   },
-  paginationContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 10,
-    marginBottom: 20,
-  },
-  paginationDot: {
-    height: 6,
-    borderRadius: 3,
-  },
-  otherTabContent: {
-    padding: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    height: height * 0.6,
-  },
-  comingSoonText: {
-    fontSize: 18,
-    color: "#555",
-  },
-  legendContainer: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginTop: 10,
-    gap: 10,
-    flexWrap: "wrap",
-  },
-  // Add these new styles for tooltip
-  tooltipModalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.3)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  tooltipContainer: {
-    backgroundColor: "white",
-    borderRadius: 10,
-    padding: 16,
-    width: width * 0.8,
-    maxWidth: 300,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  tooltipTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-    paddingBottom: 8,
-  },
-  tooltipRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  tooltipColorDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 8,
-  },
-  tooltipMoodName: {
+  screenContentText: {
     fontSize: 16,
-    fontWeight: "500",
-    flex: 1,
-  },
-  tooltipValue: {
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  // Weekly Chart Styles
-  weeklyChartContainer: {
-    marginVertical: 10,
-  },
-  weekNavigationContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    backgroundColor: "#f8fafc",
-    borderRadius: 12,
-    marginBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.03,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  weekNavButton: {
-    backgroundColor: "#ffffff",
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 0.5 },
-    shadowOpacity: 0.03,
-    shadowRadius: 1,
-    elevation: 0.5,
-  },
-  weekNavButtonDisabled: {
-    backgroundColor: "#f1f5f9",
-    borderColor: "#e2e8f0",
-  },
-  weekNavButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#475569",
-  },
-  weekIndicatorText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#334155",
-  },
-  customChartContainer: {
-    flexDirection: "row",
-    height: height * 0.28,
-    backgroundColor: "#ffffff",
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  yAxisContainer: {
-    justifyContent: "space-between",
-    alignItems: "flex-end",
-    paddingRight: 12,
-    width: 40,
-    height: height * 0.22,
-    paddingTop: 8,
-  },
-  yAxisLabel: {
-    fontSize: 12,
-    color: "#64748b",
-    fontWeight: "500",
-  },
-  chartContentWrapper: {
-    flex: 1,
-    justifyContent: "space-between",
-  },
-  chartContent: {
-    flex: 1,
-    justifyContent: "flex-end",
-  },
-  barsContainer: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-around",
-    height: height * 0.22,
-    paddingHorizontal: 8,
-    paddingTop: 8,
-  },
-  barColumn: {
-    alignItems: "center",
-    flex: 1,
-    maxWidth: 50,
-  },
-  stackedBar: {
-    flexDirection: "column-reverse",
-    alignItems: "center",
-    justifyContent: "flex-start",
-    minHeight: 20,
-  },
-  stackSegment: {
-    width: 28,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 4,
-    marginVertical: 1,
-    minHeight: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 0.5 },
-    shadowOpacity: 0.06,
-    shadowRadius: 1,
-    elevation: 1,
-  },
-  stackLabel: {
-    fontSize: 10,
-    fontWeight: "700",
-    color: "#ffffff",
-    textShadowColor: "rgba(0,0,0,0.4)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 1,
-  },
-  xAxisLabelsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    paddingHorizontal: 8,
-    paddingTop: 8,
-    marginTop: 4,
-  },
-  xAxisLabel: {
-    fontSize: 12,
-    color: "#64748b",
-    fontWeight: "500",
-    textAlign: "center",
-    flex: 1,
-    maxWidth: 50,
+    lineHeight: 24,
+    color: '#334155',
+    textAlign: 'center',
   },
 });
+
 export default EmotionPage;
