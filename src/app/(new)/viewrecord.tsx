@@ -27,6 +27,7 @@ import ImagesGrid from "@/components/carddetail/ImagesGrid";
 import RecordingsList from "@/components/carddetail/RecordingsList";
 import { ACTIVITIES } from "@/utils/constant";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Định nghĩa kiểu dữ liệu cho file
 interface FileData {
@@ -194,7 +195,8 @@ const EnhancedImagesGrid = ({ images }: { images: string[] }) => {
 export default function ViewRecordScreen() {
   const params = useLocalSearchParams();
   const recordId = params.id as string;
-
+  const [user, setUser] = useState<any>(null);
+  const [userLoaded, setUserLoaded] = useState(false); // Add this flag
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [recordData, setRecordData] = useState<RecordData | null>(null);
@@ -203,15 +205,53 @@ export default function ViewRecordScreen() {
   const [currentSound, setCurrentSound] = useState<Audio.Sound | null>(null);
   const [activityIds, setActivityIds] = useState<number[]>([]);
 
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const userData = await AsyncStorage.getItem("user");
+        if (userData) {
+          const parsedUser = JSON.parse(userData);
+          setUser(parsedUser);
+          console.log("User data loaded:", parsedUser);
+        } else {
+          throw new Error("User information not found in AsyncStorage");
+        }
+      } catch (err) {
+        console.error("Failed to load user data:", err);
+        setError("Please log in again to continue");
+        Alert.alert("Error", "Please log in again to continue", [
+          { text: "OK", onPress: () => router.push("/(auth)/login" as any) }
+        ]);
+      } finally {
+        setUserLoaded(true); // Mark user loading as complete
+      }
+    };
+
+    loadUser();
+  }, []);
+
   // Tải dữ liệu record từ API
   useEffect(() => {
+    if (!userLoaded) {
+      console.log("User not loaded yet, waiting...");
+      return;
+    }
+
+    if (!user || !user.id) {
+      console.log("No user data available after loading");
+      setError("Please log in again to continue");
+      setLoading(false);
+      return;
+    }
+
     const fetchRecord = async () => {
       try {
+
         setLoading(true);
         setError(null);
 
         const response = await fetch(
-          `${API_ENDPOINTS.RECORDS}/${recordId}?user_id=${DEFAULT_USER_ID}`
+          `${API_ENDPOINTS.RECORDS}/${recordId}?user_id=${user.id}`
         );
 
         if (!response.ok) {
@@ -264,7 +304,7 @@ export default function ViewRecordScreen() {
                     currentPosition: "00:00",
                     durationMillis: file.duration
                       ? parseInt(file.duration.split(":")[0]) * 60 * 1000 +
-                        parseInt(file.duration.split(":")[1]) * 1000
+                      parseInt(file.duration.split(":")[1]) * 1000
                       : 0,
                     currentMillis: 0,
                   };
@@ -280,7 +320,7 @@ export default function ViewRecordScreen() {
                     currentPosition: "00:00",
                     durationMillis: file.duration
                       ? parseInt(file.duration.split(":")[0]) * 60 * 1000 +
-                        parseInt(file.duration.split(":")[1]) * 1000
+                      parseInt(file.duration.split(":")[1]) * 1000
                       : 0,
                     currentMillis: 0,
                   };
@@ -320,7 +360,7 @@ export default function ViewRecordScreen() {
         }
       });
     };
-  }, [recordId]);
+  }, [recordId, user]);
 
   // Hàm phát âm thanh
   const playRecording = async (recording: RecordingData) => {
@@ -482,12 +522,12 @@ export default function ViewRecordScreen() {
           prev.map((rec) =>
             rec.id === recording.id
               ? {
-                  ...rec,
-                  isPlaying: false,
-                  isPaused: false,
-                  currentPosition: "00:00",
-                  currentMillis: 0,
-                }
+                ...rec,
+                isPlaying: false,
+                isPaused: false,
+                currentPosition: "00:00",
+                currentMillis: 0,
+              }
               : rec
           )
         );
@@ -549,10 +589,10 @@ export default function ViewRecordScreen() {
           prev.map((rec) =>
             rec.id === recording.id
               ? {
-                  ...rec,
-                  currentMillis: currentMillis,
-                  currentPosition: formattedPosition,
-                }
+                ...rec,
+                currentMillis: currentMillis,
+                currentPosition: formattedPosition,
+              }
               : rec
           )
         );
@@ -566,12 +606,12 @@ export default function ViewRecordScreen() {
           prev.map((rec) =>
             rec.id === recording.id
               ? {
-                  ...rec,
-                  isPlaying: false,
-                  isPaused: false,
-                  currentPosition: "00:00",
-                  currentMillis: 0,
-                }
+                ...rec,
+                isPlaying: false,
+                isPaused: false,
+                currentPosition: "00:00",
+                currentMillis: 0,
+              }
               : rec
           )
         );
@@ -651,7 +691,7 @@ export default function ViewRecordScreen() {
             monthName={monthName}
             formattedTime={formattedTime}
             onSubmit={handleGoBack}
-            // Không có nút Edit
+          // Không có nút Edit
           />
 
           {/* Hiển thị emoji tương ứng với mood */}

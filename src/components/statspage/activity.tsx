@@ -8,11 +8,11 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { HOME_COLOR } from "@/utils/constant";
-import { useRouter } from "expo-router";
 import ActivityCount from "@/components/statistics/ActivityCount";
 import ActivityChart from "@/components/statistics/ActivityChart";
 import { fetchActivityStatistics } from "./datafetching";
-//import { useAuth } from "@/hooks/useAuth"; // Import your auth hook to get userId
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useAppSelector } from "@/store";
 
 interface ActivityPageProps {
   currentDate: Date;
@@ -27,13 +27,38 @@ interface ActivityStats {
 }
 
 const ActivityPage = ({ currentDate, setCurrentDate }: ActivityPageProps) => {
+  // State management
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activityStats, setActivityStats] = useState<ActivityStats | null>(null);
-  const  user  = "1" // Get the current user
+  const [user, setUser] = useState<any>(null);
+  const [hasRealData, setHasRealData] = useState<boolean>(false);
+  
+  // Get records from Redux store
+  const { records } = useAppSelector((state) => state.records);
 
+  // Load user data on component mount
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const userData = await AsyncStorage.getItem("user");
+        if (userData) {
+          setUser(JSON.parse(userData));
+        }
+      } catch (err) {
+        console.error("Failed to load user data:", err);
+        setError("Failed to load user data");
+      }
+    };
+    
+    loadUser();
+  }, []);
+
+  // Fetch activity data when user or currentDate changes
   useEffect(() => {
     const fetchData = async () => {
+      if (!user) return; // Skip if no user loaded yet
+      
       try {
         setLoading(true);
         setError(null);
@@ -42,29 +67,42 @@ const ActivityPage = ({ currentDate, setCurrentDate }: ActivityPageProps) => {
         const month = currentDate.getMonth() + 1; // JavaScript months are 0-indexed
         const year = currentDate.getFullYear();
         
-        // Fetch activity statistics
-        const response = await fetchActivityStatistics(user, month, year);
+        // Fetch activity statistics using the user ID
+        const response = await fetchActivityStatistics(user.id, month, year);
+        console.log("Fetched activity statistics:", response);
         
         if (response.statusCode === 200 && response.data?.monthly) {
           const { activityData, activityNames, dates, totalRecords } = response.data.monthly;
           
+          // Save activity stats to state
           setActivityStats({
             activityData,
             activityNames,
             dates,
             totalActivities: totalRecords
           });
+          
+          // Determine if we have real data by checking if any activity has counts > 0
+          const hasAnyActivities = Object.values(activityData).some(dailyCounts => 
+            dailyCounts.some(count => count > 0)
+          );
+          
+          setHasRealData(hasAnyActivities && totalRecords > 0);
+          console.log("Has real data:", hasAnyActivities && totalRecords > 0);
+        } else {
+          throw new Error("Invalid response from server");
         }
       } catch (err) {
         setError('Failed to load activity statistics.');
         console.error('Error loading activity statistics:', err);
+        setHasRealData(false); // No real data when there's an error
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [currentDate, user]);
+  }, [currentDate, user, records]);
 
   // Format activity data for the ActivityCount component
   const formatActivitiesForCount = () => {
@@ -79,23 +117,23 @@ const ActivityPage = ({ currentDate, setCurrentDate }: ActivityPageProps) => {
     });
     
     // Map to the format expected by ActivityCount
-    return Object.entries(countByActivity).map(([activityId, count]) => {
-      const name = activityStats.activityNames[activityId] || `Activity ${activityId}`;
-      return {
-        id: Number(activityId),
-        name,
-        // Map activity names to FontAwesome5 icons - you may need to customize this mapping
-        icon: mapActivityNameToIcon(name),
-        count,
-      };
-    });
+    return Object.entries(countByActivity)
+      .filter(([_, count]) => count > 0) // Only include activities with counts > 0
+      .map(([activityId, count]) => {
+        const name = activityStats.activityNames[activityId] || `Activity ${activityId}`;
+        return {
+          id: Number(activityId),
+          name,
+          icon: mapActivityNameToIcon(name),
+          count,
+        };
+      });
   };
 
   // Helper function to map activity names to appropriate icons
   const mapActivityNameToIcon = (activityName: string): string => {
     const lowerCaseName = activityName.toLowerCase();
     
-    // Map common activities to Font Awesome 5 icons
     if (lowerCaseName.includes('work')) return 'briefcase';
     if (lowerCaseName.includes('exercise') || lowerCaseName.includes('workout')) return 'running';
     if (lowerCaseName.includes('bike') || lowerCaseName.includes('cycling')) return 'bicycle';
@@ -107,66 +145,65 @@ const ActivityPage = ({ currentDate, setCurrentDate }: ActivityPageProps) => {
     if (lowerCaseName.includes('shop')) return 'shopping-cart';
     if (lowerCaseName.includes('game')) return 'gamepad';
     
-    // Default icon
-    return 'star';
+    return 'star'; // Default icon
   };
 
-// Replace the formatActivitiesForChart function with this:
-
-const formatActivitiesForChart = () => {
-  if (!activityStats) return [];
-  
-  const formattedActivities: { date: string; count: number; name: string; id?: string; }[] = [];
-  
-  // First create the daily total line chart data
-  activityStats.dates.forEach((dateStr, dateIndex) => {
-    let dailyTotal = 0;
-    Object.values(activityStats.activityData).forEach(activityDailyCounts => {
-      dailyTotal += activityDailyCounts[dateIndex] || 0;
-    });
+  // Format activities for chart display
+  const formatActivitiesForChart = () => {
+    if (!activityStats) return [];
     
-    // Only add dates with activity
-    if (dailyTotal > 0) {
+    const formattedActivities: { date: string; count: number; name: string; id?: string; }[] = [];
+    
+    // Create daily totals for line chart
+    activityStats.dates.forEach((dateStr, dateIndex) => {
+      let dailyTotal = 0;
+      
+      // Sum all activities for this specific day
+      Object.values(activityStats.activityData).forEach(activityDailyCounts => {
+        dailyTotal += activityDailyCounts[dateIndex] || 0;
+      });
+      
+      // Add daily total entry for line chart (even if 0)
       formattedActivities.push({
         date: dateStr,
         count: dailyTotal,
-        name: 'Daily Total' // For line chart
+        name: 'Daily Total'
       });
-    }
-  });
-  
-  // Then add separate entries for each activity type
-  Object.entries(activityStats.activityData).forEach(([activityId, dailyCounts]) => {
-    const activityName = activityStats.activityNames[activityId] || `Activity ${activityId}`;
+    });
     
-    // Calculate the total for this activity
-    const totalForActivity = dailyCounts.reduce((sum, count) => sum + count, 0);
-    
-    // Only add activities with counts > 0
-    if (totalForActivity > 0) {
-      // Find most recent date with this activity
-      let mostRecentDate = '';
-      let mostRecentIndex = -1;
+    // Add individual activity types for pie chart
+    Object.entries(activityStats.activityData).forEach(([activityId, dailyCounts]) => {
+      const activityName = activityStats.activityNames[activityId] || `Activity ${activityId}`;
+      const totalForActivity = dailyCounts.reduce((sum, count) => sum + count, 0);
       
-      dailyCounts.forEach((count, i) => {
-        if (count > 0 && i > mostRecentIndex) {
-          mostRecentIndex = i;
-          mostRecentDate = activityStats.dates[i];
+      // Only add activities with counts > 0
+      if (totalForActivity > 0) {
+        // Find most recent date with this activity
+        let mostRecentDate = '';
+        let mostRecentIndex = -1;
+        
+        for (let i = dailyCounts.length - 1; i >= 0; i--) {
+          if (dailyCounts[i] > 0) {
+            mostRecentIndex = i;
+            mostRecentDate = activityStats.dates[i];
+            break;
+          }
         }
-      });
-      
-      formattedActivities.push({
-        date: mostRecentDate,
-        count: totalForActivity,
-        name: activityName,
-        id: activityId
-      });
-    }
-  });
-  
-  return formattedActivities;
-};
+        
+        formattedActivities.push({
+          date: mostRecentDate || activityStats.dates[0],
+          count: totalForActivity,
+          name: activityName,
+          id: activityId
+        });
+      }
+    });
+    
+    console.log("Formatted activities for chart:", formattedActivities);
+    return formattedActivities;
+  };
 
+  // Render loading state
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -178,6 +215,7 @@ const formatActivitiesForChart = () => {
     );
   }
 
+  // Render error state
   if (error) {
     return (
       <SafeAreaView style={styles.container}>
@@ -189,17 +227,23 @@ const formatActivitiesForChart = () => {
     );
   }
 
+  // Format data for components
   const formattedActivitiesForCount = formatActivitiesForCount();
   const formattedActivitiesForChart = formatActivitiesForChart();
 
+  // Render main content
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.contentContainer}>
-          <ActivityCount activities={formattedActivitiesForCount} />
+          <ActivityCount 
+            activities={formattedActivitiesForCount} 
+            hasRealData={hasRealData}
+          />
           <ActivityChart 
             activities={formattedActivitiesForChart} 
             currentMonth={currentDate}
+            hasRealData={hasRealData}
           />
         </View>
       </ScrollView>
@@ -210,7 +254,6 @@ const formatActivitiesForChart = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: HOME_COLOR.HOMEBACKGROUND,
   },
   scrollContainer: {
     flexGrow: 1,
