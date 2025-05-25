@@ -21,7 +21,6 @@ import { uploadFileFromBase64, uploadAudioFromUri } from "@/utils/fileService";
 import { ACTIVITIES } from "@/utils/constant";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import { API_ENDPOINTS, DEFAULT_USER_ID } from "@/utils/config";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Import các component đã tách
 import DateTimeHeader from "@/components/carddetail/DateTimeHeader";
@@ -181,28 +180,6 @@ export default function CardDetailScreen() {
   const moodId = params.mood ? parseInt(params.mood as string) : 4; // Default to joyful
   const note = (params.note as string) || "";
   const dateParam = params.date as string;
-  const [user, setUser] = useState<any>(null);
-
-  // Load user data on component mount
-  useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const userData = await AsyncStorage.getItem("user");
-        if (userData) {
-          setUser(JSON.parse(userData));
-          console.log("User data loaded:", JSON.parse(userData));
-        } else {
-          throw new Error("User information not found in AsyncStorage");
-        }
-      } catch (err) {
-        console.error("Failed to load user data:", err);
-        Alert.alert("Error", "Please log in again to continue");
-        router.push("/(auth)/login" as any);
-      }
-    };
-
-    loadUser();
-  }, []);
 
   // Xử lý dữ liệu bản ghi âm
   const [recordings, setRecordings] = useState<RecordingData[]>([]);
@@ -549,12 +526,12 @@ export default function CardDetailScreen() {
           prev.map((rec) =>
             rec.id === recording.id
               ? {
-                ...rec,
-                isPlaying: false,
-                isPaused: false,
-                currentPosition: "00:00",
-                currentMillis: 0,
-              }
+                  ...rec,
+                  isPlaying: false,
+                  isPaused: false,
+                  currentPosition: "00:00",
+                  currentMillis: 0,
+                }
               : rec
           )
         );
@@ -618,10 +595,10 @@ export default function CardDetailScreen() {
           prev.map((rec) =>
             rec.id === recording.id
               ? {
-                ...rec,
-                currentMillis: currentMillis,
-                currentPosition: formattedPosition,
-              }
+                  ...rec,
+                  currentMillis: currentMillis,
+                  currentPosition: formattedPosition,
+                }
               : rec
           )
         );
@@ -634,12 +611,12 @@ export default function CardDetailScreen() {
           prev.map((rec) =>
             rec.id === recording.id
               ? {
-                ...rec,
-                isPlaying: false,
-                isPaused: false,
-                currentPosition: "00:00",
-                currentMillis: 0,
-              }
+                  ...rec,
+                  isPlaying: false,
+                  isPaused: false,
+                  currentPosition: "00:00",
+                  currentMillis: 0,
+                }
               : rec
           )
         );
@@ -743,11 +720,6 @@ export default function CardDetailScreen() {
   // Xử lý quay về trang chính
   const handleBackToHome = async () => {
     try {
-      if (!user || !user.id) {
-        Alert.alert("Error", "User information not found. Please log in again.");
-        router.push("/(auth)/login" as any);
-        return;
-      }
       // Hiển thị loading alert
       Alert.alert("Đang xử lý", "Đang lưu dữ liệu và tải lên file media...", [
         { text: "OK", style: "default" },
@@ -763,7 +735,7 @@ export default function CardDetailScreen() {
         title: noteTitle,
         content: noteContent,
         mood_id: moodId,
-        user_id: user.id, // Sử dụng user ID từ AsyncStorage
+        user_id: DEFAULT_USER_ID,
         activity_id: activities,
         status: "ACTIVE",
         date: date.toISOString(),
@@ -784,9 +756,9 @@ export default function CardDetailScreen() {
         console.log("Response text:", responseText);
         throw new Error(
           "Không thể tạo record. Status: " +
-          recordResponse.status +
-          " - " +
-          responseText
+            recordResponse.status +
+            " - " +
+            responseText
         );
       }
 
@@ -807,7 +779,7 @@ export default function CardDetailScreen() {
               imageBase64,
               "image/jpeg",
               "images",
-              `user_${user.id}` 
+              `user_${DEFAULT_USER_ID}` // Sử dụng biến DEFAULT_USER_ID
             );
 
             console.log("File đã upload:", fileInfo);
@@ -823,7 +795,7 @@ export default function CardDetailScreen() {
                 fkey: fileInfo.key,
                 size: fileInfo.size,
                 record_id: recordId,
-                user_id: user.id,
+                user_id: DEFAULT_USER_ID,
               }),
             });
           } catch (error) {
@@ -842,7 +814,7 @@ export default function CardDetailScreen() {
             const fileInfo = await uploadAudioFromUri(
               recording.uri,
               recording.isMusic ? "audio/mpeg" : "audio/m4a",
-              `user_${user.id}` 
+              `user_${DEFAULT_USER_ID}` // Sử dụng biến DEFAULT_USER_ID
             );
 
             // Lưu thông tin file vào database
@@ -856,7 +828,7 @@ export default function CardDetailScreen() {
                 fkey: fileInfo.key,
                 size: fileInfo.size,
                 record_id: recordId,
-                user_id: user.id,
+                user_id: DEFAULT_USER_ID,
                 duration: recording.duration || "00:00",
               }),
             });

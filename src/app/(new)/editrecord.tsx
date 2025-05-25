@@ -16,9 +16,10 @@ import { Audio } from "expo-av";
 import * as ImagePicker from "expo-image-picker";
 import { uploadFileFromBase64, uploadAudioFromUri } from "@/utils/fileService";
 import { API_ENDPOINTS, DEFAULT_USER_ID } from "@/utils/config";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+
 // Import thêm MoodSelector từ newemoj
 import MoodSelector from "@/components/newemoji/MoodSelector";
+
 // Các component
 import DeleteButton from "@/components/activity/DeleteButton";
 import BackHeaderWithEmoji from "@/components/activity/BackHeaderWithEmoji";
@@ -32,8 +33,7 @@ export default function EditRecordScreen() {
   // Lấy tham số từ URL
   const params = useLocalSearchParams();
   const { id } = params;
-  const [user, setUser] = useState<any>(null);
-   const [userLoaded, setUserLoaded] = useState(false);
+
   // State cho dữ liệu record
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -62,42 +62,12 @@ export default function EditRecordScreen() {
     }[]
   >([]);
 
-  useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const userData = await AsyncStorage.getItem("user");
-        if (userData) {
-          const parsedUser = JSON.parse(userData);
-          setUser(parsedUser);
-          console.log("User data loaded:", parsedUser);
-        } else {
-          throw new Error("User information not found in AsyncStorage");
-        }
-      } catch (err) {
-        console.error("Failed to load user data:", err);
-        setError("Please log in again to continue");
-        Alert.alert("Error", "Please log in again to continue", [
-          { text: "OK", onPress: () => router.push("/(auth)/login" as any) }
-        ]);
-      } finally {
-        setUserLoaded(true); // Mark user loading as complete
-      }
-    };
-
-    loadUser();
-  }, []);
-
   // Fetch dữ liệu record
   useEffect(() => {
-    if (!userLoaded) {
-      console.log("User not loaded yet, waiting...");
-      return;
-    }
-
     if (id) {
       fetchRecordData();
     }
-  }, [id, user]);
+  }, [id]);
 
   const fetchRecordData = async () => {
     try {
@@ -106,7 +76,7 @@ export default function EditRecordScreen() {
 
       // Sử dụng fetch API với API_ENDPOINTS
       const response = await fetch(
-        `${API_ENDPOINTS.RECORDS}/${id}?user_id=${user.id}`
+        `${API_ENDPOINTS.RECORDS}/${id}?user_id=${DEFAULT_USER_ID}`
       );
 
       if (!response.ok) {

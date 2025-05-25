@@ -3,7 +3,6 @@ import Randomstring from "randomstring";
 import { format } from "date-fns";
 import { MOODS } from "src/utils/constant";
 import { API_ENDPOINTS, DEFAULT_USER_ID } from "@/utils/config";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Define Record interface
 interface Record {
@@ -40,13 +39,8 @@ export const fetchRecords = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       console.log("Bắt đầu gọi API lấy dữ liệu...");
-      const user = await (AsyncStorage.getItem("user"));
-      if (!user) {
-        throw new Error("Không tìm thấy thông tin người dùng trong AsyncStorage");
-      }
-      console.log("User data from AsyncStorage:", user);
       const response = await fetch(
-        `${API_ENDPOINTS.RECORDS}?user_id=${JSON.parse(user || "{}").id || DEFAULT_USER_ID}`,
+        `${API_ENDPOINTS.RECORDS}?user_id=${DEFAULT_USER_ID}`
       );
       console.log("API status:", response.status);
 

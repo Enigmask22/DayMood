@@ -2,8 +2,8 @@ import React, { useState, useRef } from "react";
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { format, addMonths, subMonths } from "date-fns";
-import EmotionPage from "@/components/statspage/emotion";
-import ActivityPage from "@/components/statspage/activity";
+import EmotionPage from "@/components/stats/emotion";
+import ActivityPage from "@/components/stats/activity";
 
 const { width, height } = Dimensions.get("window");
 

@@ -78,7 +78,7 @@ export default function Login() {
       if (data.statusCode === 201) {
         await AsyncStorage.setItem("access_token", data.data.access_token);
         await AsyncStorage.setItem("user", JSON.stringify(data.data.user));
-        
+
         const cookies = response.headers.get("set-cookie");
         if (cookies) {
           const refreshToken = cookies.split(";")[0].split("=")[1];

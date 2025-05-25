@@ -16,7 +16,6 @@ import ActionButtons from "@/components/newemoji/ActionButtons";
 import Header from "@/components/newemoji/Header";
 import { wp, hp } from "@/components/newemoji/utils";
 import { API_ENDPOINTS, DEFAULT_USER_ID } from "@/utils/config";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Map mood IDs to titles
 const moodTitles: { [key: number]: string } = {
@@ -65,15 +64,12 @@ export default function NewEmojiScreen() {
 
       // Lấy title từ moodTitles dựa vào selectedMood
       const moodTitle = moodTitles[selectedMood] || "How I feel today";
-      const user = await (AsyncStorage.getItem("user"));
-      if (!user) {
-        throw new Error("Không tìm thấy thông tin người dùng trong AsyncStorage");
-      }
+
       // Chuẩn bị dữ liệu gửi đi với title từ mood
       const recordData = {
         date: date.toISOString(),
         mood_id: selectedMood,
-        user_id: JSON.parse(user || "{}").id || DEFAULT_USER_ID,
+        user_id: DEFAULT_USER_ID,
         status: "ACTIVE",
         title: moodTitle, // Thêm title dựa vào mood
       };

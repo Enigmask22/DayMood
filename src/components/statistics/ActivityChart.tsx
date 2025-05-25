@@ -13,14 +13,9 @@ interface ActivityWithCount {
 interface ActivityChartProps {
   activities: ActivityWithCount[];
   currentMonth: Date;
-  hasRealData?: boolean; // Add this prop
 }
 
-const ActivityChart = ({ 
-  activities, 
-  currentMonth = new Date(),
-  hasRealData = true // Default to true but allow override from parent
-}: ActivityChartProps) => {
+const ActivityChart = ({ activities, currentMonth = new Date() }: ActivityChartProps) => {
   // Activity name mappings for better display
   const activityDisplayNames: Record<string, string> = {
     "1": "Work",
@@ -55,130 +50,156 @@ const ActivityChart = ({
     "Activity 15": "Outdoors"
   };
   
-  // Fixed color mapping for activities with more distinct colors
-  const activityColors: Record<string, string> = {
-    "Work": "#8c4A4A",       // Dark Gray
-    "Exercise": "#4CAF50",   // Green
-    "Biking": "#FF5722",     // Deep Orange
-    "Music": "#2196F3",      // Blue
-    "Dishes": "#F44336",     // Red
-    "Reading": "#9C27B0",    // Purple
-    "Shopping": "#FFB300",   // Amber
-    "Travel": "#00BCD4",     // Cyan
-    "Study": "#607D8B",      // Blue Gray
-    "Gaming": "#673AB7",     // Deep Purple
-    "Cooking": "#E91E63",    // Pink
-    "Cleaning": "#3F51B5",   // Indigo
-    "Meditation": "#009688", // Teal
-    "Social": "#CDDC39",     // Lime
-    "Outdoors": "#8BC34A",   // Light Green
-    "Other": "#BDBDBD",      // Light Gray
-  };
+ // Update the activityColors object with these more distinct colors:
 
+// Fixed color mapping for activities with more distinct colors
+const activityColors: Record<string, string> = {
+  "Work": "#8c4A4A",       // Dark Gray
+  "Exercise": "#4CAF50",   // Green
+  "Biking": "#FF5722",     // Deep Orange
+  "Music": "#2196F3",      // Blue
+  "Dishes": "#F44336",     // Red
+  "Reading": "#9C27B0",    // Purple
+  "Shopping": "#FFB300",   // Amber
+  "Travel": "#00BCD4",     // Cyan
+  "Study": "#607D8B",      // Blue Gray
+  "Gaming": "#673AB7",     // Deep Purple
+  "Cooking": "#E91E63",    // Pink
+  "Cleaning": "#3F51B5",   // Indigo
+  "Meditation": "#009688", // Teal
+  "Social": "#CDDC39",     // Lime
+  "Outdoors": "#8BC34A",   // Light Green
+  "Other": "#BDBDBD",      // Light Gray
+};
+
+  // Data preparation for both charts
   const { lineChartData, pieChartData, totalByType, totalActivities, daysInMonth, recentActivities } = 
   useMemo(() => {
-    console.log("Processing activities data:", activities);
-    console.log("Using hasRealData value:", hasRealData);
-    
     // Calculate days in month and current day
     const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
-    const today = new Date();
-    const isCurrentMonth = currentMonth.getFullYear() === today.getFullYear() && 
-                           currentMonth.getMonth() === today.getMonth();
+    const currentDay = Math.min(currentMonth.getDate(), daysInMonth);
     
-    // For current month, include up to today's date
-    let currentDay = isCurrentMonth ? today.getDate() : daysInMonth;
-    currentDay = Math.min(currentDay, daysInMonth);
+    // Check if we have real data from API
+    const hasAPIData = activities && activities.length > 0;
     
-    // Initialize arrays - removed internal hasRealData calculation
+    // Prepare daily activity data for line chart
     let dailyTotals = Array(currentDay).fill(0);
     let typeData: Record<string, number> = {};
     let recentActivities: Record<string, string> = {};
     
-    if (hasRealData) {
-      // Process the formatted activities data from activity.tsx
-      activities.forEach(activity => {
-        if (activity.name === "Daily Total") {
-          // This contains the daily totals for the line chart
-          const activityDate = new Date(activity.date);
-          const day = activityDate.getDate();
-          
-          if (day >= 1 && day <= currentDay) {
-            dailyTotals[day - 1] = activity.count;
-          }
-        } else {
-          // Individual activity types for pie chart
-          const displayName = activityDisplayNames[activity.name] || activity.name;
-          
-          if (!typeData[displayName]) {
-            typeData[displayName] = 0;
-          }
-          typeData[displayName] += activity.count;
-          
-          // Track most recent date for this activity type
-          if (!recentActivities[displayName] || 
-              new Date(activity.date) > new Date(recentActivities[displayName])) {
-            recentActivities[displayName] = activity.date;
-          }
-        }
-      });
-    } else {
-      // Sample data - ensure consistency with ActivityCount sample data
-      dailyTotals = Array(currentDay).fill(0).map((_, index) => {
-        return Math.floor(Math.random() * 8) + 1; // Random 1-8 activities per day
-      });
+// Focus on the data processing part in useMemo
+
+// Inside useMemo, update the activity processing logic:
+if (hasAPIData) {
+  // Process activities from the activities prop (formatted data)
+  activities.forEach(activity => {
+    const activityDate = new Date(activity.date);
+    const day = activityDate.getDate();
+    
+    // Update daily totals for the line chart
+    if (day >= 1 && day <= currentDay) {
+      dailyTotals[day - 1] += activity.count;
+    }
+    
+    // Skip "Daily Total" entries for the pie chart
+    if (activity.name === "Daily Total") {
+      return; // Skip this iteration
+    }
+    
+    // Get proper display name for this activity
+    const displayName = activityDisplayNames[activity.name] || activity.name;
+    
+    // Update total counts by activity type
+    if (!typeData[displayName]) {
+      typeData[displayName] = 0;
+    }
+    typeData[displayName] += activity.count;
+    
+    // Track most recent date for this activity type
+    const dateStr = activity.date;
+    if (!recentActivities[displayName] || 
+        new Date(dateStr) > new Date(recentActivities[displayName])) {
+      recentActivities[displayName] = dateStr;
+    }
+  });
+} else {
+      // When no activities data provided, create sample data
+      dailyTotals = Array(currentDay).fill(0).map(() => 
+        Math.floor(Math.random() * 15) + 2 // Random value between 2-17
+      );
       
+      // Sample pie chart data
       typeData = {
-        "Work": 2,
-        "Exercise": 8,
-        "Biking": 2,
-        "Music": 7,
-        "Dishes": 12,
-        "Reading": 2
+        "Work": 18,
+        "Exercise": 24,
+        "Biking": 8,
+        "Music": 22,
+        "Dishes": 16,
+        "Reading": 12,
       };
     }
     
-    // Create labels for all days
-    const chartLabels = Array.from({ length: currentDay }, (_, i) => `${i + 1}`);
+    // Calculate total activities
+    const total = Object.values(typeData).reduce((sum, count) => sum + count, 0);
     
-    console.log("Line chart data:", {
-      labels: chartLabels,
-      dailyTotals: dailyTotals,
-      currentDay: currentDay
+    // Create array of activity types sorted by count
+    const sortedActivities = Object.entries(typeData)
+      .filter(([_, count]) => count > 0) // Filter out zero counts
+      .sort((a, b) => b[1] - a[1]) // Sort by count, highest first
+      .map(([name, count]) => ({ name, count }));
+    
+    // Get top 5 activities
+    const top5 = sortedActivities.slice(0, 5);
+    
+    // Sum up remaining activities for "Other" category
+    const otherActivities = sortedActivities.slice(5);
+    const otherCount = otherActivities.reduce((sum, item) => sum + item.count, 0);
+    
+    // Create pie chart data with colors
+    const pieData = top5.map(item => {
+      return {
+        name: item.name,
+        count: item.count,
+        color: activityColors[item.name] || "#DDD",
+        legendFontColor: "#7F7F7F",
+        legendFontSize: 12
+      };
     });
     
-    // Process pie chart data
-    const sortedActivities = Object.entries(typeData)
-      .sort(([,a], [,b]) => b - a)
-      .slice(0, 5);
-    
-    const top5 = sortedActivities.map(([name, count]) => ({ name, count }));
-    const otherCount = Object.values(typeData).reduce((sum, count) => sum + count, 0) -
-      top5.reduce((sum, item) => sum + item.count, 0);
-    
-    const pieData = top5.map(item => ({
-      name: item.name,
-      count: item.count,
-      color: activityColors[item.name] || "#DDD",
-      legendFontColor: "#7F7F7F",
-      legendFontSize: 12
-    }));
-    
+    // Add "Other" category if needed
     if (otherCount > 0) {
       pieData.push({
         name: "Other",
         count: otherCount,
-        color: activityColors["Other"] || "#CCCCCC",
+        color: activityColors["Other"],
         legendFontColor: "#7F7F7F",
         legendFontSize: 12
       });
     }
     
-    const total = Object.values(typeData).reduce((sum, count) => sum + count, 0);
+    // If no data or only one type, add placeholder
+    if (pieData.length === 0) {
+      pieData.push({
+        name: "No Data",
+        count: 1,
+        color: "#EEEEEE",
+        legendFontColor: "#AAAAAA",
+        legendFontSize: 12
+      });
+    } else if (pieData.length === 1) {
+      // Add a tiny segment for visual separation
+      pieData.push({
+        name: "Other",
+        count: pieData[0].count * 0.01, // 1% of main value
+        color: "#F0F0F0",
+        legendFontColor: "#CCCCCC",
+        legendFontSize: 12
+      });
+    }
     
     return {
       lineChartData: {
-        labels: chartLabels,
+        labels: Array.from({ length: currentDay }, (_, i) => `${i + 1}`),
         datasets: [
           {
             data: dailyTotals,
@@ -193,7 +214,7 @@ const ActivityChart = ({
       daysInMonth: currentDay,
       recentActivities
     };
-  }, [activities, currentMonth, activityDisplayNames, activityColors, hasRealData]); // Added hasRealData as dependency
+  }, [activities, currentMonth, activityDisplayNames, activityColors]);
 
   return (
     <View style={styles.container}>
@@ -205,8 +226,7 @@ const ActivityChart = ({
       {/* Daily Activity Line Chart */}
       <ActivityLineChart 
         lineChartData={lineChartData} 
-        daysInMonth={daysInMonth}
-        hasRealData={hasRealData} // Pass the prop directly
+        daysInMonth={daysInMonth} 
       />
       
       {/* Activity Distribution Pie Chart */}
@@ -215,7 +235,6 @@ const ActivityChart = ({
         totalByType={totalByType}
         totalActivities={totalActivities}
         recentActivities={recentActivities}
-        hasRealData={hasRealData} // Pass the prop directly
       />
     </View>
   );

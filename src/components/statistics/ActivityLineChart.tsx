@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo, useEffect } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import { View, Text, StyleSheet, Dimensions, Animated } from "react-native";
 import { LineChart } from "react-native-chart-kit";
 import { HOME_COLOR } from "@/utils/constant";
@@ -10,7 +10,6 @@ import {
   PanGestureHandlerEventPayload
 } from "react-native-gesture-handler";
 import { SegmentedControl } from "@/components/statistics/SegmentedControl";
-import { FontAwesome5 } from "@expo/vector-icons";
 
 interface ActivityLineChartProps {
   lineChartData: {
@@ -22,21 +21,19 @@ interface ActivityLineChartProps {
     }[];
   };
   daysInMonth: number;
-  hasRealData?: boolean;
 }
 
-const ActivityLineChart = ({ lineChartData, daysInMonth, hasRealData = true }: ActivityLineChartProps) => {
+const ActivityLineChart = ({ lineChartData, daysInMonth }: ActivityLineChartProps) => {
   // Display mode state: 'daily', '2day', or '5day'
   const [displayMode, setDisplayMode] = useState<'daily' | '2day' | '5day'>('5day');
-
-
+  
   // For horizontal scrolling
   const [panX, setPanX] = useState(0);
   const translateX = useRef(new Animated.Value(0)).current;
-
+  
   // Derive zoom level from display mode
   const zoomLevel = useMemo(() => {
-    switch (displayMode) {
+    switch(displayMode) {
       case 'daily': return 1;  // Show every day
       case '2day': return 2;   // Group by 2 days
       case '5day': return 5;   // Group by 5 days
@@ -44,68 +41,56 @@ const ActivityLineChart = ({ lineChartData, daysInMonth, hasRealData = true }: A
     }
   }, [displayMode]);
 
-// Update the zoomedLineChartData useMemo function:
-
-// Create zoomed data based on zoom level
-const zoomedLineChartData = useMemo(() => {
-  const { labels, datasets } = lineChartData;
-  const data = datasets[0].data;
-
-  if (zoomLevel === 1) {
-    // Show all days (maximum detail)
-    return lineChartData;
-  }
-
-  // Aggregate data points based on zoom level
-  const aggregatedLabels: string[] = [];
-  const aggregatedData: number[] = [];
-
-  for (let i = 0; i < labels.length; i += zoomLevel) {
-    // Calculate SUM for this group (not average)
-    let sum = 0;
-    let count = 0;
-    let startDay = parseInt(labels[i]);
-    let endDay = startDay;
-
-    for (let j = 0; j < zoomLevel && i + j < data.length; j++) {
-      sum += data[i + j];
-      count++;
-      endDay = parseInt(labels[i + j]);
+  // Create zoomed data based on zoom level
+  const zoomedLineChartData = useMemo(() => {
+    const { labels, datasets } = lineChartData;
+    const data = datasets[0].data;
+    
+    if (zoomLevel === 1) {
+      // Show all days (maximum detail)
+      return lineChartData;
     }
-
-    if (count > 0) {
-      // Use sum directly instead of average to maintain proper scaling
-      aggregatedData.push(sum);
+    
+    // Aggregate data points based on zoom level
+    const aggregatedLabels: string[] = [];
+    const aggregatedData: number[] = [];
+    
+    for (let i = 0; i < labels.length; i += zoomLevel) {
+      // Calculate average for this group
+      let sum = 0;
+      let count = 0;
       
-      // Show date range in label
-      if (startDay === endDay) {
-        aggregatedLabels.push(`${startDay}`);
-      } else {
-        aggregatedLabels.push(`${startDay}-${endDay}`);
+      for (let j = 0; j < zoomLevel && i + j < data.length; j++) {
+        sum += data[i + j];
+        count++;
+      }
+      
+      if (count > 0) {
+        aggregatedData.push(Math.round(sum / count));
+        aggregatedLabels.push(`${parseInt(labels[i])}`);
       }
     }
-  }
-
-  return {
-    labels: aggregatedLabels,
-    datasets: [
-      {
-        data: aggregatedData,
-        color: datasets[0].color,
-        strokeWidth: datasets[0].strokeWidth,
-      }
-    ]
-  };
-}, [lineChartData, zoomLevel]);
+    
+    return {
+      labels: aggregatedLabels,
+      datasets: [
+        {
+          data: aggregatedData,
+          color: datasets[0].color,
+          strokeWidth: datasets[0].strokeWidth,
+        }
+      ]
+    };
+  }, [lineChartData, zoomLevel]);
 
   // Calculate chart dimensions based on display mode
   const chartWidth = Dimensions.get('window').width - 40; // Base width
   const chartHeight = 180; // Base height
-
+  
   // Calculate width based on display mode (wider for more detailed views)
   const displayWidth = displayMode === 'daily' ? chartWidth * 2 : // Double width for daily view
-    displayMode === '2day' ? chartWidth * 1.8: // Slightly wider for 2-day
-      chartWidth; // Regular width for 5-day (fits whole month)
+                        displayMode === '2day' ? chartWidth * 1.3 : // Slightly wider for 2-day
+                        chartWidth; // Regular width for 5-day (fits whole month)
 
   // Event handler for pan gesture
   const onPanGestureEvent = Animated.event(
@@ -117,69 +102,55 @@ const zoomedLineChartData = useMemo(() => {
     if (event.nativeEvent.state === State.END) {
       // Update pan position
       let newPanX = panX + event.nativeEvent.translationX;
-
+      
       // Calculate boundaries for horizontal scrolling
       const maxPanX = Math.max(0, (displayWidth - chartWidth) / 2);
-
+      
       // Apply boundaries
       newPanX = Math.min(Math.max(newPanX, -maxPanX), maxPanX);
-
+      
       setPanX(newPanX);
-
+      
       // Reset animated values
       translateX.setValue(0);
     }
   };
-
-  // Add this useEffect after the existing state declarations and before the zoomedLineChartData useMemo:
-
-  // Set initial position to show most recent data (right edge)
-  React.useEffect(() => {
-    if (displayMode !== '5day') {
-      // Calculate the position to show the right edge of the chart
-      const maxPanX = Math.max(0, (displayWidth - chartWidth) / 2);
-      const initialPosition = -maxPanX; // Negative to show right side
-      setPanX(initialPosition);
-      translateX.setValue(0);
-    } else {
-      // Reset for 5-day view
-      setPanX(0);
-      translateX.setValue(0);
-    }
-  }, [displayMode, displayWidth, chartWidth]);
 
   return (
     <View style={styles.chartSection}>
       <View style={styles.chartTitleContainer}>
         <Text style={styles.chartTitle}>Daily Activity Count</Text>
       </View>
-
+      
       {/* Display Mode Selector */}
       <View style={styles.displayModeContainer}>
-        <SegmentedControl
+        <SegmentedControl 
           values={['5-Day View', '2-Day View', 'Daily View']}
           selectedIndex={displayMode === '5day' ? 0 : displayMode === '2day' ? 1 : 2}
           onChange={(index) => {
             const modes: Array<'5day' | '2day' | 'daily'> = ['5day', '2day', 'daily'];
             setDisplayMode(modes[index]);
+            // Reset pan position when changing display mode
+            setPanX(0);
+            translateX.setValue(0);
           }}
           style={styles.segmentedControl}
         />
       </View>
-
-      {/* Chart Window Container with relative positioning for overlay */}
+      
+      {/* Chart Window Container */}
       <View style={styles.chartWindowContainer}>
         <GestureHandlerRootView style={styles.gestureContainer}>
           <PanGestureHandler
             onGestureEvent={onPanGestureEvent}
             onHandlerStateChange={onPanHandlerStateChange}
             minDist={10}
-            enabled={displayMode !== '5day'}
+            enabled={displayMode !== '5day'} // Only enable pan for detailed views
           >
-            <Animated.View
+            <Animated.View 
               style={[
                 styles.scrollableChartContent,
-                {
+                { 
                   transform: [
                     { translateX: Animated.add(translateX, new Animated.Value(panX)) }
                   ]
@@ -214,25 +185,8 @@ const zoomedLineChartData = useMemo(() => {
             </Animated.View>
           </PanGestureHandler>
         </GestureHandlerRootView>
-
-        {/* Sample data overlay - only show when no real data */}
-        {!hasRealData && (
-          <View style={styles.sampleDataOverlay}>
-            <View style={styles.sampleDataBanner}>
-              <FontAwesome5 name="info-circle" size={20} color={HOME_COLOR.HOMETABBAR} style={styles.infoIcon} />
-              <View style={styles.textContainer}>
-                <Text style={styles.sampleDataTitle}>
-                  SAMPLE DATA
-                </Text>
-                <Text style={styles.sampleDataSubtitle}>
-                  Track activities to see your progress!
-                </Text>
-              </View>
-            </View>
-          </View>
-        )}
       </View>
-
+      
       {displayMode !== '5day' && (
         <View style={styles.gestureHint}>
           <Text style={styles.hintText}>Swipe to scroll horizontally</Text>
@@ -265,7 +219,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 36,
   },
-
   chartWindowContainer: {
     height: 180,
     borderRadius: 16,
@@ -273,54 +226,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: '#f0f0f0',
-    position: 'relative', // Add this for overlay positioning
-  },
-
-  // Add these new overlay styles
-  sampleDataOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.75)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 16,
-  },
-
-  sampleDataBanner: {
-    backgroundColor: 'rgba(255, 255, 255, 0)',
-    borderRadius: 10,
-    padding: 12,
-    width: '80%',
-    alignItems: 'center',
-    flexDirection: 'row',
-  },
-
-  textContainer: {
-    flex: 1,
-    alignItems: 'center',
-  },
-
-  sampleDataTitle: {
-    fontSize: 16,
-    color: '#333',
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 2,
-  },
-
-  sampleDataSubtitle: {
-    fontSize: 12,
-    color: '#666',
-    fontWeight: '500',
-    textAlign: 'center',
-    lineHeight: 14,
-  },
-
-  infoIcon: {
-    marginRight: 10,
   },
   gestureContainer: {
     flex: 1,

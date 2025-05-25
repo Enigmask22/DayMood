@@ -42,7 +42,7 @@ const ActivitiesSelector: React.FC<ActivitiesSelectorProps> = ({
           >
             <FontAwesome5
               name={activity.icon}
-              size={wp(5)}
+              size={selectedActivities.includes(activity.id) ? wp(5.5) : wp(5)}
               color={
                 selectedActivities.includes(activity.id) ? "#006400" : "#fff"
               }
@@ -51,7 +51,7 @@ const ActivitiesSelector: React.FC<ActivitiesSelectorProps> = ({
               style={[
                 styles.activityName,
                 selectedActivities.includes(activity.id) &&
-                  styles.selectActivitiesText,
+                  styles.selectedActivityName,
               ]}
             >
               {activity.name}
@@ -110,24 +110,20 @@ const styles = StyleSheet.create({
     backgroundColor: "#00A67E",
     borderRadius: wp(4),
     padding: wp(3.5),
-    paddingVertical: hp(1.5),
-    height: hp(45), // Giữ chiều cao cố định để tránh thay đổi kích thước khi chọn hoạt động
+    paddingVertical: hp(2),
   },
   activityItem: {
-    width: "22%", // Để 4 items mỗi hàng với một chút khoảng cách
-    aspectRatio: 0.7, // Hơi bẹt xuống 1 chút để giảm chiều cao tổng thể
+    width: "23%", // Để 4 items mỗi hàng với một chút khoảng cách
+    aspectRatio: 1.1, // Hơi bẹt xuống 1 chút để giảm chiều cao tổng thể
     justifyContent: "center",
     alignItems: "center",
     marginBottom: hp(1.2),
-    marginHorizontal: wp(0.5),
-    borderRadius: 100,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.5)",
+    borderRadius: wp(15),
     backgroundColor: "rgba(255, 255, 255, 0.15)",
   },
   selectedActivity: {
-    backgroundColor: "#A3E635", // Màu xanh lá nhạt hơn, gần với thiết kế
-    borderWidth: 1,
+    backgroundColor: "#90EE90", // Màu xanh lá nhạt hơn, gần với thiết kế
+    borderWidth: 1.5,
     borderColor: "white",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
@@ -135,9 +131,8 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 3,
   },
-
   moreButton: {
-    backgroundColor: "rgba(255, 255, 255, 0.5)", // Màu nền hơi khác để phân biệt
+    backgroundColor: "rgba(255, 255, 255, 0.25)", // Màu nền hơi khác để phân biệt
   },
   activityName: {
     fontSize: wp(2.8),
@@ -145,6 +140,9 @@ const styles = StyleSheet.create({
     marginTop: hp(0.5),
     textAlign: "center",
     fontFamily: "Quicksand-Regular",
+  },
+  selectedActivityName: {
+    fontWeight: "bold",
   },
   selectActivitiesContainer: {
     backgroundColor: "white",
@@ -177,11 +175,9 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   selectActivitiesText: {
-    fontSize: wp(3.5),
+    fontSize: wp(4),
     color: "#888",
-    marginTop: hp(0.5),
     textAlign: "center",
-    fontWeight: "700",
     fontFamily: "Quicksand-Regular",
   },
 });
