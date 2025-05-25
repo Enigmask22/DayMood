@@ -182,7 +182,8 @@ const styles = StyleSheet.create({
   },
   button: {
     borderRadius: width * 0.05,
-    paddingVertical: height * 0.012,
+    paddingVertical: height * 0.018,
+    paddingHorizontal: width * 0.02,
     alignItems: "center",
     width: width * 0.4,
     // tôi chỉ muốn độ dài của text là 1 dòng, nếu dài hơn thì hiện ... ở cuối

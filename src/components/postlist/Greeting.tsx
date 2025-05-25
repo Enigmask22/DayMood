@@ -24,15 +24,21 @@ const Greeting = () => {
             <View style={styles.infoContainer}>
                 <View style={styles.nameContainer}>
                     <Text style={styles.greetingText}>Hello there,</Text>
-                    <Text style={styles.nameText}>Hung Jonathan</Text>
+                    {/* Replace the simple Text with this TextWithOutline component */}
+                    <View style={styles.nameTextContainer}>
+                        {/* Create the outline effect with multiple text shadows */}
+                        <Text style={styles.nameTextOutline}>Hung Jonathan</Text>
+                        {/* Main text on top */}
+                        <Text style={styles.nameText}>Hung Jonathan</Text>
+                    </View>
                 </View>
                 <Image
-                    source={require("@/assets/images/home/home_avatar.png")} // Replace with actual profile image URL'
+                    source={require("@/assets/images/home/home_avatar.png")}
                     style={styles.profileImage}
                 />
             </View>
             <Image
-                source={require("@/assets/images/home/home_bg.png")} // Replace with actual profile image URL'
+                source={require("@/assets/images/home/home_bg.png")}
                 style={styles.greetingImage}
             />
         </View>
@@ -52,7 +58,7 @@ const styles = StyleSheet.create({
     },
     greetingContainer: {
         position: "relative",
-        height: height * 0.2,
+        height: height * 0.16,
         overflow: "hidden",
         width: "100%",
         display: "flex",
@@ -65,11 +71,27 @@ const styles = StyleSheet.create({
         fontSize: width * 0.035,
         color: "#000",
     },
+    nameTextContainer: {
+        position: 'relative',  // For proper stacking of texts
+    },
     nameText: {
         fontFamily: "Quicksand-Bold",
         fontSize: width * 0.045,
         fontWeight: "600",
-        color: "#000",
+        color: "#0B6E4F",
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        zIndex: 2, // Ensure it's on top
+    },
+    nameTextOutline: {
+        fontFamily: "Quicksand-Bold",
+        fontSize: width * 0.045,
+        fontWeight: "600",
+        color: "white",
+        textShadowColor: 'white',
+        textShadowOffset: { width: -1, height: -1 },
+        textShadowRadius: 3,
     },
     nameContainer: {
         flexDirection: "column",

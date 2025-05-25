@@ -7,6 +7,7 @@ import { useAppSelector, useAppDispatch } from "src/store";
 import { fetchRecords } from "src/store/slices/recordSlice";
 import { useFocusEffect } from "expo-router";
 import AntDesign from '@expo/vector-icons/AntDesign';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const { width, height } = Dimensions.get("window");
 const PostlistPage = () => {
@@ -20,7 +21,7 @@ const PostlistPage = () => {
       // Tải dữ liệu khi màn hình được focus (khi người dùng quay lại từ màn hình khác)
       console.log("Home screen focused, fetching records...");
       dispatch(fetchRecords());
-      console.log("Fetched records:", records);
+      // console.log("Fetched records:", records);
     }, [dispatch])
   );
 
@@ -57,16 +58,38 @@ const PostlistPage = () => {
   return (
     <View style={styles.container}>
       <Greeting />
-      <View style={styles.monthSelector}>
-        <TouchableOpacity onPress={goToPreviousMonth} style={styles.monthButton}>
-          <AntDesign name="leftcircleo" size={24} color="black" />
-        </TouchableOpacity>
-        <Text style={styles.monthText}>
-          {selectedDate.toLocaleString('en', { month: 'long' })}, {selectedDate.getFullYear()}
-        </Text>
-        <TouchableOpacity onPress={goToNextMonth} style={styles.monthButton}>
-          <AntDesign name="rightcircleo" size={24} color="black" />
-        </TouchableOpacity>
+      <View style={styles.monthSelectorContainer}>
+        <LinearGradient
+          colors={['#ffff', '#DFE6DA']}
+          style={styles.monthSelector}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+        >
+          <TouchableOpacity
+            onPress={goToPreviousMonth}
+            style={styles.monthButton}
+            activeOpacity={0.7}
+          >
+            <AntDesign name="leftcircle" size={28} color="#25A18E" />
+          </TouchableOpacity>
+
+          <View style={styles.monthTextContainer}>
+            <Text style={styles.monthText}>
+              {selectedDate.toLocaleString('en', { month: 'long' })}
+            </Text>
+            <Text style={styles.yearText}>
+              {selectedDate.getFullYear()}
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            onPress={goToNextMonth}
+            style={styles.monthButton}
+            activeOpacity={0.7}
+          >
+            <AntDesign name="rightcircle" size={28} color="#25A18E" />
+          </TouchableOpacity>
+        </LinearGradient>
       </View>
       <RecordsList records={filteredRecords} loading={loading} error={error} />
     </View>
@@ -78,20 +101,41 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: HOME_COLOR.HOMEBACKGROUND,
   },
+  monthSelectorContainer: {
+    paddingHorizontal: width * 0.05,
+    paddingVertical: height * 0.01,
+  },
   monthSelector: {
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: height * 0.02,
-    paddingHorizontal: width * 0.05,
-    gap: width * 0.05,
+    paddingVertical: height * 0.015,
+    paddingHorizontal: width * 0.04,
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   monthButton: {
-    padding: width * 0.02,
+    padding: width * 0.015,
+    borderRadius: 30,
+  },
+  monthTextContainer: {
+    alignItems: 'center',
+    flex: 1,
   },
   monthText: {
-    fontSize: 22,
-    fontWeight: 'bold',
+    fontSize: width * 0.055,
+    fontFamily: 'Quicksand-Bold', // Use your app's font family
+    color: '#333',
+  },
+  yearText: {
+    fontSize: width * 0.035,
+    fontFamily: 'Quicksand-Medium', // Use your app's font family
+    color: '#666',
+    marginTop: 2,
   },
 });
 

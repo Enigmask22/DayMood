@@ -76,3 +76,11 @@ export const ACTIVITIES = [
   { id: 15, name: "Swimming", icon: "swimmer" },
   { id: 16, name: "More", icon: "plus" },
 ];
+
+export const moodAdviceMap: { [key: number]: string } = {
+  1: "It's okay to feel sad sometimes. Take care of yourself and reach out if you need support.",
+  2: "Try to manage your anger with deep breaths or a walk. Remember, it's healthy to express your feelings.",
+  3: "Keep a balanced routine and enjoy the normal moments in your life.",
+  4: "Let your joy inspire others! Spread your happiness and keep doing what makes you smile.",
+  5: "Excellent mood! Use this energy to achieve your goals and help others.",
+};

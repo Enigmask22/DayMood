@@ -5,9 +5,13 @@ import {
   Text,
   View,
   ActivityIndicator,
+  TouchableOpacity,
+  ScrollView
 } from "react-native";
+import { useState, useEffect } from "react";
 import FeelingRecord from "./FeelingRecord";
 import { FeelingRecordProps } from "src/components/homepage/FeelingRecord";
+import { MOODS } from "@/utils/constant";
 const { width, height } = Dimensions.get("window");
 
 interface RecordItem extends FeelingRecordProps {
@@ -21,8 +25,47 @@ interface RecordsListProps {
 }
 
 const RecordsList = ({ records, loading, error }: RecordsListProps) => {
+  // State to hold the selected mood filter
+  const [selectedMoodFilter, setSelectedMoodFilter] = useState<string | null>(null);
+  // State to hold filtered records
+  const [filteredRecords, setFilteredRecords] = useState<RecordItem[]>(records);
+
+  // Update filtered records when records change or filter changes
+  useEffect(() => {
+    if (selectedMoodFilter) {
+      const filtered = records.filter(record => record.emoji === selectedMoodFilter.toLowerCase());
+      setFilteredRecords(filtered);
+    } else {
+      setFilteredRecords(records);
+    }
+  }, [records, selectedMoodFilter]);
+
+  // Function to handle mood filter selection
+  const handleMoodFilter = (moodName: string) => {
+    if (selectedMoodFilter === moodName) {
+      // If clicking the same filter, clear the filter
+      setSelectedMoodFilter(null);
+    } else {
+      setSelectedMoodFilter(moodName);
+    }
+  };
+
+  // Function to clear the filter
+  const clearFilter = () => {
+    setSelectedMoodFilter(null);
+  };
+
   return (
     <View style={styles.container}>
+      {/* Results Status */}
+      {!loading && !error && selectedMoodFilter && (
+        <View style={styles.filterStatusContainer}>
+          <Text style={styles.filterStatusText}>
+            Showing {filteredRecords.length} {selectedMoodFilter} record{filteredRecords.length !== 1 ? 's' : ''}
+          </Text>
+        </View>
+      )}
+
       <View style={styles.contentWrapper}>
         {/* Hiển thị loading */}
         {loading && (
@@ -40,16 +83,20 @@ const RecordsList = ({ records, loading, error }: RecordsListProps) => {
         )}
 
         {/* Hiển thị khi không có dữ liệu */}
-        {!loading && !error && records.length === 0 && (
+        {!loading && !error && filteredRecords.length === 0 && (
           <View style={styles.centerContainer}>
-            <Text style={styles.messageText}>No Recording</Text>
+            <Text style={styles.messageText}>
+              {selectedMoodFilter
+                ? `No "${selectedMoodFilter}" records found`
+                : "No Recording"}
+            </Text>
           </View>
         )}
 
         {/* Scrollable List */}
-        {!loading && !error && records.length > 0 && (
+        {!loading && !error && filteredRecords.length > 0 && (
           <FlatList
-            data={records}
+            data={filteredRecords}
             renderItem={({ item }) => (
               <FeelingRecord
                 id={item.id}
@@ -62,9 +109,40 @@ const RecordsList = ({ records, loading, error }: RecordsListProps) => {
             style={styles.scrollContainer}
             contentContainerStyle={styles.contentContainer}
             showsVerticalScrollIndicator={true}
-            scrollIndicatorInsets={{ right: 1 }} // Optional: Adjust the position of the scroll indicator
+            scrollIndicatorInsets={{ right: 1 }}
           />
         )}
+        {/* Mood Filter Section */}
+        <View style={styles.filterContainer}>
+          <Text style={styles.filterTitle}>Filter by mood:</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
+            {MOODS.map((mood) => (
+              <TouchableOpacity
+                key={mood.id}
+                style={[
+                  styles.moodFilterItem,
+                  selectedMoodFilter === mood.name && styles.moodFilterItemSelected,
+                  { backgroundColor: selectedMoodFilter === mood.name ? mood.color : 'rgba(0,0,0,0.05)' }
+                ]}
+                onPress={() => handleMoodFilter(mood.name)}
+              >
+                <Text style={[
+                  styles.moodFilterText,
+                  selectedMoodFilter === mood.name && styles.moodFilterTextSelected
+                ]}>
+                  {mood.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+
+          {/* Show Clear Filter button when a filter is active */}
+          {/* {selectedMoodFilter && (
+            <TouchableOpacity style={styles.clearFilterButton} onPress={clearFilter}>
+              <Text style={styles.clearFilterText}>Clear Filter</Text>
+            </TouchableOpacity>
+          )} */}
+        </View>
       </View>
     </View>
   );
@@ -73,9 +151,67 @@ const RecordsList = ({ records, loading, error }: RecordsListProps) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingBottom: height * 0.12,
-    width: width * 0.9, 
+    width: width * 0.9,
     alignSelf: "center",
+  },
+  filterContainer: {
+    marginBottom: height * 0.015,
+    paddingTop: height * 0.01,
+  },
+  filterTitle: {
+    fontSize: width * 0.04,
+    fontFamily: "Quicksand-Bold",
+    marginBottom: height * 0.01,
+    paddingLeft: width * 0.02,
+  },
+  filterScroll: {
+    flexDirection: 'row',
+    paddingVertical: 6,
+  },
+  moodFilterItem: {
+    paddingHorizontal: width * 0.03,
+    paddingVertical: height * 0.01,
+    borderRadius: 20,
+    marginRight: width * 0.02,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  moodFilterItemSelected: {
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.22,
+    shadowRadius: 2.22,
+  },
+  moodFilterText: {
+    fontFamily: "Quicksand-Medium",
+    fontSize: width * 0.035,
+  },
+  moodFilterTextSelected: {
+    color: "white",
+    fontFamily: "Quicksand-Bold",
+  },
+  clearFilterButton: {
+    alignSelf: 'flex-end',
+    paddingHorizontal: width * 0.03,
+    paddingVertical: height * 0.005,
+    marginTop: height * 0.01,
+  },
+  clearFilterText: {
+    color: "#2196F3",
+    fontFamily: "Quicksand-Medium",
+    fontSize: width * 0.035,
+  },
+  filterStatusContainer: {
+    paddingHorizontal: width * 0.02,
+    paddingBottom: height * 0.01,
+  },
+  filterStatusText: {
+    fontFamily: "Quicksand-Medium",
+    fontSize: width * 0.035,
+    color: "#666",
+    fontStyle: 'italic',
   },
   contentWrapper: {
     flex: 1,
@@ -95,7 +231,7 @@ const styles = StyleSheet.create({
     color: "#000",
   },
   scrollContainer: {
-    flex: 1,
+    flex: 1
   },
   contentContainer: {
     paddingHorizontal: width * 0.025,
