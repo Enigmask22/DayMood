@@ -17,6 +17,8 @@ import { router } from "expo-router";
 const { width, height } = Dimensions.get("window");
 export interface FeelingRecordProps {
   id?: string | number;
+  index: number;
+  total: number
   date: string;
   emoji: string;
   feeling: string;
@@ -24,6 +26,8 @@ export interface FeelingRecordProps {
 
 const FeelingRecord = ({
   id,
+  index,
+  total,
   date = "THURSDAY, MARCH 6 20:00",
   emoji = "sad",
   feeling = "I'm feeling bad",
@@ -78,7 +82,7 @@ const FeelingRecord = ({
   return (
     <View style={styles.container}>
       {/* Emoji Section */}
-      <Feeling emoji={emoji}/>
+      <Feeling emoji={emoji} showVerticalLine={!(index == total - 1)}/>
       
       <View style={styles.main}>
         <View style={styles.textContainer}>

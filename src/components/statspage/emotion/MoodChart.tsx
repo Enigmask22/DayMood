@@ -140,11 +140,8 @@ const styles = StyleSheet.create({
   },
   yAxisContainer: {
     position: 'absolute',
-    left: 10,
     top: 10,
-    width: 35,
     height: CHART_HEIGHT,
-    paddingLeft: 5,
     zIndex: 2,
   },
   yAxisLabelContainer: {
@@ -224,8 +221,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'center',
     marginTop: 40,
-    marginLeft: 35,
-    marginRight: 5,
     gap: 8,
   },
   legendItem: {

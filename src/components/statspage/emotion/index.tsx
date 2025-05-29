@@ -368,7 +368,8 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
       <View style={styles.chartCard}>
         <Text style={styles.chartTitle}>Mood Chart</Text>
         <Text style={styles.chartSubtitle}>
-          {format(currentDate, 'MMMM yyyy')}
+          {/* {format(currentDate, 'MMMM yyyy')} */}
+          {"Let's see how your mood has been this month!"}
         </Text>
         
         <View style={styles.chartWrapper}>
@@ -434,7 +435,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#64748b',
     textAlign: 'center',
-    marginBottom: 16,
+    paddingHorizontal: width * 0.1,
   },
   chartWrapper: {
     overflow: 'hidden',

@@ -97,8 +97,10 @@ const RecordsList = ({ records, loading, error }: RecordsListProps) => {
         {!loading && !error && filteredRecords.length > 0 && (
           <FlatList
             data={filteredRecords}
-            renderItem={({ item }) => (
+            renderItem={({ item, index }) => (
               <FeelingRecord
+                index={index}
+                total={filteredRecords.length}
                 id={item.id}
                 date={item.date}
                 emoji={item.emoji}
