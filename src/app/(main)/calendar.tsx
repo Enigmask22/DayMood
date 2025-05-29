@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, StyleSheet } from "react-native";
 import { Calendar } from "react-native-calendars";
 import { LocaleConfig } from "react-native-calendars";
@@ -6,7 +6,9 @@ import CalendarHeader from "../../components/calendar/CalendarHeader";
 import CustomCalendarHeader from "../../components/calendar/CustomCalendarHeader";
 import MonthPickerModal from "../../components/calendar/MonthPickerModal";
 import YearPickerModal from "../../components/calendar/YearPickerModal";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
+import { API_URL } from "@/utils/config";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Cấu hình ngôn ngữ
 LocaleConfig.locales["en"] = LocaleConfig.locales[""];
@@ -52,20 +54,90 @@ const CalendarPage = () => {
     return `${yyyy}-${mm}-${dd}`;
   });
 
+  // State cho tháng/năm hiện tại
+  const today = new Date();
+  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
+  const [currentYear, setCurrentYear] = useState(today.getFullYear());
+  const [showMonthPicker, setShowMonthPicker] = useState(false);
+  const [showYearPicker, setShowYearPicker] = useState(false);
+
+  // State cho thống kê
+  const [eventDates, setEventDates] = useState<Record<string, any>>({});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Hàm lấy thống kê từ API
+  const fetchMoodStatistics = async (month: number, year: number) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const user = await AsyncStorage.getItem("user");
+      if (!user) {
+        throw new Error("User not found");
+      }
+      const userData = JSON.parse(user);
+      const response = await fetch(
+        `${API_URL}/api/v1/records/statistic/mood?user_id=${userData.id}&month=${month}&year=${year}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch mood statistics");
+      }
+
+      const data = await response.json();
+
+      // Chuyển đổi dữ liệu từ API thành định dạng eventDates
+      const newEventDates: Record<string, any> = {};
+      data.data.monthly.dailyMoodStats.forEach((day: any) => {
+        if (day.totalRecords > 0) {
+          const dots = day.moodStats.map((mood: any) => ({
+            color: getMoodColor(mood.moodId),
+          }));
+          newEventDates[day.date] = {
+            marked: true,
+            dots: dots,
+          };
+        }
+      });
+
+      setEventDates(newEventDates);
+    } catch (err) {
+      setError("Failed to fetch mood statistics");
+      console.error("Error fetching mood statistics:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Hàm lấy màu dựa trên moodId
+  const getMoodColor = (moodId: number): string => {
+    const moodColors: Record<number, string> = {
+      1: "#7E7E7E", // Sad
+      2: "#EF0808", // Angry
+      3: "#540BFF", // Normal
+      4: "#FCA10C", // Joyfulr
+      5: "#22C55E", // Excellent
+    };
+    return moodColors[moodId] || "#7C5CFC";
+  };
+
+  // Gọi API mỗi khi trang Calendar được focus hoặc khi thay đổi tháng/năm
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchMoodStatistics(currentMonth + 1, currentYear);
+    }, [currentMonth, currentYear])
+  );
+
   // Format selected date for display
   const formatSelectedDate = (dateString: string) => {
     const date = new Date(dateString);
     return formatDate(date);
-  };
-
-  // Demo: các ngày có sự kiện
-  const eventDates: Record<string, any> = {
-    "2025-05-03": { marked: true, dots: [{ color: "#79BF5D" }] },
-    "2025-05-04": { marked: true, dots: [{ color: "#7C5CFC" }] },
-    "2025-05-07": {
-      marked: true,
-      dots: [{ color: "#79BF5D" }, { color: "#7C5CFC" }],
-    },
   };
 
   // markedDates luôn có ngày selected với khung tròn tím
@@ -78,111 +150,40 @@ const CalendarPage = () => {
     },
   };
 
-  // State cho tháng/năm hiện tại
-  const today = new Date();
-  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
-  const [currentYear, setCurrentYear] = useState(today.getFullYear());
-  const [showMonthPicker, setShowMonthPicker] = useState(false);
-  const [showYearPicker, setShowYearPicker] = useState(false);
-
   // Xử lý thay đổi tháng
   const handleMonthChange = (monthIdx: number) => {
     setCurrentMonth(monthIdx);
-    const today = new Date();
-    const isCurrentMonth =
-      monthIdx === today.getMonth() && currentYear === today.getFullYear();
-    if (isCurrentMonth) {
-      const yyyy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, "0");
-      const dd = String(today.getDate()).padStart(2, "0");
-      setSelected(`${yyyy}-${mm}-${dd}`);
-    } else {
-      setSelected("");
-    }
     setShowMonthPicker(false);
   };
 
   // Xử lý thay đổi năm
   const handleYearChange = (year: number) => {
     setCurrentYear(year);
-    const today = new Date();
-    const isCurrentYear =
-      year === today.getFullYear() && currentMonth === today.getMonth();
-    if (isCurrentYear) {
-      const yyyy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, "0");
-      const dd = String(today.getDate()).padStart(2, "0");
-      setSelected(`${yyyy}-${mm}-${dd}`);
-    } else {
-      setSelected("");
-    }
     setShowYearPicker(false);
   };
 
   // Xử lý nút prev/next
   const handlePrevPress = () => {
-    const today = new Date();
     if (currentMonth === 0) {
       const newYear = currentYear - 1;
       const newMonth = 11;
       setCurrentYear(newYear);
       setCurrentMonth(newMonth);
-      const isCurrentMonth =
-        newMonth === today.getMonth() && newYear === today.getFullYear();
-      if (isCurrentMonth) {
-        const yyyy = today.getFullYear();
-        const mm = String(today.getMonth() + 1).padStart(2, "0");
-        const dd = String(today.getDate()).padStart(2, "0");
-        setSelected(`${yyyy}-${mm}-${dd}`);
-      } else {
-        setSelected("");
-      }
     } else {
       const newMonth = currentMonth - 1;
       setCurrentMonth(newMonth);
-      const isCurrentMonth =
-        newMonth === today.getMonth() && currentYear === today.getFullYear();
-      if (isCurrentMonth) {
-        const yyyy = today.getFullYear();
-        const mm = String(today.getMonth() + 1).padStart(2, "0");
-        const dd = String(today.getDate()).padStart(2, "0");
-        setSelected(`${yyyy}-${mm}-${dd}`);
-      } else {
-        setSelected("");
-      }
     }
   };
 
   const handleNextPress = () => {
-    const today = new Date();
     if (currentMonth === 11) {
       const newYear = currentYear + 1;
       const newMonth = 0;
       setCurrentYear(newYear);
       setCurrentMonth(newMonth);
-      const isCurrentMonth =
-        newMonth === today.getMonth() && newYear === today.getFullYear();
-      if (isCurrentMonth) {
-        const yyyy = today.getFullYear();
-        const mm = String(today.getMonth() + 1).padStart(2, "0");
-        const dd = String(today.getDate()).padStart(2, "0");
-        setSelected(`${yyyy}-${mm}-${dd}`);
-      } else {
-        setSelected("");
-      }
     } else {
       const newMonth = currentMonth + 1;
       setCurrentMonth(newMonth);
-      const isCurrentMonth =
-        newMonth === today.getMonth() && currentYear === today.getFullYear();
-      if (isCurrentMonth) {
-        const yyyy = today.getFullYear();
-        const mm = String(today.getMonth() + 1).padStart(2, "0");
-        const dd = String(today.getDate()).padStart(2, "0");
-        setSelected(`${yyyy}-${mm}-${dd}`);
-      } else {
-        setSelected("");
-      }
     }
   };
   console.log(todayString);
