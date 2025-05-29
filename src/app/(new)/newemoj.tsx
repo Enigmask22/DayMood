@@ -65,9 +65,11 @@ export default function NewEmojiScreen() {
 
       // Lấy title từ moodTitles dựa vào selectedMood
       const moodTitle = moodTitles[selectedMood] || "How I feel today";
-      const user = await (AsyncStorage.getItem("user"));
+      const user = await AsyncStorage.getItem("user");
       if (!user) {
-        throw new Error("Không tìm thấy thông tin người dùng trong AsyncStorage");
+        throw new Error(
+          "Không tìm thấy thông tin người dùng trong AsyncStorage"
+        );
       }
       // Chuẩn bị dữ liệu gửi đi với title từ mood
       const recordData = {
@@ -104,7 +106,8 @@ export default function NewEmojiScreen() {
         {
           text: "OK",
           onPress: () => {
-            router.push("/(main)" as any);
+            router.back();
+            // router.push("/(main)" as any);
           },
         },
       ]);
