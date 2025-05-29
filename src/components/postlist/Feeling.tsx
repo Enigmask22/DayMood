@@ -16,8 +16,10 @@ const emojiMap: { [key: string]: any } = {
 
 const Feeling = ({
     emoji = "normal",
+    showVerticalLine = true,
 }: {
     emoji: string,
+    showVerticalLine?: boolean,
 }) => {
 
     const emojiSource = emojiMap[emoji] || emojiMap["normal"]; // Fallback to a default emoji if not found
@@ -70,7 +72,7 @@ const Feeling = ({
     });
     return (
         <View style={styles.wrapper}>
-            <View style={styles.verticalElement} />
+            {showVerticalLine && <View style={styles.verticalElement} />}
             <View style={styles.container}>
                 <Image
                     source={emojiSource}
