@@ -1,6 +1,6 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { createClient } from "@supabase/supabase-js";
-import "react-native-url-polyfill/auto";
+import 'react-native-url-polyfill/auto'; // Ensure this is high up
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createClient } from '@supabase/supabase-js';
 import Constants from "expo-constants";
 
 // Lấy thông tin từ biến môi trường

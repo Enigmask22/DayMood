@@ -1,3 +1,5 @@
+import 'react-native-url-polyfill/auto'; // For Supabase URL needs
+import 'react-native-get-random-values'; // If you encounter crypto issues, Supabase relies on a global 
 import { Stack, useRouter } from "expo-router";
 import { View, Text } from "react-native";
 import { useFonts } from "expo-font";
@@ -6,6 +8,7 @@ import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { store } from "src/store";
 import { Provider } from "react-redux";
+import 'stream-browserify';
 
 SplashScreen.preventAutoHideAsync();
 

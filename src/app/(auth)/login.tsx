@@ -123,7 +123,7 @@ export default function Login() {
               <Text style={styles.logoText}>Welcome To</Text>
             </View>
             <View style={styles.logoBox}>
-              <Text style={styles.logoText}>YoloHome</Text>
+              <Text style={styles.logoText}>DayMood</Text>
             </View>
 
             {/* sign up */}
