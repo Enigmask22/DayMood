@@ -74,7 +74,7 @@ const ActivityCount = ({
     <View style={styles.container}>
       <Text style={styles.title}>Activity Count</Text>
       <Text style={styles.subtitle}>
-        Your activity statistic with count in {month.toLocaleString('default', { month: 'long' })}
+        Your activity statistic with count in {month.toLocaleString('en', { month: 'long' })}
       </Text>
 
       <View style={styles.gridContainer}>

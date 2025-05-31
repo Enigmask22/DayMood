@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { format, parseISO } from 'date-fns';
-import { MOODS, moodAdviceMap } from '@/utils/constant';
+import { HOME_COLOR, MOODS, moodAdviceMap } from '@/utils/constant';
 import { API_ENDPOINTS } from '@/utils/config';
 import { ScreenItem, StatisticData } from '@/types/stats';
 import { renderSlideCard } from './renderSlideCard';
@@ -70,36 +70,36 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
 
     const { dailyMoodStats } = statistic.monthly;
     const daysInMonth = dailyMoodStats.length;
-    
+
     // Group days into weeks
     const weeks: ChartWeekData[] = [];
-    
+
     for (let startIdx = 0; startIdx < daysInMonth; startIdx += DAYS_PER_WEEK) {
       const weekDays: DayData[] = [];
       const endIdx = Math.min(startIdx + DAYS_PER_WEEK, daysInMonth);
-      
+
       let startDate = '';
       let endDate = '';
-      
+
       for (let i = startIdx; i < endIdx; i++) {
         const dailyStat = dailyMoodStats[i];
         const date = dailyStat.date;
-        
+
         if (i === startIdx) startDate = date;
         if (i === endIdx - 1) endDate = date;
-        
+
         // Get day of month number
         const day = date.split('-')[2];
-        
+
         // Create mood counts object
-        const moodCounts: {[key: number]: number} = {};
+        const moodCounts: { [key: number]: number } = {};
         let hasData = false;
-        
+
         dailyStat.moodStats.forEach(stat => {
           moodCounts[stat.moodId] = stat.count;
           if (stat.count > 0) hasData = true;
         });
-        
+
         weekDays.push({
           date,
           day,
@@ -108,19 +108,19 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
           hasData
         });
       }
-      
+
       // Format date range for this week
       const formattedStartDate = format(parseISO(startDate), 'MMM d');
       const formattedEndDate = format(parseISO(endDate), 'MMM d');
       const weekDateRange = `${formattedStartDate} - ${formattedEndDate}`;
-      
+
       weeks.push({
         days: weekDays,
         startDate,
         endDate
       });
     }
-    
+
     return weeks;
   };
 
@@ -131,7 +131,7 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
 
     if (!weeklyStats || !monthlyStats) return;
 
-    const findMoodById = (moodId: number) => 
+    const findMoodById = (moodId: number) =>
       MOODS.find(mood => mood.id === moodId);
 
     const getPercentage = (moodData: any, totalRecords: number) => {
@@ -139,12 +139,12 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
       if (moodData.percentage !== undefined) {
         return Math.round(moodData.percentage);
       }
-      
+
       // Otherwise calculate it from count and total records
       if (totalRecords > 0 && moodData.count !== undefined) {
         return Math.round((moodData.count / totalRecords) * 100);
       }
-      
+
       return 0;
     };
 
@@ -200,7 +200,7 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
         indicator: [false, false, true],
       },
     ];
-    
+
     setScreens(screensData);
   };
 
@@ -209,9 +209,9 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
     // Create tooltip data from the day data
     const moodDetails = MOODS.map(mood => {
       const count = dayData.moodCounts[mood.id] || 0;
-      const percentage = dayData.totalRecords ? 
+      const percentage = dayData.totalRecords ?
         Math.round((count / dayData.totalRecords) * 100) : 0;
-      
+
       return {
         moodId: mood.id,
         moodName: mood.name,
@@ -266,7 +266,7 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
     if (loading) {
       return (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#3b82f6" />
+          <ActivityIndicator size="large" color={HOME_COLOR.HOMETABBAR}/>
         </View>
       );
     }
@@ -280,7 +280,7 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
     }
 
     const currentWeek = chartWeeks[currentWeekIndex];
-    
+
     // Format week date range for display
     const startDate = parseISO(currentWeek.startDate);
     const endDate = parseISO(currentWeek.endDate);
@@ -294,7 +294,7 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
           weekDateRange={weekDateRange}
           onWeekChange={handleWeekChange}
         />
-        
+
         <MoodChart
           weekData={currentWeek}
           onDayPress={handleDayPress}
@@ -327,13 +327,13 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
       try {
         const month = currentDate.getMonth() + 1;
         const year = currentDate.getFullYear();
-        
+
         const response = await fetch(
           `${API_ENDPOINTS.RECORDS}/statistic/mood?user_id=${user.id}&month=${month}&year=${year}`
         );
-        
+
         const data = await response.json();
-        
+
         if (response.ok && data.statusCode === 200) {
           setStatistic(data.data);
         } else {
@@ -345,7 +345,7 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
       }
       setLoading(false);
     };
-    
+
     fetchStatistic();
   }, [currentDate, user, records]);
 
@@ -354,7 +354,7 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
       const weeks = processChartData();
       setChartWeeks(weeks);
       createScreensData();
-      
+
       // Set current week to the week that includes today
       const today = new Date();
       const todayDay = today.getDate();
@@ -372,15 +372,15 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
           {renderChartSection()}
         </View>
       ) : (
-        // Else render the full EmotionPage
-        <>
+        <View style={styles.container}>
           {/* Chart Section */}
           <View style={styles.chartCard}>
             <Text style={styles.chartTitle}>Mood Chart</Text>
             <Text style={styles.chartSubtitle}>
+              {/* {format(currentDate, 'MMMM yyyy')} */}
               {"Let's see how your mood has been this month!"}
             </Text>
-            
+
             <View style={styles.chartWrapper}>
               {renderChartSection()}
             </View>
@@ -388,11 +388,34 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
 
           {/* Slides Section */}
           <View style={styles.slideContainer}>
-            {/* ...existing slide container code... */}
+            <FlatList
+              ref={flatListRef}
+              data={screens}
+              renderItem={renderSlideCard}
+              keyExtractor={(_, index) => index.toString()}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={(event) => {
+                const index = Math.round(
+                  event.nativeEvent.contentOffset.x /
+                  event.nativeEvent.layoutMeasurement.width
+                );
+                handleSlideChange(index);
+              }}
+              style={styles.slidesList}
+            />
+            {renderIndicator()}
           </View>
-        </>
+
+          {/* Tooltip for mood details */}
+          <MoodTooltip
+            data={tooltipData}
+            onClose={closeTooltip}
+          />
+        </View>
       )}
-      
+
       {/* Only show tooltip if not in compact mode or if it's visible */}
       {(!showMoodChartOnly || tooltipData.visible) && (
         <MoodTooltip
@@ -407,7 +430,7 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    paddingBottom: height * 0.15,
+    paddingBottom: height * 0.05,
   },
   chartCard: {
     backgroundColor: '#fff',
@@ -482,7 +505,7 @@ const styles = StyleSheet.create({
     color: '#334155',
     textAlign: 'center',
   },
-   compactContainer: {
+  compactContainer: {
     paddingBottom: 0,
     height: 200,
   },

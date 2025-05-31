@@ -11,12 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { format, addMonths, subMonths } from "date-fns";
 import EmotionPage from "@/components/statspage/emotion";
 import ActivityPage from "@/components/statspage/activity";
-import StreakRow from "@/components/statspage/StreakRow";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { API_URL } from "@/utils/config";
-import { useFocusEffect } from "expo-router";
-import ActivityLineChart from "@/components/statistics/ActivityLineChart";
-
+import GeneralPage from "@/components/statspage/general";
 const { width, height } = Dimensions.get("window");
 
 // Tab options
@@ -29,122 +24,20 @@ const tabs = [
 const StatsPage = () => {
   const [selectedTab, setSelectedTab] = useState("general");
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [moodStats, setMoodStats] = useState<any[]>([]); // dailyMoodStats
-  const [loading, setLoading] = useState(false);
-  const [longestStreak, setLongestStreak] = useState(0);
-  const [streakRow, setStreakRow] = useState<
-    ("empty" | "check" | "plus" | "bookmark" | "rect")[]
-  >(["plus", "plus", "plus", "plus", "bookmark"]);
-
-  useFocusEffect(
-    React.useCallback(() => {
-      if (selectedTab !== "general") return;
-      const fetchMoodStats = async () => {
-        setLoading(true);
-        try {
-          const user = await AsyncStorage.getItem("user");
-          if (!user) return;
-          const userData = JSON.parse(user);
-          const year = currentDate.getFullYear();
-          const month = currentDate.getMonth() + 1;
-          const res = await fetch(
-            `${API_URL}/api/v1/records/statistic/mood?user_id=${userData.id}&month=${month}&year=${year}`,
-            {
-              method: "GET",
-              headers: {
-                "Content-Type": "application/json",
-              },
-            }
-          );
-          const data = await res.json();
-          const dailyStats = data?.data?.monthly?.dailyMoodStats || [];
-          setMoodStats(dailyStats);
-
-          // Calculate longest streak from start of month up to and including today
-          let maxStreak = 0,
-            curStreak = 0;
-          const start = new Date(year, month - 1, 1);
-          const realToday = new Date();
-          const isCurrentMonth =
-            realToday.getFullYear() === year &&
-            realToday.getMonth() + 1 === month;
-          const lastDay = isCurrentMonth
-            ? realToday.getDate()
-            : new Date(year, month, 0).getDate();
-          for (let i = 0; i < lastDay; i++) {
-            const d = new Date(year, month - 1, 1 + i);
-            const dateStr = d.toISOString().slice(0, 10);
-            const found = dailyStats.find((ds: any) => ds.date === dateStr);
-            if (found && found.totalRecords > 0) {
-              curStreak++;
-              if (curStreak > maxStreak) maxStreak = curStreak;
-            } else {
-              curStreak = 0;
-            }
-          }
-          // Check today
-          const todayDate = new Date(year, month - 1, lastDay);
-          const todayStr = todayDate.toISOString().slice(0, 10);
-          const todayFound = dailyStats.find((ds: any) => ds.date === todayStr);
-          if (todayFound && todayFound.totalRecords > 0) {
-            curStreak++;
-            if (curStreak > maxStreak) maxStreak = curStreak;
-          } else {
-            curStreak = 0;
-          }
-          setLongestStreak(maxStreak);
-
-          // Prepare streak row (4 previous days + today as yellow)
-          let streakArr: ("empty" | "check" | "plus" | "bookmark" | "rect")[] =
-            [];
-          for (let i = 3; i >= 0; i--) {
-            let d = new Date(
-              realToday.getFullYear(),
-              realToday.getMonth(),
-              realToday.getDate() - i
-            );
-            if (d.getMonth() + 1 !== month || d > realToday) {
-              streakArr.push("empty");
-              continue;
-            }
-            const dateStr = d.toISOString().slice(0, 10);
-            const found = dailyStats.find((ds: any) => ds.date === dateStr);
-            streakArr.push(found && found.totalRecords > 0 ? "check" : "plus");
-          }
-          // Today (yellow)
-          streakArr.push("bookmark");
-          // Rectangle (visual only)
-          streakArr.push("rect");
-          setStreakRow(streakArr);
-        } catch (e) {
-          setMoodStats([]);
-          setStreakRow(["plus", "plus", "plus", "plus", "bookmark"] as (
-            | "empty"
-            | "check"
-            | "plus"
-            | "bookmark"
-          )[]);
-          setLongestStreak(0);
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchMoodStats();
-    }, [currentDate, selectedTab])
-  );
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
   // Function to handle month navigation
   const handlePreviousMonth = () => {
-    setCurrentDate(subMonths(currentDate, 1));
+    setSelectedDate(subMonths(selectedDate, 1));
   };
 
   // Function to handle month navigation
   const handleNextMonth = () => {
-    setCurrentDate(addMonths(currentDate, 1));
+    setSelectedDate(addMonths(selectedDate, 1));
   };
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={true}>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {selectedTab !== "general" ? (
         <View style={styles.header}>
           <TouchableOpacity
@@ -154,12 +47,12 @@ const StatsPage = () => {
             <Ionicons name="chevron-back" size={24} color="#000" />
           </TouchableOpacity>
           <Text style={styles.monthText}>
-            {format(currentDate, "MMMM, yyyy")}
+            {format(selectedDate, "MMMM, yyyy")}
           </Text>
           <TouchableOpacity onPress={handleNextMonth} style={styles.navButton}>
             <Ionicons name="chevron-forward" size={24} color="#000" />
           </TouchableOpacity>
-        </View> ): <Text style={styles.statisticsHeader}>Statistics</Text>
+        </View>) : <Text style={styles.statisticsHeader}><Ionicons name="stats-chart" size={24}/> Statistics</Text>
       }
 
       <View style={styles.tabsContainer}>
@@ -171,9 +64,9 @@ const StatsPage = () => {
               selectedTab === tab.id && styles.selectedTabButton,
               tab.id === "emotion"
                 ? {
-                    backgroundColor:
-                      selectedTab === tab.id ? "#4CAF50" : "#f1f1f1",
-                  }
+                  backgroundColor:
+                    selectedTab === tab.id ? "#4CAF50" : "#f1f1f1",
+                }
                 : null,
             ]}
             onPress={() => setSelectedTab(tab.id)}
@@ -195,77 +88,28 @@ const StatsPage = () => {
 
       {(() => {
         switch (selectedTab) {
+          case "general":
+            return (
+              <GeneralPage
+                currentDate={currentDate}
+                setCurrentDate={setCurrentDate}
+                onTabChange={setSelectedTab}
+              />
+
+            );
+          case "activity":
+            return (
+              <ActivityPage
+                currentDate={selectedDate}
+                setCurrentDate={setSelectedDate}
+              />
+            );
           case "emotion":
             return (
               <EmotionPage
-                currentDate={currentDate}
-                setCurrentDate={setCurrentDate}
-              />
-            );
-          case "general":
-  return (
-    <View style={styles.generalTabContent}>
-      <StreakRow streak={streakRow} longestStreak={longestStreak} />
-      
-      {/* Mood Insights Card */}
-      <TouchableOpacity 
-        style={styles.card}
-        activeOpacity={0.7}
-        onPress={() => setSelectedTab("emotion")}
-      >
-        <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>Mood Insights</Text>
-          <View style={styles.viewMoreContainer}>
-            <Text style={styles.viewMoreText}>View details</Text>
-            <Ionicons name="chevron-forward" size={20} color="#666" />
-          </View>
-        </View>
-        
-        <View style={styles.chartContainer}>
-          <EmotionPage 
-            currentDate={currentDate}
-            setCurrentDate={setCurrentDate}
-            showMoodChartOnly={true}
-          />
-        </View>
-      </TouchableOpacity>
-      
-      {/* Activity Overview Card */}
-      <TouchableOpacity 
-        style={styles.card}
-        activeOpacity={0.7}
-        onPress={() => setSelectedTab("activity")}
-      >
-        <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>Activity Overview</Text>
-          <View style={styles.viewMoreContainer}>
-            <Text style={styles.viewMoreText}>View details</Text>
-            <Ionicons name="chevron-forward" size={20} color="#666" />
-          </View>
-        </View>
-        
-        <View style={styles.chartContainer}>
-          <ActivityLineChart
-            lineChartData={{
-              labels: Array.from({length: new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()}, (_, i) => `${i+1}`),
-              datasets: [{
-                data: Array.from({length: new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()}, () => Math.floor(Math.random() * 5) + 1),
-                color: () => "#4CAF50",
-                strokeWidth: 2
-              }]
-            }}
-            daysInMonth={new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()}
-            hasRealData={false}
-          />
-        </View>
-      </TouchableOpacity>
-    </View>
-  );
-            case "activity":
-            return (
-              <ActivityPage
-                currentDate={currentDate}
-                setCurrentDate={setCurrentDate}
+                currentDate={selectedDate}
+                setCurrentDate={setSelectedDate}
+                showMoodChartOnly={false}
               />
             );
           default:
@@ -307,7 +151,7 @@ const styles = StyleSheet.create({
     paddingBottom: height * 0.02,
   },
   monthText: {
-    fontSize: width * 0.05,
+    fontSize: width * 0.06,
     fontWeight: "700",
     color: "#000",
   },
@@ -348,53 +192,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: "#555",
   },
-  generalTabContent: {
-    flex: 1,
-    paddingTop: 10,
-  },
   statisticsHeader: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: "bold",
     textAlign: "center",
-    marginVertical: 15,
+    marginVertical: 24,
     color: "#333",
-  },
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 15,
-    padding: 15,
-    marginHorizontal: 16,
-    marginVertical: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#333",
-  },
-  viewMoreContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  viewMoreText: {
-    fontSize: 14,
-    color: "#666",
-    marginRight: 5,
-  },
-  chartContainer: {
-    height: 200,
-    marginTop: 10,
-    overflow: 'hidden',
   },
 });
 

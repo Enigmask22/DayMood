@@ -6,6 +6,7 @@ import {
   ScrollView,
   SafeAreaView,
   ActivityIndicator,
+  Dimensions,
 } from "react-native";
 import { HOME_COLOR } from "@/utils/constant";
 import ActivityCount from "@/components/statistics/ActivityCount";
@@ -13,6 +14,7 @@ import ActivityChart from "@/components/statistics/ActivityChart";
 import { fetchActivityStatistics } from "./datafetching";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAppSelector } from "@/store";
+const { height } = Dimensions.get("window");
 
 interface ActivityPageProps {
   currentDate: Date;
@@ -209,7 +211,7 @@ const ActivityPage = ({ currentDate, setCurrentDate }: ActivityPageProps) => {
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={HOME_COLOR.HOMETABBAR} />
-          <Text style={styles.loadingText}>Loading activity stats...</Text>
+          <Text style={styles.loadingText}>Loading activity data...</Text>
         </View>
       </SafeAreaView>
     );
@@ -254,6 +256,7 @@ const ActivityPage = ({ currentDate, setCurrentDate }: ActivityPageProps) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingBottom: height*0.05,
   },
   scrollContainer: {
     flexGrow: 1,

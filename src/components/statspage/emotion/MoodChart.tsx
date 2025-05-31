@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
     width: 25,
     textAlign: 'right',
     marginRight: 5,
-  },
+  },  
   gridLine: {
     position: 'absolute',
     left: 30,
@@ -172,14 +172,15 @@ const styles = StyleSheet.create({
     marginLeft: 35,
     marginTop: 10,
     marginRight: 5,
+    zIndex: 2,
   },
   barColumn: {
     alignItems: 'center',
     width: BAR_WIDTH + 6,
-  },
-  barContainer: {
+  },  barContainer: {
     width: BAR_WIDTH,
     justifyContent: 'flex-end',
+    zIndex: 3,
   },
   bar: {
     flexDirection: 'column-reverse',
@@ -187,6 +188,7 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 4,
     overflow: 'hidden',
+    zIndex: 3,
   },
   barSegment: {
     width: '100%',

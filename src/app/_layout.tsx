@@ -89,14 +89,6 @@ const RootLayout = () => {
     } catch (error) {
       console.error('Failed to configure SystemBars:', error);
     }
-
-    // // Clean up when the component unmounts
-    // return () => {
-    //   if (systemBarsEntry.current) {
-    //     SystemBars.popStackEntry(systemBarsEntry.current);
-    //     systemBarsEntry.current = null;
-    //   }
-    // };
   }, []); // Empty dependency array to ensure it only runs once
 
   if (isLoading || (!loaded && !error)) {

@@ -229,7 +229,7 @@ const ActivityChart = ({
       <Text style={styles.title}>Activity Chart</Text>
       <Text style={styles.subtitle}>
         Your activity statistic with chart in{" "}
-        {currentMonth.toLocaleString("default", { month: "long" })}
+        {currentMonth.toLocaleString("en", { month: "long" })}
       </Text>
 
       {/* Daily Activity Line Chart */}
