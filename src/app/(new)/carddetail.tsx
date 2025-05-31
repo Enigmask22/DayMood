@@ -10,6 +10,7 @@ import {
   Image,
   TouchableOpacity,
   Dimensions,
+  ActivityIndicator,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { wp, hp } from "@/components/newemoji/utils";
@@ -142,6 +143,8 @@ const ImageViewer = ({
 // Cập nhật ImagesGrid để hỗ trợ phóng to ảnh
 const EnhancedImagesGrid = ({ images }: { images: string[] }) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [loadingStates, setLoadingStates] = useState<{ [key: number]: boolean }>({});
+  const [errorStates, setErrorStates] = useState<{ [key: number]: boolean }>({});
 
   if (!images || images.length === 0) return null;
 
@@ -153,6 +156,26 @@ const EnhancedImagesGrid = ({ images }: { images: string[] }) => {
     setSelectedImage(null);
   };
 
+  // Handle image loading states
+  const handleImageLoadStart = (index: number) => {
+    setLoadingStates(prev => ({ ...prev, [index]: true }));
+  };
+
+  const handleImageLoad = (index: number) => {
+    setLoadingStates(prev => ({ ...prev, [index]: false }));
+  };
+
+  const handleImageError = (index: number) => {
+    setLoadingStates(prev => ({ ...prev, [index]: false }));
+    setErrorStates(prev => ({ ...prev, [index]: true }));
+  };
+
+  const getImageType = (uri: string) => {
+    if (uri.startsWith("data:image")) return "Base64";
+    if (uri.startsWith("file://")) return "Local";
+    if (uri.startsWith("http")) return "Web";
+    return "Unknown";
+  };
   return (
     <View style={styles.imageContainer}>
       <View style={styles.imageGrid}>
@@ -162,7 +185,35 @@ const EnhancedImagesGrid = ({ images }: { images: string[] }) => {
             style={styles.imageWrapper}
             onPress={() => handleImagePress(imageUrl)}
           >
-            <Image source={{ uri: imageUrl }} style={styles.image} />
+            <View style={styles.imageItemContainer}>
+              {/* Loading indicator */}
+              {loadingStates[index] && (
+                <View style={styles.imageLoadingOverlay}>
+                  <ActivityIndicator size="small" color="#32B768" />
+                  <Text style={styles.loadingImageText}>Loading...</Text>
+                </View>
+              )}
+              
+              {/* Error overlay */}
+              {errorStates[index] && (
+                <View style={styles.imageErrorOverlay}>
+                  <Text style={styles.errorImageText}>Failed to load</Text>
+                  <Text style={styles.errorImageSubText}>{getImageType(imageUrl)}</Text>
+                </View>
+              )}
+              
+              <Image 
+                source={{ uri: imageUrl }} 
+                style={[
+                  styles.image,
+                  errorStates[index] && styles.errorImage
+                ]} 
+                onLoadStart={() => handleImageLoadStart(index)}
+                onLoad={() => handleImageLoad(index)}
+                onError={() => handleImageError(index)}
+                resizeMode="cover"
+              />
+            </View>
           </TouchableOpacity>
         ))}
       </View>
@@ -210,20 +261,19 @@ export default function CardDetailScreen() {
 
   // Xử lý dữ liệu hình ảnh
   const [images, setImages] = useState<string[]>([]);
-
   // Tải dữ liệu hình ảnh từ params
   useEffect(() => {
     try {
-      // console.log("params.images:", params.images);
+      console.log("params.images:", params.images);
       if (
         params.images &&
         typeof params.images === "string" &&
         params.images !== ""
       ) {
         const parsedImages = JSON.parse(params.images);
-        // console.log("Ảnh đã parse:", parsedImages);
+        console.log("Ảnh đã parse:", parsedImages);
 
-        // Đơn giản hóa cách xử lý - chỉ cần mảng URI hợp lệ
+        // Xử lý mảng URI đơn giản
         if (Array.isArray(parsedImages)) {
           // Lọc ra các URI có giá trị
           const validImages = parsedImages.filter(
@@ -235,7 +285,7 @@ export default function CardDetailScreen() {
                 uri.startsWith("http"))
           );
 
-          // console.log("Đường dẫn ảnh hợp lệ:", validImages);
+          console.log("Đường dẫn ảnh hợp lệ:", validImages);
           setImages(validImages);
           console.log("Số lượng ảnh đã set:", validImages.length);
         }
@@ -950,6 +1000,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#E0F7ED",
+    paddingTop: hp(2),
   },
   content: {
     flex: 1,
@@ -1042,9 +1093,59 @@ const styles = StyleSheet.create({
     marginBottom: wp(1),
     borderRadius: wp(2),
     overflow: "hidden",
-  },
-  image: {
+  },  image: {
     width: "100%",
     height: "100%",
+  },
+
+  // Enhanced image grid styles
+  imageItemContainer: {
+    position: 'relative',
+    width: '100%',
+    height: '100%',
+  },
+  imageLoadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 2,
+  },
+  loadingImageText: {
+    marginTop: 8,
+    fontSize: wp(3),
+    color: '#666',
+    fontFamily: 'Quicksand-Medium',
+  },
+  imageErrorOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 0, 0, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 2,
+  },
+  errorImageText: {
+    fontSize: wp(3),
+    color: '#ff4444',
+    fontFamily: 'Quicksand-Bold',
+    textAlign: 'center',
+  },
+  errorImageSubText: {
+    fontSize: wp(2.5),
+    color: '#ff6666',
+    fontFamily: 'Quicksand-Regular',
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  errorImage: {
+    opacity: 0.3,
   },
 });

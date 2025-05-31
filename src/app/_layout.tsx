@@ -1,14 +1,22 @@
 import 'react-native-url-polyfill/auto'; // For Supabase URL needs
 import 'react-native-get-random-values'; // If you encounter crypto issues, Supabase relies on a global 
+// Buffer polyfill
+import { Buffer } from 'buffer';
+if (typeof global.Buffer === 'undefined') {
+  global.Buffer = Buffer;
+}
+
 import { Stack, useRouter } from "expo-router";
-import { View, Text } from "react-native";
+import { View, Text, Platform, StatusBar } from "react-native";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { store } from "src/store";
 import { Provider } from "react-redux";
 import 'stream-browserify';
+// Import the SystemBars APIs from react-native-edge-to-edge
+import { SystemBars, SystemBarsEntry } from 'react-native-edge-to-edge';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -25,6 +33,7 @@ const RootLayout = () => {
   });
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
+  const systemBarsEntry = useRef<SystemBarsEntry | null>(null);
 
   useEffect(() => {
     const checkOnboardingStatus = async () => {
@@ -60,17 +69,52 @@ const RootLayout = () => {
     checkOnboardingStatus();
   }, [loaded, error, router]);
 
+  //Configure system bars using the SystemBars API
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+    
+    // Use a ref to track if we've already configured the system bars
+    if (systemBarsEntry.current !== null) return;
+    
+    try {
+      // Push a new entry to the SystemBars stack with desired properties
+      systemBarsEntry.current = SystemBars.pushStackEntry({
+        // Light content for better visibility on dark backgrounds
+        style: { statusBar: 'dark', navigationBar: 'light' },
+        // Hide the navigation bar initially
+        hidden: { navigationBar: true, statusBar: false },
+      });
+      
+      //console.log('SystemBars configured successfully');
+    } catch (error) {
+      console.error('Failed to configure SystemBars:', error);
+    }
+
+    // // Clean up when the component unmounts
+    // return () => {
+    //   if (systemBarsEntry.current) {
+    //     SystemBars.popStackEntry(systemBarsEntry.current);
+    //     systemBarsEntry.current = null;
+    //   }
+    // };
+  }, []); // Empty dependency array to ensure it only runs once
+
   if (isLoading || (!loaded && !error)) {
     return null;
   }
 
   return (
     <Provider store={store}>
+      <SystemBars
+        style={{ statusBar: 'dark', navigationBar: 'light' }}
+        hidden={{ navigationBar: true, statusBar: false }}
+      />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="(main)" />
         <Stack.Screen name="(onboarding)" />
         <Stack.Screen name="(auth)" />
+       
       </Stack>
     </Provider>
   );

@@ -12,10 +12,10 @@ import { format, addMonths, subMonths } from "date-fns";
 import EmotionPage from "@/components/statspage/emotion";
 import ActivityPage from "@/components/statspage/activity";
 import StreakRow from "@/components/statspage/StreakRow";
-import ActivityChart from "@/components/statistics/ActivityChart";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { API_URL } from "@/utils/config";
 import { useFocusEffect } from "expo-router";
+import ActivityLineChart from "@/components/statistics/ActivityLineChart";
 
 const { width, height } = Dimensions.get("window");
 
@@ -145,20 +145,22 @@ const StatsPage = () => {
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={true}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={handlePreviousMonth}
-          style={styles.navButton}
-        >
-          <Ionicons name="chevron-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.monthText}>
-          {format(currentDate, "MMMM, yyyy")}
-        </Text>
-        <TouchableOpacity onPress={handleNextMonth} style={styles.navButton}>
-          <Ionicons name="chevron-forward" size={24} color="#000" />
-        </TouchableOpacity>
-      </View>
+      {selectedTab !== "general" ? (
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={handlePreviousMonth}
+            style={styles.navButton}
+          >
+            <Ionicons name="chevron-back" size={24} color="#000" />
+          </TouchableOpacity>
+          <Text style={styles.monthText}>
+            {format(currentDate, "MMMM, yyyy")}
+          </Text>
+          <TouchableOpacity onPress={handleNextMonth} style={styles.navButton}>
+            <Ionicons name="chevron-forward" size={24} color="#000" />
+          </TouchableOpacity>
+        </View> ): <Text style={styles.statisticsHeader}>Statistics</Text>
+      }
 
       <View style={styles.tabsContainer}>
         {tabs.map((tab) => (
@@ -201,21 +203,65 @@ const StatsPage = () => {
               />
             );
           case "general":
-            return (
-              <View style={styles.generalTabContent}>
-                <StreakRow streak={streakRow} longestStreak={longestStreak} />
-                <ScrollView contentContainerStyle={styles.scrollContainer}>
-                  <View style={styles.contentContainer}>
-                    <ActivityChart
-                      activities={[]}
-                      currentMonth={currentDate}
-                      hasRealData={false}
-                    />
-                  </View>
-                </ScrollView>
-              </View>
-            );
-          case "activity":
+  return (
+    <View style={styles.generalTabContent}>
+      <StreakRow streak={streakRow} longestStreak={longestStreak} />
+      
+      {/* Mood Insights Card */}
+      <TouchableOpacity 
+        style={styles.card}
+        activeOpacity={0.7}
+        onPress={() => setSelectedTab("emotion")}
+      >
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardTitle}>Mood Insights</Text>
+          <View style={styles.viewMoreContainer}>
+            <Text style={styles.viewMoreText}>View details</Text>
+            <Ionicons name="chevron-forward" size={20} color="#666" />
+          </View>
+        </View>
+        
+        <View style={styles.chartContainer}>
+          <EmotionPage 
+            currentDate={currentDate}
+            setCurrentDate={setCurrentDate}
+            showMoodChartOnly={true}
+          />
+        </View>
+      </TouchableOpacity>
+      
+      {/* Activity Overview Card */}
+      <TouchableOpacity 
+        style={styles.card}
+        activeOpacity={0.7}
+        onPress={() => setSelectedTab("activity")}
+      >
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardTitle}>Activity Overview</Text>
+          <View style={styles.viewMoreContainer}>
+            <Text style={styles.viewMoreText}>View details</Text>
+            <Ionicons name="chevron-forward" size={20} color="#666" />
+          </View>
+        </View>
+        
+        <View style={styles.chartContainer}>
+          <ActivityLineChart
+            lineChartData={{
+              labels: Array.from({length: new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()}, (_, i) => `${i+1}`),
+              datasets: [{
+                data: Array.from({length: new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()}, () => Math.floor(Math.random() * 5) + 1),
+                color: () => "#4CAF50",
+                strokeWidth: 2
+              }]
+            }}
+            daysInMonth={new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()}
+            hasRealData={false}
+          />
+        </View>
+      </TouchableOpacity>
+    </View>
+  );
+            case "activity":
             return (
               <ActivityPage
                 currentDate={currentDate}
@@ -250,6 +296,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#e8f5e9",
+    paddingTop: height * 0.035,
   },
   header: {
     flexDirection: "row",
@@ -304,6 +351,50 @@ const styles = StyleSheet.create({
   generalTabContent: {
     flex: 1,
     paddingTop: 10,
+  },
+  statisticsHeader: {
+    fontSize: 28,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginVertical: 15,
+    color: "#333",
+  },
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 15,
+    padding: 15,
+    marginHorizontal: 16,
+    marginVertical: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333",
+  },
+  viewMoreContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  viewMoreText: {
+    fontSize: 14,
+    color: "#666",
+    marginRight: 5,
+  },
+  chartContainer: {
+    height: 200,
+    marginTop: 10,
+    overflow: 'hidden',
   },
 });
 

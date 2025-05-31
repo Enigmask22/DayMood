@@ -154,10 +154,6 @@ const FullNoteEditor: React.FC<FullNoteEditorProps> = ({
             },
           ]}
         >
-          <StatusBar
-            backgroundColor="rgba(0, 0, 0, 0.5)"
-            barStyle="light-content"
-          />
 
           {/* Header */}
           <LinearGradient
@@ -274,7 +270,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: wp(4),
-    paddingVertical: hp(2),
+    paddingVertical: hp(4),
     borderBottomLeftRadius: wp(3),
     borderBottomRightRadius: wp(3),
     elevation: 3,

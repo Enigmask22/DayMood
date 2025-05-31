@@ -24,15 +24,22 @@
         "foregroundImage": "./src/assets/images/react_temp/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+      "enableEdgeToEdge": false,
       "package": "com.dkdh.DayMood",
-      "permissions": ["INTERNET"]
+      "permissions": [
+        "INTERNET"
+      ]
     },
     "web": {
       "bundler": "metro",
       "output": "static",
       "favicon": "./src/assets/images/react_temp/favicon.png"
     },
-    "plugins": ["expo-router", "expo-font"],
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "react-native-edge-to-edge"
+    ],
     "experiments": {
       "typedRoutes": true
     },

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Dimensions } from "react-native";
 import { Calendar } from "react-native-calendars";
 import { LocaleConfig } from "react-native-calendars";
 import CalendarHeader from "../../components/calendar/CalendarHeader";
@@ -13,7 +13,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 // Cấu hình ngôn ngữ
 LocaleConfig.locales["en"] = LocaleConfig.locales[""];
 LocaleConfig.defaultLocale = "en";
-
+const { width, height } = Dimensions.get("window");
 const CalendarPage = () => {
   // Hàm format ngày hiện tại
   const formatDate = (date: Date) => {
@@ -235,7 +235,6 @@ const CalendarPage = () => {
             backgroundColor: "#F0F8F3",
             calendarBackground: "#F0F8F3",
             textSectionTitleColor: "#8F9BB3",
-            textDayHeaderColor: "#8F9BB3",
             selectedDayBackgroundColor: "#7C5CFC",
             selectedDayTextColor: "#fff",
             todayTextColor: "#7C5CFC",
@@ -277,8 +276,7 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: "#E6F4EA",
-    paddingTop: 24,
-    paddingHorizontal: 0,
+    paddingTop: height*0.05,
   },
   calendarBox: {
     backgroundColor: "#F0F8F3",

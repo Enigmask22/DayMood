@@ -7,14 +7,16 @@ import {
   TouchableOpacity,
   Switch,
   Alert,
+  Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { HOME_COLOR } from "@/utils/constant";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-// import Avatar from "@/components/settingpage/Avatar";
-// import SettingOption from "@/components/settingpage/SettingOption";
+import Avatar from "@/components/settingpage/Avatar";
+import SettingOption from "@/components/settingpage/SettingOption";
 
+const { width, height } = Dimensions.get("window");
 const SettingPage = () => {
   // Sample state for settings toggles
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -88,13 +90,13 @@ const SettingPage = () => {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Profile Section */}
       <View style={styles.profileContainer}>
-        {/* <Avatar 
+        <Avatar 
           size={80} 
           source={{ uri: "https://randomuser.me/api/portraits/people/42.jpg" }}
-        /> */}
+        />
         <View style={styles.profileInfo}>
           <Text style={styles.profileName}>{userProfile.name}</Text>
           <Text style={styles.profileEmail}>{userProfile.email}</Text>
@@ -114,13 +116,13 @@ const SettingPage = () => {
       {/* Account Settings */}
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>Account</Text>
-        {/* <SettingOption
+        <SettingOption
           icon="person-outline"
           title="Personal Information"
           onPress={() => router.push("/")}
           showChevron
-        /> */}
-        {/* <SettingOption
+        /> 
+        <SettingOption
           icon="notifications-outline"
           title="Notifications"
           rightElement={
@@ -131,19 +133,19 @@ const SettingPage = () => {
               thumbColor={notificationsEnabled ? HOME_COLOR.HOMETABBAR : "#F4F3F4"}
             />
           }
-        /> */}
-        {/* <SettingOption
+        />
+        <SettingOption
           icon="lock-closed-outline"
           title="Privacy & Security"
           onPress={() => router.push("/")}
           showChevron
-        /> */}
+        />
       </View>
 
       {/* Preferences */}
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>Preferences</Text>
-        {/* <SettingOption
+        <SettingOption
           icon="moon-outline"
           title="Dark Mode"
           rightElement={
@@ -154,15 +156,15 @@ const SettingPage = () => {
               thumbColor={darkMode ? HOME_COLOR.HOMETABBAR : "#F4F3F4"}
             />
           }
-        /> */}
-        {/* <SettingOption
+        />
+        <SettingOption
           icon="language-outline"
           title="Language"
           subtitle={languages.find(l => l.code === selectedLanguage)?.name || "English"}
           onPress={() => router.push("/")}
           showChevron
-        /> */}
-        {/* <SettingOption
+        />
+        <SettingOption
           icon="color-palette-outline"
           title="Appearance"
           onPress={() => router.push("/")}
@@ -179,13 +181,13 @@ const SettingPage = () => {
               thumbColor={soundEnabled ? HOME_COLOR.HOMETABBAR : "#F4F3F4"}
             />
           }
-        /> */}
+        />
       </View>
 
       {/* Data Management */}
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>Data</Text>
-        {/* <SettingOption
+        <SettingOption
           icon="cloud-upload-outline"
           title="Sync Data"
           subtitle="Last synced: Today, 10:45 AM"
@@ -197,25 +199,25 @@ const SettingPage = () => {
               thumbColor={dataSync ? HOME_COLOR.HOMETABBAR : "#F4F3F4"}
             />
           }
-        /> */}
-        {/* <SettingOption
+        />
+        <SettingOption
           icon="download-outline"
           title="Export Your Data"
           onPress={() => router.push("/")}
           showChevron
-        /> */}
+        />
       </View>
 
       {/* Support and About */}
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>Support</Text>
-        {/* <SettingOption
+        <SettingOption
           icon="help-circle-outline"
           title="Help Center"
           onPress={() => router.push("/")}
           showChevron
-        /> */}
-        {/* <SettingOption
+        />
+        <SettingOption
           icon="information-circle-outline"
           title="About DayMood"
           subtitle="Version 1.2.3"
@@ -227,7 +229,7 @@ const SettingPage = () => {
           title="Feedback"
           onPress={() => router.push("/")}
           showChevron
-        /> */}
+        />
       </View>
 
       {/* Logout Button */}
@@ -248,6 +250,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: HOME_COLOR.HOMEBACKGROUND,
+    paddingTop: height * 0.035,
+    marginBottom: height * 0.08,
   },
   profileContainer: {
     backgroundColor: "white",
@@ -343,7 +347,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 12,
     color: "#999",
-    marginBottom: 30,
+    paddingBottom: height*0.08,
   },
 });
 

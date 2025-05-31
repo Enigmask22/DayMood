@@ -6,14 +6,13 @@ import {
   StyleSheet,
   SafeAreaView,
   TouchableOpacity,
-  StatusBar,
   Dimensions,
   Animated,
   PanResponder,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { APP_COLOR } from "src/utils/constant";
-import AsyncStorage from "@react-native-async-storage/async-storage"; // Bỏ comment dòng này
+import AsyncStorage from "@react-native-async-storage/async-storage"; 
 
 const { width } = Dimensions.get("window");
 
@@ -57,7 +56,6 @@ const OnboardScreen3 = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
       <Animated.View
         style={[
           styles.contentContainer,

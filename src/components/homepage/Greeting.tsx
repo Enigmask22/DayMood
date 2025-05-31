@@ -1,4 +1,5 @@
-import React from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -13,12 +14,29 @@ import {
 const { width, height } = Dimensions.get("window");
 
 const Greeting = () => {
+  const [user, setUser] = useState<any>(null);
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const userData = await AsyncStorage.getItem("user");
+        if (userData) {
+          setUser(JSON.parse(userData));
+        }
+      } catch (err) {
+        console.error("Failed to load user data:", err);
+        setError("Failed to load user data");
+      }
+    };
+    
+    loadUser();
+  }, []);
+
   return (
     <View style={styles.greetingContainer}>
       <View style={styles.infoContainer}>
         <View style={styles.nameContainer}>
           <Text style={styles.greetingText}>Hello there,</Text>
-          <Text style={styles.nameText}>Hung Jonathan</Text>
+          <Text style={styles.nameText}>{(user != null ? user.username : "")}</Text>
         </View>
         <Image
           source={require("@/assets/images/home/home_avatar.png")} // Replace with actual profile image URL'
@@ -108,3 +126,7 @@ const styles = StyleSheet.create({
 });
 
 export default Greeting;
+function setError(arg0: string) {
+  throw new Error("Function not implemented.");
+}
+

@@ -6,7 +6,6 @@ import {
   StyleSheet,
   SafeAreaView,
   TouchableOpacity,
-  StatusBar,
   Dimensions,
   Animated,
   Easing,
@@ -25,7 +24,6 @@ const TitleScreen = () => {
 
   return (
     <>
-      <StatusBar backgroundColor={"white"} />
       <TouchableOpacity
         style={styles.container}
         onPress={handlePress}
@@ -38,7 +36,7 @@ const TitleScreen = () => {
               style={styles.logo}
               resizeMode="contain"
             />
-            <Text style={styles.title}>Daymood</Text>
+            <Text style={styles.title}>DayMood</Text>
           </View>
           <Text style={styles.creator}>Created by DKDH_L01</Text>
         </SafeAreaView>

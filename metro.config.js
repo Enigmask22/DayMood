@@ -29,16 +29,6 @@ defaultConfig.resolver.extraNodeModules = {
   'ws/lib/websocket-server.js': require.resolve('./empty-module.js'), // Create an empty JS file
   'ws/lib/stream.js': require.resolve('./empty-module.js'), // if 'stream.js' from ws also causes issues and stream-browserify doesn't cut it for its specific use.
 
-  // Some modules are best left as false if they are server-only and not practically polyfillable
-  // or if their functionality is not expected in a client.
-  // 'fs': false, // If you encounter 'fs' errors from server-side code, you might disable it or use a mock.
-  // 'child_process': false,
-  // 'dgram': false,
 };
-
-// You might also need to ensure that certain packages are transformed if they use syntax not understood by Metro.
-// defaultConfig.transformer.babelTransformerPath = require.resolve('react-native-svg-transformer');
-// defaultConfig.resolver.assetExts = defaultConfig.resolver.assetExts.filter(ext => ext !== 'svg');
-// defaultConfig.resolver.sourceExts.push('svg');
 
 module.exports = defaultConfig;

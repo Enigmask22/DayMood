@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, SafeAreaView, ScrollView } from "react-native";
+import { View, StyleSheet, SafeAreaView, ScrollView, Dimensions } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import Header from "@/components/newemoji/Header";
 import DateTimeSelector from "@/components/newemoji/DateTimeSelector";
@@ -14,6 +14,7 @@ import ImageSection from "@/components/activity/ImageSection";
 import AudioSection from "@/components/activity/AudioSection";
 import SaveButton from "@/components/activity/SaveButton";
 import * as ImagePicker from "expo-image-picker";
+const { width, height } = Dimensions.get("window");
 export default function ActivityScreen() {
   // Lấy tham số từ URL
   const params = useLocalSearchParams();
@@ -115,30 +116,17 @@ export default function ActivityScreen() {
         name: recording.name || `Bản ghi #${index + 1}`,
       }));
       console.log("Recordings data được chuẩn bị:", recordingsData);
-    }
-
-    // Chuẩn bị dữ liệu hình ảnh
-    type ImageData = {
-      id: number;
-      uri: string;
-    };
-
-    let imagesData: ImageData[] = [];
-    if (images.length > 0) {
-      imagesData = images.map((uri, index) => ({
-        id: index,
-        uri: uri,
-      }));
-      console.log("Số lượng ảnh:", images.length);
-    }
+    }    // Chuẩn bị dữ liệu hình ảnh - chỉ cần mảng URI đơn giản
+    console.log("Số lượng ảnh:", images.length);
+    console.log("Images data prepared for saving:", images); // Log the actual URIs
 
     // Định dạng ngày giờ
     const formattedDate = date.toISOString();
 
-    // Chuyển đổi dữ liệu sang JSON
+    // Chuyển đổi dữ liệu sang JSON - trực tiếp stringify mảng URI
     const recordingsJson =
       recordings.length > 0 ? JSON.stringify(recordingsData) : "";
-    const imagesJson = images.length > 0 ? JSON.stringify(imagesData) : "";
+    const imagesJson = images.length > 0 ? JSON.stringify(images) : "";
 
     // Chuyển hướng đến trang card detail với tham số
     try {
@@ -173,14 +161,23 @@ export default function ActivityScreen() {
         quality: 1,
         base64: true, // Yêu cầu trả về dữ liệu base64
       });
+
+      console.log("Camera result:", JSON.stringify(result, null, 2)); // Log the full result
+
       if (!result.canceled) {
-        // Tạo URI dạng data:image/jpeg;base64 để dễ dàng hiển thị ở mọi nơi
-        const base64Uri = `data:image/jpeg;base64,${result.assets[0].base64}`;
-        setImages([...images, base64Uri]);
-        console.log("Đã thêm ảnh base64");
+        if (result.assets && result.assets.length > 0 && result.assets[0].base64) {
+          const base64Uri = `data:image/jpeg;base64,${result.assets[0].base64}`;
+          console.log("Generated base64 URI (take photo):", base64Uri.substring(0, 100) + "..."); // Log a snippet
+          setImages((prevImages) => [...prevImages, base64Uri]);
+          console.log("Đã thêm ảnh base64");
+        } else {
+          console.warn("Camera result missing assets or base64 data.");
+        }
+      } else {
+        console.log("Camera launch canceled by user.");
       }
     } catch (error) {
-      console.error("Error requesting camera permissions:", error);
+      console.error("Error requesting camera permissions or launching camera:", error);
     }
   };
 
@@ -194,14 +191,23 @@ export default function ActivityScreen() {
         quality: 1,
         base64: true, // Yêu cầu trả về dữ liệu base64
       });
+
+      console.log("Gallery result:", JSON.stringify(result, null, 2)); // Log the full result
+
       if (!result.canceled) {
-        // Tạo URI dạng data:image/jpeg;base64 để dễ dàng hiển thị ở mọi nơi
-        const base64Uri = `data:image/jpeg;base64,${result.assets[0].base64}`;
-        setImages([...images, base64Uri]);
-        console.log("Đã thêm ảnh base64 từ thư viện");
+        if (result.assets && result.assets.length > 0 && result.assets[0].base64) {
+          const base64Uri = `data:image/jpeg;base64,${result.assets[0].base64}`;
+          console.log("Generated base64 URI (pick gallery):", base64Uri.substring(0, 100) + "..."); // Log a snippet
+          setImages((prevImages) => [...prevImages, base64Uri]);
+          console.log("Đã thêm ảnh base64 từ thư viện");
+        } else {
+          console.warn("Gallery result missing assets or base64 data.");
+        }
+      } else {
+        console.log("Gallery pick canceled by user.");
       }
     } catch (error) {
-      console.error("Error picking image from gallery:", error);
+      console.error("Error requesting media library permissions or launching image library:", error);
     }
   };
 
@@ -262,6 +268,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#E0F7ED",
+    paddingTop: height*0.035, // Thêm khoảng cách trên cùng
   },
   content: {
     flex: 1,

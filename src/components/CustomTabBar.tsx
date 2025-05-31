@@ -16,8 +16,6 @@ import { Ionicons } from "@expo/vector-icons"; // Ví dụ sử dụng Ionicons
 import { HOME_COLOR } from "src/utils/constant";
 import { router } from "expo-router"; // Thêm router từ expo-router
 import DateTimePicker from "@react-native-community/datetimepicker";
-// Import các bộ icon khác nếu cần
-// import { FontAwesome } from '@expo/vector-icons';
 
 // Lấy cả width và height
 const { width, height } = Dimensions.get("window");

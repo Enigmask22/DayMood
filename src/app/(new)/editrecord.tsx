@@ -592,6 +592,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#E0F7ED", // Cập nhật màu giống activity.tsx
+    paddingTop: hp(2),
   },
   content: {
     flex: 1,

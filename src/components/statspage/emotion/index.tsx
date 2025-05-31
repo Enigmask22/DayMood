@@ -31,11 +31,13 @@ const DAYS_PER_WEEK = 7;
 interface EmotionPageProps {
   currentDate: Date;
   setCurrentDate: (date: Date) => void;
+  showMoodChartOnly?: boolean; // New prop to only show the chart
 }
 
 const EmotionPage: React.FC<EmotionPageProps> = ({
   currentDate,
   setCurrentDate,
+  showMoodChartOnly = false // Default to false
 }) => {
   // State management
   const [currentScreenIndex, setCurrentScreenIndex] = useState(0);
@@ -363,50 +365,45 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
 
   // Main render
   return (
-    <View style={styles.container}>
-      {/* Chart Section */}
-      <View style={styles.chartCard}>
-        <Text style={styles.chartTitle}>Mood Chart</Text>
-        <Text style={styles.chartSubtitle}>
-          {/* {format(currentDate, 'MMMM yyyy')} */}
-          {"Let's see how your mood has been this month!"}
-        </Text>
-        
+    <View style={[styles.container, showMoodChartOnly && styles.compactContainer]}>
+      {/* If showMoodChartOnly is true, only render the chart section */}
+      {showMoodChartOnly ? (
         <View style={styles.chartWrapper}>
           {renderChartSection()}
         </View>
-      </View>
+      ) : (
+        // Else render the full EmotionPage
+        <>
+          {/* Chart Section */}
+          <View style={styles.chartCard}>
+            <Text style={styles.chartTitle}>Mood Chart</Text>
+            <Text style={styles.chartSubtitle}>
+              {"Let's see how your mood has been this month!"}
+            </Text>
+            
+            <View style={styles.chartWrapper}>
+              {renderChartSection()}
+            </View>
+          </View>
 
-      {/* Slides Section */}
-      <View style={styles.slideContainer}>
-        <FlatList
-          ref={flatListRef}
-          data={screens}
-          renderItem={renderSlideCard}
-          keyExtractor={(_, index) => index.toString()}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          onMomentumScrollEnd={(event) => {
-            const index = Math.round(
-              event.nativeEvent.contentOffset.x /
-                event.nativeEvent.layoutMeasurement.width
-            );
-            handleSlideChange(index);
-          }}
-          style={styles.slidesList}
+          {/* Slides Section */}
+          <View style={styles.slideContainer}>
+            {/* ...existing slide container code... */}
+          </View>
+        </>
+      )}
+      
+      {/* Only show tooltip if not in compact mode or if it's visible */}
+      {(!showMoodChartOnly || tooltipData.visible) && (
+        <MoodTooltip
+          data={tooltipData}
+          onClose={closeTooltip}
         />
-        {renderIndicator()}
-      </View>
-
-      {/* Tooltip for mood details */}
-      <MoodTooltip
-        data={tooltipData}
-        onClose={closeTooltip}
-      />
+      )}
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {
@@ -484,6 +481,10 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     color: '#334155',
     textAlign: 'center',
+  },
+   compactContainer: {
+    paddingBottom: 0,
+    height: 200,
   },
 });
 

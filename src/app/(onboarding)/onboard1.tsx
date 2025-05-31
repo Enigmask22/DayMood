@@ -1,16 +1,17 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import {
   View,
   Text,
-  Image,
   StyleSheet,
-  SafeAreaView,
+  Image,
   TouchableOpacity,
-  StatusBar,
   Dimensions,
+  SafeAreaView,
   Animated,
-  Easing,
   PanResponder,
+  Easing,
+  GestureResponderEvent,
+  PanResponderGestureState
 } from "react-native";
 import { useRouter } from "expo-router";
 
@@ -23,16 +24,17 @@ const OnboardScreen1 = () => {
   const router = useRouter();
   const rotateValue = new Animated.Value(0);
   const pan = new Animated.ValueXY();
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const panResponder = React.useRef(
     PanResponder.create({
-      onMoveShouldSetPanResponder: (_, gestureState) => {
+      onMoveShouldSetPanResponder: (_: GestureResponderEvent, gestureState: PanResponderGestureState) => {
         return Math.abs(gestureState.dx) > 10;
       },
-      onPanResponderMove: (_, gestureState) => {
+      onPanResponderMove: (_: GestureResponderEvent, gestureState: PanResponderGestureState) => {
         pan.x.setValue(gestureState.dx);
       },
-      onPanResponderRelease: (_, gestureState) => {
+      onPanResponderRelease: (_: GestureResponderEvent, gestureState: PanResponderGestureState) => {
         if (gestureState.dx < -50) {
           // Nếu vuốt sang trái đủ xa (hơn 50 đơn vị)
           router.push("/onboard2" as any);
@@ -65,6 +67,14 @@ const OnboardScreen1 = () => {
     ).start();
   }, []);
 
+  React.useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 1000,
+      useNativeDriver: true,
+    }).start();
+  }, [fadeAnim]);
+
   const rotate = rotateValue.interpolate({
     inputRange: [0, 1],
     outputRange: ["-20deg", "20deg"],
@@ -72,9 +82,6 @@ const OnboardScreen1 = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-
-      {/* Main Content */}
       <Animated.View
         style={[
           styles.contentContainer,
