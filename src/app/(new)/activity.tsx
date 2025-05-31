@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, SafeAreaView, ScrollView, Dimensions } from "react-native";
+import { View, StyleSheet, SafeAreaView, ScrollView, Dimensions, Alert } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import Header from "@/components/newemoji/Header";
 import DateTimeSelector from "@/components/newemoji/DateTimeSelector";
@@ -14,6 +14,9 @@ import ImageSection from "@/components/activity/ImageSection";
 import AudioSection from "@/components/activity/AudioSection";
 import SaveButton from "@/components/activity/SaveButton";
 import * as ImagePicker from "expo-image-picker";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as FileSystem from 'expo-file-system';
+
 const { width, height } = Dimensions.get("window");
 export default function ActivityScreen() {
   // Lấy tham số từ URL
@@ -43,7 +46,7 @@ export default function ActivityScreen() {
   const [selectedActivities, setSelectedActivities] = useState<number[]>([]);
   const [note, setNote] = useState("");
   const [isFullNoteOpen, setIsFullNoteOpen] = useState(false);
-
+  const [isLoading, setIsLoading] = useState(false);
   // Lấy emoji tương ứng với mood
   const moodId = selectedMood ? parseInt(selectedMood as string) : null;
 
@@ -84,8 +87,8 @@ export default function ActivityScreen() {
     setNote(text);
   };
 
-  // Lưu dữ liệu
-  const handleSave = () => {
+const handleSave = async () => {
+  try {
     console.log("Saving data:", {
       date,
       mood: moodId,
@@ -95,17 +98,10 @@ export default function ActivityScreen() {
       imagesCount: images.length,
     });
 
-    // Chuẩn bị dữ liệu âm thanh (recordings)
-    type RecordingData = {
-      id: number;
-      uri: string;
-      duration: string;
-      isMusic?: boolean;
-      isPaused?: boolean;
-      name?: string;
-    };
+    setIsLoading(true);
 
-    let recordingsData: RecordingData[] = [];
+    // Prepare recording data (unchanged)
+    let recordingsData: { id: number; uri: string; duration: string; isMusic: boolean; isPaused: boolean; name: string; }[] = [];
     if (recordings.length > 0) {
       recordingsData = recordings.map((recording, index) => ({
         id: index,
@@ -115,38 +111,65 @@ export default function ActivityScreen() {
         isPaused: recording.isPaused || false,
         name: recording.name || `Bản ghi #${index + 1}`,
       }));
-      console.log("Recordings data được chuẩn bị:", recordingsData);
-    }    // Chuẩn bị dữ liệu hình ảnh - chỉ cần mảng URI đơn giản
-    console.log("Số lượng ảnh:", images.length);
-    //console.log("Images data prepared for saving:", images); // Log the actual URIs
-
-    // Định dạng ngày giờ
+    }
+    
+    // Store images directly in FileSystem and pass file paths
+    const imageRefs = [];
+    
+    if (images.length > 0) {
+      for (let i = 0; i < images.length; i++) {
+        try {
+          // Generate unique filename for this image
+          const imageId = `temp_image_${Date.now()}_${i}`;
+          const filePath = `${FileSystem.cacheDirectory}${imageId}.jpg`;
+          
+          // Get base64 data (remove data URL prefix if present)
+          let base64Data = images[i];
+          if (base64Data.startsWith('data:')) {
+            base64Data = base64Data.split(',')[1];
+          }
+          
+          // Write the file directly to FileSystem
+          await FileSystem.writeAsStringAsync(filePath, base64Data, { 
+            encoding: FileSystem.EncodingType.Base64 
+          });
+          
+          // Store file path directly in imageRefs - NO AsyncStorage
+          imageRefs.push(filePath);
+          
+          console.log(`Saved image ${i+1}/${images.length} to ${filePath}`);
+        } catch (err) {
+          console.error(`Failed to save image ${i+1}:`, err);
+        }
+      }
+    }
+    
+    // Format date
     const formattedDate = date.toISOString();
 
-    // Chuyển đổi dữ liệu sang JSON - trực tiếp stringify mảng URI
-    const recordingsJson =
-      recordings.length > 0 ? JSON.stringify(recordingsData) : "";
-    const imagesJson = images.length > 0 ? JSON.stringify(images) : "";
+    // Convert to JSON
+    const recordingsJson = recordings.length > 0 ? JSON.stringify(recordingsData) : "";
+    const imagesJson = JSON.stringify(imageRefs); // Just passing file paths now
 
-    // Chuyển hướng đến trang card detail với tham số
-    try {
-      const params = {
+    // Navigate to card detail
+    router.push({
+      pathname: "/(new)/carddetail" as any,
+      params: {
         mood: moodId?.toString() || "4",
         activities: selectedActivities.join(","),
         note: note || "",
         date: formattedDate,
         recordings: recordingsJson,
         images: imagesJson,
-      };
-
-      router.push({
-        pathname: "/(new)/carddetail" as any,
-        params: params,
-      });
-    } catch (error) {
-      console.error("Navigation error:", error);
-    }
-  };
+        useImageRefs: "true", // Flag to indicate we're using file paths
+      },
+    });
+  } catch (error) {
+    console.error("Error saving activity data:", error);
+    setIsLoading(false);
+    Alert.alert("Error", "Failed to save data. Please try again.");
+  }
+};
 
   // Thay vì chỉ lưu một ảnh, chúng ta sẽ lưu mảng các ảnh
   const [images, setImages] = useState<string[]>([]);
@@ -268,7 +291,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#E0F7ED",
-    paddingTop: height*0.035, // Thêm khoảng cách trên cùng
+    paddingTop: height * 0.035, // Thêm khoảng cách trên cùng
   },
   content: {
     flex: 1,

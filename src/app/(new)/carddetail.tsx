@@ -145,7 +145,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
                   customAlertStyles.button,
                   button.style === "cancel" && customAlertStyles.cancelButton,
                   button.style === "destructive" &&
-                    customAlertStyles.destructiveButton,
+                  customAlertStyles.destructiveButton,
                   buttons.length === 1 && customAlertStyles.singleButton,
                 ]}
                 onPress={() => {
@@ -157,9 +157,9 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
                   style={[
                     customAlertStyles.buttonText,
                     button.style === "cancel" &&
-                      customAlertStyles.cancelButtonText,
+                    customAlertStyles.cancelButtonText,
                     button.style === "destructive" &&
-                      customAlertStyles.destructiveButtonText,
+                    customAlertStyles.destructiveButtonText,
                   ]}
                 >
                   {button.text}
@@ -289,9 +289,36 @@ const EnhancedImagesGrid = ({ images }: { images: string[] }) => {
   }>({});
   const [errorStates, setErrorStates] = useState<{ [key: number]: boolean }>(
     {}
-  );
+  ); console.log("=== EnhancedImagesGrid DEBUG ===");
+  //console.log("Received images array:", images);
+  console.log("Images length:", images?.length || 0);
+  console.log("First image sample:", images?.[0]?.substring(0, 100) + "...");
+  console.log("Images array type:", typeof images, Array.isArray(images));
 
-  if (!images || images.length === 0) return null;
+  // Don't return null early - let's always render something for debugging
+  const hasValidImages = images && Array.isArray(images) && images.length > 0;
+
+  if (!hasValidImages) {
+    console.log("EnhancedImagesGrid - No valid images, showing placeholder");
+    return (
+      <View style={styles.imageContainer}>
+        <View style={styles.imageDebugContainer}>
+          <Text style={styles.imageDebugTitle}>Image Debug Info</Text>
+          <Text style={styles.imageDebugText}>
+            Images prop: {typeof images} (length: {images?.length || 0})
+          </Text>
+          <Text style={styles.imageDebugText}>
+            Array.isArray: {Array.isArray(images).toString()}
+          </Text>
+          {images && images.length > 0 && (
+            <Text style={styles.imageDebugText}>
+              First item: {typeof images[0]} ({images[0]?.substring(0, 30)}...)
+            </Text>
+          )}
+        </View>
+      </View>
+    );
+  }
 
   const handleImagePress = (imageUrl: string) => {
     setSelectedImage(imageUrl);
@@ -377,6 +404,8 @@ export default function CardDetailScreen() {
   const note = (params.note as string) || "";
   const dateParam = params.date as string;
   const [user, setUser] = useState<any>(null);
+  const [loadedImages, setLoadedImages] = useState<string[]>([]);
+  const [imageLoading, setImageLoading] = useState(true);
 
   // Custom Alert State
   const [alertConfig, setAlertConfig] = useState<{
@@ -452,38 +481,107 @@ export default function CardDetailScreen() {
 
   // Xử lý dữ liệu hình ảnh
   const [images, setImages] = useState<string[]>([]);
-  // Tải dữ liệu hình ảnh từ params
+
   useEffect(() => {
-    try {
-      //console.log("params.images:", params.images);
-      if (
-        params.images &&
-        typeof params.images === "string" &&
-        params.images !== ""
-      ) {
-        const parsedImages = JSON.parse(params.images);
-        console.log("Ảnh đã parse:", parsedImages);
+    const loadImagesFromRefs = async () => {
+      try {
+        console.log("=== Starting image loading process ===");
+        console.log("params.useImageRefs:", params.useImageRefs);
+        console.log("params.images:", params.images);
 
-        // Xử lý mảng URI đơn giản
-        if (Array.isArray(parsedImages)) {
-          // Lọc ra các URI có giá trị
-          const validImages = parsedImages.filter(
-            (uri) =>
-              uri &&
-              typeof uri === "string" &&
-              (uri.startsWith("data:image") ||
-                uri.startsWith("file://") ||
-                uri.startsWith("http"))
-          );
+        setImageLoading(true);
 
-          console.log("Đường dẫn ảnh hợp lệ:", validImages);
-          setImages(validImages);
-          console.log("Số lượng ảnh đã set:", validImages.length);
+        // Check if we're using image refs
+        if (params.useImageRefs === "true" && params.images) {
+          console.log("Loading images from refs...");
+          const imageRefs = JSON.parse(params.images as string);
+          console.log("Image refs:", imageRefs);
+          const loadedImages: string[] = [];
+
+          for (let i = 0; i < imageRefs.length; i++) {
+            const filePath = imageRefs[i]; // The ref IS the file path directly
+            try {
+              console.log(`Processing image file ${i + 1}/${imageRefs.length}: ${filePath}`);
+
+              // Check if file exists
+              const fileInfo = await FileSystem.getInfoAsync(filePath);
+              console.log(`File exists for ${filePath}:`, fileInfo.exists);
+
+              if (fileInfo.exists) {
+                // Read the file content
+                const base64 = await FileSystem.readAsStringAsync(filePath, {
+                  encoding: FileSystem.EncodingType.Base64
+                });
+
+                // Add data URL prefix back for display
+                const imageDataUrl = `data:image/jpeg;base64,${base64}`;
+                loadedImages.push(imageDataUrl);
+                console.log(`Successfully loaded image ${i + 1}: ${imageDataUrl.substring(0, 50)}...`);
+              } else {
+                console.log(`File doesn't exist: ${filePath}`);
+              }
+            } catch (err: any) {
+              console.error(`Error loading image ${i + 1}:`, err.message);
+            }
+          }
+
+          console.log(`=== Image loading complete ===`);
+          console.log(`Successfully loaded ${loadedImages.length} of ${imageRefs.length} images`);
+          console.log("Final loaded images array:", loadedImages);
+
+          // Set both state variables
+          setLoadedImages(loadedImages);
+          setImages(loadedImages);
+        } else if (params.images) {
+          // Legacy path - direct images in params
+          console.log("Loading images from direct params...");
+          try {
+            const parsedImages = JSON.parse(params.images as string);
+            console.log("Parsed direct images:", parsedImages);
+            setLoadedImages(parsedImages);
+            setImages(parsedImages);
+          } catch (parseErr) {
+            console.error("Error parsing images JSON:", parseErr);
+          }
+        } else {
+          console.log("No images to load");
+        }
+      } catch (error: any) {
+        console.error(`Error loading images: ${error.message}`);
+      } finally {
+        console.log("Image loading process finished, setting imageLoading to false");
+        setImageLoading(false);
+      }
+    };
+
+    console.log("Triggering image loading...");
+    loadImagesFromRefs();
+  }, [params.images, params.useImageRefs]);
+
+  // Cleanup temporary files when unmounting
+  useEffect(() => {
+    return () => {
+      // Cleanup function
+      if (params.useImageRefs === "true" && params.images) {
+        try {
+          const imageRefs = JSON.parse(params.images as string);
+          // Delete each temporary file
+          imageRefs.forEach(async (filePath: string) => {
+            try {
+              const fileInfo = await FileSystem.getInfoAsync(filePath);
+              if (fileInfo.exists) {
+                console.log(`Cleaning up temporary file: ${filePath.substring(0, 30)}...`);
+                await FileSystem.deleteAsync(filePath);
+              }
+            } catch (err) {
+              console.log(`Error cleaning up file ${filePath}:`, err);
+            }
+          });
+        } catch (e) {
+          console.error("Error during cleanup:", e);
         }
       }
-    } catch (error) {
-      console.error("Lỗi khi phân tích dữ liệu hình ảnh:", error);
-    }
+    };
   }, [params.images]);
 
   // Tải dữ liệu bản ghi âm từ params
@@ -796,12 +894,12 @@ export default function CardDetailScreen() {
           prev.map((rec) =>
             rec.id === recording.id
               ? {
-                  ...rec,
-                  isPlaying: false,
-                  isPaused: false,
-                  currentPosition: "00:00",
-                  currentMillis: 0,
-                }
+                ...rec,
+                isPlaying: false,
+                isPaused: false,
+                currentPosition: "00:00",
+                currentMillis: 0,
+              }
               : rec
           )
         );
@@ -865,10 +963,10 @@ export default function CardDetailScreen() {
           prev.map((rec) =>
             rec.id === recording.id
               ? {
-                  ...rec,
-                  currentMillis: currentMillis,
-                  currentPosition: formattedPosition,
-                }
+                ...rec,
+                currentMillis: currentMillis,
+                currentPosition: formattedPosition,
+              }
               : rec
           )
         );
@@ -881,12 +979,12 @@ export default function CardDetailScreen() {
           prev.map((rec) =>
             rec.id === recording.id
               ? {
-                  ...rec,
-                  isPlaying: false,
-                  isPaused: false,
-                  currentPosition: "00:00",
-                  currentMillis: 0,
-                }
+                ...rec,
+                isPlaying: false,
+                isPaused: false,
+                currentPosition: "00:00",
+                currentMillis: 0,
+              }
               : rec
           )
         );
@@ -977,10 +1075,8 @@ export default function CardDetailScreen() {
     time: formattedTime,
     emoji: emojiMap[moodId],
     title: moodTitles[moodId] || "How I feel today",
-    note:
-      note ||
-      'Lorem ipsum...\n"Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit..."\n\nLorem ipsum...\n\nLorem ipsum...',
-    hasImages: images.length > 0, // Chỉ true nếu thực sự có hình ảnh
+    note: note || 'Lorem ipsum...',
+    hasImages: loadedImages.length > 0, // Use loadedImages instead of images
     hasMusic: true,
     music: {
       title: "Shape of you",
@@ -1035,9 +1131,9 @@ export default function CardDetailScreen() {
         console.log("Response text:", responseText);
         throw new Error(
           "Không thể tạo record. Status: " +
-            recordResponse.status +
-            " - " +
-            responseText
+          recordResponse.status +
+          " - " +
+          responseText
         );
       }
 
@@ -1125,7 +1221,7 @@ export default function CardDetailScreen() {
       );
 
       // Điều hướng về trang chủ
-      router.push("/(main)" as any);
+      router.push("/(main)");
     } catch (error) {
       console.error("Lỗi khi lưu dữ liệu:", error);
       showAlert(
@@ -1143,11 +1239,16 @@ export default function CardDetailScreen() {
     } catch (error) {
       console.error("Navigation error:", error);
     }
-  };
-
-  // Hiển thị trước khi trả về JSX để kiểm tra
-  console.log("Trước render - Số lượng ảnh:", images.length);
+  };  // Debug logging before render
+  console.log("=== RENDER DEBUG ===");
+  console.log("loadedImages.length:", loadedImages.length);
+  console.log("images.length:", images.length);
   console.log("hasImages:", cardData.hasImages);
+  console.log("loadedImages:", loadedImages);
+  console.log("imageLoading:", imageLoading);
+  if (loadedImages.length > 0) {
+    console.log("Sample loadedImage:", loadedImages[0]?.substring(0, 100) + "...");
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -1170,10 +1271,35 @@ export default function CardDetailScreen() {
           {activities.length > 0 && <ActivitiesList activities={activities} />}
 
           {/* Hiển thị ghi chú - đã tách title và content trước khi truyền vào NoteCard */}
-          {note && <NoteCard title={noteTitle} content={noteContent} />}
+          {note && <NoteCard title={noteTitle} content={noteContent} />}          
+          {/* Image Loading State */}
+          {imageLoading && (
+            <View style={styles.imageLoadingContainer}>
+              <ActivityIndicator size="large" color="#32B768" />
+              <Text style={styles.imageLoadingText}>Loading images...</Text>
+            </View>
+          )}          
+          {!imageLoading && loadedImages.length === 0 && (
+            <View style={styles.noImagesContainer}>
+              <Text style={styles.noImagesText}>No images available</Text>
+              <Text style={styles.debugText}>
+                useImageRefs: {params.useImageRefs || "undefined"}
+              </Text>
+              <Text style={styles.debugText}>
+                params.images: {params.images ? "present" : "undefined"}
+              </Text>
+            </View>
+          )}
 
-          {/* Hiển thị hình ảnh nếu có - Thay ImagesGrid bằng EnhancedImagesGrid */}
-          {images.length > 0 && <EnhancedImagesGrid images={images} />}
+          {/* Hiển thị hình ảnh nếu có - Debug the condition */}
+          {(() => {
+            console.log("JSX Render Check - loadedImages.length:", loadedImages.length);
+            console.log("JSX Render Check - about to render EnhancedImagesGrid:", loadedImages.length > 0);
+            if (loadedImages.length > 0) {
+              return <EnhancedImagesGrid images={loadedImages} />;
+            }
+            return null;
+          }) ()}
 
           {/* Hiển thị danh sách bản ghi âm */}
           {recordings.length > 0 && (
@@ -1443,8 +1569,76 @@ const styles = StyleSheet.create({
     fontFamily: "Quicksand-Regular",
     textAlign: "center",
     marginTop: 4,
-  },
-  errorImage: {
+  }, errorImage: {
     opacity: 0.3,
+  },
+  // Image loading styles
+  imageLoadingContainer: {
+    marginVertical: hp(2),
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    borderRadius: wp(4),
+    padding: wp(4),
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: "rgba(34, 197, 94, 0.1)",
+  }, imageLoadingText: {
+    marginTop: hp(1),
+    fontSize: wp(3.5),
+    color: "#32B768",
+    fontFamily: "Quicksand-Medium",
+  },
+  // Debug styles
+  noImagesContainer: {
+    marginVertical: hp(2),
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    borderRadius: wp(4),
+    padding: wp(4),
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: "rgba(34, 197, 94, 0.1)",
+  },
+  noImagesText: {
+    fontSize: wp(4),
+    color: "#666",
+    fontFamily: "Quicksand-Bold",
+    marginBottom: hp(1),
+  }, debugText: {
+    fontSize: wp(3),
+    color: "#999",
+    fontFamily: "Quicksand-Regular",
+    marginVertical: hp(0.2),
+  },
+  // Image debug styles
+  imageDebugContainer: {
+    padding: wp(4),
+    backgroundColor: "#FFF3CD",
+    borderRadius: wp(3),
+    borderWidth: 1,
+    borderColor: "#FFEAA7",
+  },
+  imageDebugTitle: {
+    fontSize: wp(4),
+    fontFamily: "Quicksand-Bold",
+    color: "#856404",
+    marginBottom: hp(1),
+    textAlign: "center",
+  },
+  imageDebugText: {
+    fontSize: wp(3),
+    fontFamily: "Quicksand-Regular",
+    color: "#856404",
+    marginVertical: hp(0.3),
   },
 });
