@@ -11,7 +11,7 @@ import {
 import { useState, useEffect } from "react";
 import FeelingRecord from "./FeelingRecord";
 import { FeelingRecordProps } from "src/components/homepage/FeelingRecord";
-import { MOODS } from "@/utils/constant";
+import { HOME_COLOR, MOODS } from "@/utils/constant";
 const { width, height } = Dimensions.get("window");
 
 interface RecordItem extends FeelingRecordProps {
@@ -70,7 +70,7 @@ const RecordsList = ({ records, loading, error }: RecordsListProps) => {
         {/* Hiển thị loading */}
         {loading && (
           <View style={styles.centerContainer}>
-            <ActivityIndicator size="large" color="#0000ff" />
+            <ActivityIndicator size="large" color={HOME_COLOR.HOMETABBAR} />
             <Text style={styles.messageText}>Loading...</Text>
           </View>
         )}

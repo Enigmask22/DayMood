@@ -10,6 +10,7 @@ interface PieChartItem {
   color: string;
   legendFontColor: string;
   legendFontSize: number;
+  isOther?: boolean; // Add flag to identify the "Other" category
 }
 
 interface ActivityPieChartProps {
@@ -38,6 +39,32 @@ const ActivityPieChart = ({
       mostFrequentActivity = activity;
     }
   }
+
+  // Calculate percentages with the "Other" category calculated by subtraction
+  const calculatedPercentages = React.useMemo(() => {
+    // Initialize result object
+    const result: Record<string, number> = {};
+    
+    // Track the total percentage of non-"Other" categories
+    let totalPercentageUsed = 0;
+    
+    // Calculate and store percentages for non-"Other" categories
+    pieChartData.forEach(item => {
+      if (item.name !== "Other") {
+        const percentage = Math.round((item.count / totalActivities) * 100);
+        result[item.name] = percentage;
+        totalPercentageUsed += percentage;
+      }
+    });
+    
+    // Set "Other" category percentage by subtraction (ensuring it's not negative)
+    const otherItem = pieChartData.find(item => item.name === "Other");
+    if (otherItem) {
+      result["Other"] = Math.max(0, 100 - totalPercentageUsed);
+    }
+    
+    return result;
+  }, [pieChartData, totalActivities]);
 
   return (
     <View style={styles.container}>
@@ -75,7 +102,9 @@ const ActivityPieChart = ({
                 <Text style={styles.legendText}>{item.name}</Text>
               </View>
               <Text style={styles.legendValueText}>
-                {item.count} ({Math.round((item.count / totalActivities) * 100)}%)
+                {item.count} ({item.name === "Other" 
+                  ? calculatedPercentages[item.name] 
+                  : Math.round((item.count / totalActivities) * 100)}%)
               </Text>
             </View>
           ))}
@@ -114,7 +143,9 @@ const ActivityPieChart = ({
   );
 };
 
+// Styles remain unchanged
 const styles = StyleSheet.create({
+  // All your existing styles...
   container: {
     marginVertical: 15,
   },
@@ -125,7 +156,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   chartAndLegendContainer: {
-    position: 'relative', // For overlay positioning
+    position: 'relative',
   },
   chartContainer: {
     alignItems: 'center',
@@ -134,6 +165,9 @@ const styles = StyleSheet.create({
     height: 200,
     marginVertical: 10,
     overflow: 'visible',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 20,
   },
   colorLegendContainer: {
     flexDirection: 'column',
@@ -185,7 +219,6 @@ const styles = StyleSheet.create({
     color: HOME_COLOR.HOMETEXT,
     marginTop: 4,
   },
-  // Sample data overlay styles
   sampleDataOverlay: {
     position: 'absolute',
     top: 0,

@@ -8,7 +8,7 @@ interface StreakRowProps {
 }
 
 const iconMap = {
-  check: <Ionicons name="checkmark" size={20} color="#22C55E" />,
+  check: <Ionicons name="checkmark" size={20} color="#fff" />,
   plus: <Ionicons name="add" size={20} color="#22C55E" />,
   bookmark: <MaterialIcons name="bookmark-border" size={20} color="#FCA10C" />,
   empty: null,
@@ -16,7 +16,8 @@ const iconMap = {
 
 const StreakRow: React.FC<StreakRowProps> = ({ streak, longestStreak }) => (
   <View style={styles.container}>
-    <Text style={styles.title}>Days in Row</Text>
+    <Text style={styles.title}>Mood streak</Text>
+    <Text style={styles.subtitle}>Your recent mood records past 5 days</Text>
     <View style={styles.row}>
       {streak.map((type, idx) => (
         <React.Fragment key={idx}>
@@ -25,9 +26,11 @@ const StreakRow: React.FC<StreakRowProps> = ({ streak, longestStreak }) => (
           ) : (
             <View
               style={[
-                styles.circle,
+                styles.uncheckedCircle,
                 type === "bookmark" && styles.bookmarkCircle,
                 type === "empty" && styles.emptyCircle,
+                type === "plus" && styles.uncheckedCircle,
+                type === "check" && styles.checkedCircle,
               ]}
             >
               {iconMap[type]}
@@ -61,6 +64,13 @@ const styles = StyleSheet.create({
     color: "#222",
     alignSelf: "center",
   },
+  subtitle: {
+    fontWeight: "400",
+    fontSize: 12,
+    marginBottom: 15,
+    color: "#222",
+    alignSelf: "center",
+  },
   row: {
     flexDirection: "row",
     alignItems: "center",
@@ -68,7 +78,7 @@ const styles = StyleSheet.create({
     alignSelf: "stretch",
     justifyContent: "center",
   },
-  circle: {
+  uncheckedCircle: {
     width: 36,
     height: 36,
     borderRadius: 18,
@@ -77,6 +87,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#fff",
+  },
+  checkedCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 2,
+    borderColor: "#22C55E",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#22C55E",
   },
   bookmarkCircle: {
     borderColor: "#FCA10C",
@@ -94,7 +114,7 @@ const styles = StyleSheet.create({
   rectBox: {
     width: 36,
     height: 36,
-    borderRadius: 12,
+    borderRadius: 20,
     backgroundColor: "#E5E5E5",
   },
   streakText: {

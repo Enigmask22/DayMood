@@ -523,7 +523,7 @@ const styles = StyleSheet.create({
     height: width * 0.13, // Giữ hình vuông theo width
     left: width / 2 - (width * 0.13) / 2, // Căn giữa
     // Sử dụng height
-    bottom: Platform.OS === "ios" ? height * 0.055 : height * 0.05,
+    bottom: Platform.OS === "ios" ? height * 0.055 : height * 0.055,
     // Sử dụng width
     borderRadius: width * 0.075,
     backgroundColor: ADD_BUTTON_BG,

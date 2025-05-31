@@ -19,7 +19,7 @@ const CalendarHeader = ({ dateString, onAddPress }: CalendarHeaderProps) => {
         />
         <Text style={styles.headerText}>Calendar</Text>
       </View>
-      <View style={styles.rowBox}>
+      {/* <View style={styles.rowBox}>
         <Text style={styles.dateText}>{dateString}</Text>
         <TouchableOpacity style={styles.addBtn} onPress={onAddPress}>
           <Text style={styles.addText}>ADD</Text>
@@ -30,7 +30,7 @@ const CalendarHeader = ({ dateString, onAddPress }: CalendarHeaderProps) => {
             style={{ marginLeft: 2 }}
           />
         </TouchableOpacity>
-      </View>
+      </View> */}
     </>
   );
 };

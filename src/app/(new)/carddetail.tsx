@@ -264,7 +264,7 @@ export default function CardDetailScreen() {
   // Tải dữ liệu hình ảnh từ params
   useEffect(() => {
     try {
-      console.log("params.images:", params.images);
+      //console.log("params.images:", params.images);
       if (
         params.images &&
         typeof params.images === "string" &&

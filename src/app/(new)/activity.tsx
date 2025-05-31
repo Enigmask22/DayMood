@@ -118,7 +118,7 @@ export default function ActivityScreen() {
       console.log("Recordings data được chuẩn bị:", recordingsData);
     }    // Chuẩn bị dữ liệu hình ảnh - chỉ cần mảng URI đơn giản
     console.log("Số lượng ảnh:", images.length);
-    console.log("Images data prepared for saving:", images); // Log the actual URIs
+    //console.log("Images data prepared for saving:", images); // Log the actual URIs
 
     // Định dạng ngày giờ
     const formattedDate = date.toISOString();
