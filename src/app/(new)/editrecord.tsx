@@ -7,6 +7,9 @@ import {
   Alert,
   ActivityIndicator,
   Text,
+  Modal,
+  TouchableOpacity,
+  Animated,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import Header from "@/components/newemoji/Header";
@@ -17,6 +20,7 @@ import * as ImagePicker from "expo-image-picker";
 import { uploadFileFromBase64, uploadAudioFromUri } from "@/utils/fileService";
 import { API_ENDPOINTS, DEFAULT_USER_ID } from "@/utils/config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 // Import thêm MoodSelector từ newemoj
 import MoodSelector from "@/components/newemoji/MoodSelector";
 // Các component
@@ -28,12 +32,196 @@ import ImageSection from "@/components/activity/ImageSection";
 import AudioSection from "@/components/activity/AudioSection";
 import SaveButton from "@/components/activity/SaveButton";
 
+// Custom Alert Component
+interface CustomAlertProps {
+  visible: boolean;
+  type: "success" | "error" | "warning" | "info";
+  title: string;
+  message: string;
+  buttons?: Array<{
+    text: string;
+    style?: "default" | "cancel" | "destructive";
+    onPress?: () => void;
+  }>;
+  onClose: () => void;
+}
+
+const CustomAlert: React.FC<CustomAlertProps> = ({
+  visible,
+  type,
+  title,
+  message,
+  buttons = [{ text: "OK", style: "default" }],
+  onClose,
+}) => {
+  const [fadeAnim] = useState(new Animated.Value(0));
+  const [scaleAnim] = useState(new Animated.Value(0.8));
+
+  useEffect(() => {
+    if (visible) {
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          tension: 100,
+          friction: 8,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 0.8,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [visible]);
+
+  const getIconAndColor = () => {
+    switch (type) {
+      case "success":
+        return { icon: "check-circle", color: "#10B981", bgColor: "#ECFDF5" };
+      case "error":
+        return {
+          icon: "exclamation-circle",
+          color: "#EF4444",
+          bgColor: "#FEF2F2",
+        };
+      case "warning":
+        return {
+          icon: "exclamation-triangle",
+          color: "#F59E0B",
+          bgColor: "#FFFBEB",
+        };
+      case "info":
+        return { icon: "info-circle", color: "#3B82F6", bgColor: "#EFF6FF" };
+      default:
+        return { icon: "info-circle", color: "#6B7280", bgColor: "#F9FAFB" };
+    }
+  };
+
+  const { icon, color, bgColor } = getIconAndColor();
+
+  if (!visible) return null;
+
+  return (
+    <Modal transparent visible={visible} animationType="none">
+      <Animated.View style={[customAlertStyles.overlay, { opacity: fadeAnim }]}>
+        <Animated.View
+          style={[
+            customAlertStyles.alertContainer,
+            { transform: [{ scale: scaleAnim }] },
+          ]}
+        >
+          <View
+            style={[
+              customAlertStyles.iconContainer,
+              { backgroundColor: bgColor },
+            ]}
+          >
+            <FontAwesome5 name={icon} size={wp(6)} color={color} />
+          </View>
+
+          <Text style={customAlertStyles.title}>{title}</Text>
+          <Text style={customAlertStyles.message}>{message}</Text>
+
+          <View style={customAlertStyles.buttonContainer}>
+            {buttons.map((button, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  customAlertStyles.button,
+                  button.style === "cancel" && customAlertStyles.cancelButton,
+                  button.style === "destructive" &&
+                    customAlertStyles.destructiveButton,
+                  buttons.length === 1 && customAlertStyles.singleButton,
+                ]}
+                onPress={() => {
+                  button.onPress?.();
+                  onClose();
+                }}
+              >
+                <Text
+                  style={[
+                    customAlertStyles.buttonText,
+                    button.style === "cancel" &&
+                      customAlertStyles.cancelButtonText,
+                    button.style === "destructive" &&
+                      customAlertStyles.destructiveButtonText,
+                  ]}
+                >
+                  {button.text}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </Animated.View>
+      </Animated.View>
+    </Modal>
+  );
+};
+
 export default function EditRecordScreen() {
   // Lấy tham số từ URL
   const params = useLocalSearchParams();
   const { id } = params;
   const [user, setUser] = useState<any>(null);
-   const [userLoaded, setUserLoaded] = useState(false);
+  const [userLoaded, setUserLoaded] = useState(false);
+
+  // Custom Alert State
+  const [alertConfig, setAlertConfig] = useState<{
+    visible: boolean;
+    type: "success" | "error" | "warning" | "info";
+    title: string;
+    message: string;
+    buttons: Array<{
+      text: string;
+      style?: "default" | "cancel" | "destructive";
+      onPress?: () => void;
+    }>;
+  }>({
+    visible: false,
+    type: "info",
+    title: "",
+    message: "",
+    buttons: [{ text: "OK", style: "default" }],
+  });
+
+  // Helper function to show custom alert
+  const showAlert = (
+    type: "success" | "error" | "warning" | "info",
+    title: string,
+    message: string,
+    buttons?: Array<{
+      text: string;
+      style?: "default" | "cancel" | "destructive";
+      onPress?: () => void;
+    }>
+  ) => {
+    setAlertConfig({
+      visible: true,
+      type,
+      title,
+      message,
+      buttons: buttons || [{ text: "OK", style: "default" }],
+    });
+  };
+
+  const hideAlert = () => {
+    setAlertConfig((prev) => ({ ...prev, visible: false }));
+  };
+
   // State cho dữ liệu record
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -76,9 +264,12 @@ export default function EditRecordScreen() {
       } catch (err) {
         console.error("Failed to load user data:", err);
         setError("Please log in again to continue");
-        Alert.alert("Error", "Please log in again to continue", [
-          { text: "OK", onPress: () => router.push("/(auth)/login" as any) }
-        ]);
+        showAlert(
+          "error",
+          "Authentication Error",
+          "Please log in again to continue",
+          [{ text: "OK", onPress: () => router.push("/(auth)/login" as any) }]
+        );
       } finally {
         setUserLoaded(true); // Mark user loading as complete
       }
@@ -276,7 +467,11 @@ export default function EditRecordScreen() {
       }
     } catch (error: any) {
       console.error("Lỗi khi xóa file:", error.message);
-      Alert.alert("Lỗi", "Không thể xóa file. Vui lòng thử lại sau.");
+      showAlert(
+        "error",
+        "Error",
+        "Unable to delete file. Please try again later."
+      );
     }
   };
 
@@ -284,16 +479,17 @@ export default function EditRecordScreen() {
   const handleClearAllRecordings = async () => {
     try {
       // Xác nhận trước khi xóa
-      Alert.alert(
-        "Xác nhận xóa",
-        "Bạn có chắc chắn muốn xóa tất cả bản ghi âm không?",
+      showAlert(
+        "warning",
+        "Confirm Delete",
+        "Are you sure you want to delete all audio recordings?",
         [
           {
-            text: "Hủy",
+            text: "Cancel",
             style: "cancel",
           },
           {
-            text: "Xóa",
+            text: "Delete",
             style: "destructive",
             onPress: async () => {
               // Lọc ra các file âm thanh cần xóa (có file_id)
@@ -341,9 +537,10 @@ export default function EditRecordScreen() {
               setRecordings([]);
 
               if (hasError) {
-                Alert.alert(
-                  "Cảnh báo",
-                  "Một số file không thể xóa. Vui lòng thử lại sau."
+                showAlert(
+                  "warning",
+                  "Warning",
+                  "Some files could not be deleted. Please try again later."
                 );
               }
             },
@@ -352,7 +549,11 @@ export default function EditRecordScreen() {
       );
     } catch (error: any) {
       console.error("Lỗi khi xóa các bản ghi âm:", error.message);
-      Alert.alert("Lỗi", "Không thể xóa các bản ghi âm. Vui lòng thử lại sau.");
+      showAlert(
+        "error",
+        "Error",
+        "Unable to delete audio recordings. Please try again later."
+      );
     }
   };
 
@@ -379,7 +580,7 @@ export default function EditRecordScreen() {
       const newFiles = [];
 
       // Hiển thị dialog loading
-      Alert.alert("Đang xử lý", "Đang tải file lên, vui lòng đợi...");
+      showAlert("info", "Processing", "Uploading files, please wait...");
 
       // Upload ảnh mới lên Supabase Storage
       const newImages = images.filter((img) => img.id === 0);
@@ -460,48 +661,61 @@ export default function EditRecordScreen() {
         );
       }
 
-      Alert.alert("Thành công", "Đã cập nhật record thành công", [
+      showAlert("success", "Success", "Record updated successfully", [
         { text: "OK", onPress: () => router.back() },
       ]);
     } catch (error: any) {
       console.error("Lỗi khi cập nhật record:", error.message);
-      Alert.alert("Lỗi", "Không thể cập nhật record. Vui lòng thử lại sau.");
+      showAlert(
+        "error",
+        "Error",
+        "Unable to update record. Please try again later."
+      );
     }
   };
 
   // Xử lý xóa record
   const handleDeleteRecord = () => {
-    Alert.alert("Xác nhận xóa", "Bạn có chắc chắn muốn xóa record này không?", [
-      {
-        text: "Hủy",
-        style: "cancel",
-      },
-      {
-        text: "Xóa",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            // Xóa record qua API
-            const response = await fetch(`${API_ENDPOINTS.RECORDS}/${id}`, {
-              method: "DELETE",
-            });
+    showAlert(
+      "warning",
+      "Confirm Delete",
+      "Are you sure you want to delete this record?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              // Xóa record qua API
+              const response = await fetch(`${API_ENDPOINTS.RECORDS}/${id}`, {
+                method: "DELETE",
+              });
 
-            if (!response.ok) {
-              throw new Error(
-                `Không thể xóa dữ liệu. Mã lỗi: ${response.status}`
+              if (!response.ok) {
+                throw new Error(
+                  `Không thể xóa dữ liệu. Mã lỗi: ${response.status}`
+                );
+              }
+
+              showAlert("success", "Success", "Record deleted successfully", [
+                { text: "OK", onPress: () => router.back() },
+              ]);
+            } catch (error: any) {
+              console.error("Lỗi khi xóa record:", error.message);
+              showAlert(
+                "error",
+                "Error",
+                "Unable to delete record. Please try again later."
               );
             }
-
-            Alert.alert("Thành công", "Đã xóa record thành công", [
-              { text: "OK", onPress: () => router.back() },
-            ]);
-          } catch (error: any) {
-            console.error("Lỗi khi xóa record:", error.message);
-            Alert.alert("Lỗi", "Không thể xóa record. Vui lòng thử lại sau.");
-          }
+          },
         },
-      },
-    ]);
+      ]
+    );
   };
 
   if (isLoading) {
@@ -519,7 +733,7 @@ export default function EditRecordScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
-          <Header title="Lỗi" />
+          <Header title="Error" />
           <Text style={styles.errorText}>{error}</Text>
         </View>
       </SafeAreaView>
@@ -535,7 +749,7 @@ export default function EditRecordScreen() {
 
           {/* Tiêu đề */}
           <View style={styles.headerContainer}>
-            <Header title="Chỉnh sửa cảm xúc" />
+            <Header title="Edit Mood" />
           </View>
 
           {/* Date Time Selector */}
@@ -584,9 +798,104 @@ export default function EditRecordScreen() {
           </View>
         </View>
       </ScrollView>
+
+      {/* Custom Alert */}
+      <CustomAlert
+        visible={alertConfig.visible}
+        type={alertConfig.type}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        buttons={alertConfig.buttons}
+        onClose={hideAlert}
+      />
     </SafeAreaView>
   );
 }
+
+const customAlertStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: wp(5),
+  },
+  alertContainer: {
+    backgroundColor: "white",
+    borderRadius: wp(4),
+    padding: wp(6),
+    width: "100%",
+    maxWidth: wp(80),
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 10,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  iconContainer: {
+    width: wp(16),
+    height: wp(16),
+    borderRadius: wp(8),
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: hp(2),
+  },
+  title: {
+    fontSize: wp(5),
+    fontFamily: "Quicksand-Bold",
+    color: "#1F2937",
+    textAlign: "center",
+    marginBottom: hp(1),
+  },
+  message: {
+    fontSize: wp(3.8),
+    fontFamily: "Quicksand-Medium",
+    color: "#6B7280",
+    textAlign: "center",
+    lineHeight: wp(5.5),
+    marginBottom: hp(3),
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    width: "100%",
+    gap: wp(3),
+  },
+  button: {
+    flex: 1,
+    backgroundColor: "#32B768",
+    paddingVertical: hp(1.5),
+    paddingHorizontal: wp(4),
+    borderRadius: wp(3),
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  singleButton: {
+    flex: 1,
+  },
+  cancelButton: {
+    backgroundColor: "#F3F4F6",
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+  },
+  destructiveButton: {
+    backgroundColor: "#EF4444",
+  },
+  buttonText: {
+    fontSize: wp(4),
+    fontFamily: "Quicksand-SemiBold",
+    color: "white",
+  },
+  cancelButtonText: {
+    color: "#6B7280",
+  },
+  destructiveButtonText: {
+    color: "white",
+  },
+});
 
 const styles = StyleSheet.create({
   container: {

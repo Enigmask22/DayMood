@@ -7,6 +7,7 @@ import {
   Alert,
   Animated,
   Easing,
+  Modal,
 } from "react-native";
 import { FontAwesome5, FontAwesome } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -14,6 +15,146 @@ import { Audio } from "expo-av";
 import * as FileSystem from "expo-file-system";
 import * as DocumentPicker from "expo-document-picker";
 import { wp, hp } from "../newemoji/utils";
+
+// Custom Alert Component
+interface CustomAlertProps {
+  visible: boolean;
+  type: "success" | "error" | "warning" | "info";
+  title: string;
+  message: string;
+  buttons?: Array<{
+    text: string;
+    style?: "default" | "cancel" | "destructive";
+    onPress?: () => void;
+  }>;
+  onClose: () => void;
+}
+
+const CustomAlert: React.FC<CustomAlertProps> = ({
+  visible,
+  type,
+  title,
+  message,
+  buttons = [{ text: "OK", style: "default" }],
+  onClose,
+}) => {
+  const [fadeAnim] = useState(new Animated.Value(0));
+  const [scaleAnim] = useState(new Animated.Value(0.8));
+
+  useEffect(() => {
+    if (visible) {
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          tension: 100,
+          friction: 8,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 0.8,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [visible]);
+
+  const getIconAndColor = () => {
+    switch (type) {
+      case "success":
+        return { icon: "check-circle", color: "#10B981", bgColor: "#ECFDF5" };
+      case "error":
+        return {
+          icon: "exclamation-circle",
+          color: "#EF4444",
+          bgColor: "#FEF2F2",
+        };
+      case "warning":
+        return {
+          icon: "exclamation-triangle",
+          color: "#F59E0B",
+          bgColor: "#FFFBEB",
+        };
+      case "info":
+        return { icon: "info-circle", color: "#3B82F6", bgColor: "#EFF6FF" };
+      default:
+        return { icon: "info-circle", color: "#6B7280", bgColor: "#F9FAFB" };
+    }
+  };
+
+  const { icon, color, bgColor } = getIconAndColor();
+
+  if (!visible) return null;
+
+  return (
+    <Modal transparent visible={visible} animationType="none">
+      <Animated.View style={[customAlertStyles.overlay, { opacity: fadeAnim }]}>
+        <Animated.View
+          style={[
+            customAlertStyles.alertContainer,
+            { transform: [{ scale: scaleAnim }] },
+          ]}
+        >
+          <View
+            style={[
+              customAlertStyles.iconContainer,
+              { backgroundColor: bgColor },
+            ]}
+          >
+            <FontAwesome5 name={icon} size={wp(6)} color={color} />
+          </View>
+
+          <Text style={customAlertStyles.title}>{title}</Text>
+          <Text style={customAlertStyles.message}>{message}</Text>
+
+          <View style={customAlertStyles.buttonContainer}>
+            {buttons.map((button, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  customAlertStyles.button,
+                  button.style === "cancel" && customAlertStyles.cancelButton,
+                  button.style === "destructive" &&
+                    customAlertStyles.destructiveButton,
+                  buttons.length === 1 && customAlertStyles.singleButton,
+                ]}
+                onPress={() => {
+                  button.onPress?.();
+                  onClose();
+                }}
+              >
+                <Text
+                  style={[
+                    customAlertStyles.buttonText,
+                    button.style === "cancel" &&
+                      customAlertStyles.cancelButtonText,
+                    button.style === "destructive" &&
+                      customAlertStyles.destructiveButtonText,
+                  ]}
+                >
+                  {button.text}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </Animated.View>
+      </Animated.View>
+    </Modal>
+  );
+};
 
 interface RecordingInfo {
   sound?: Audio.Sound;
@@ -45,6 +186,49 @@ const AudioSection: React.FC<AudioSectionProps> = ({
   const [currentSound, setCurrentSound] = useState<Audio.Sound | null>(null);
   const [permissionResponse, requestPermission] = Audio.usePermissions();
   const fadeAnim = useRef(new Animated.Value(1)).current;
+
+  // Custom Alert State
+  const [alertConfig, setAlertConfig] = useState<{
+    visible: boolean;
+    type: "success" | "error" | "warning" | "info";
+    title: string;
+    message: string;
+    buttons: Array<{
+      text: string;
+      style?: "default" | "cancel" | "destructive";
+      onPress?: () => void;
+    }>;
+  }>({
+    visible: false,
+    type: "info",
+    title: "",
+    message: "",
+    buttons: [{ text: "OK", style: "default" }],
+  });
+
+  // Helper function to show custom alert
+  const showAlert = (
+    type: "success" | "error" | "warning" | "info",
+    title: string,
+    message: string,
+    buttons?: Array<{
+      text: string;
+      style?: "default" | "cancel" | "destructive";
+      onPress?: () => void;
+    }>
+  ) => {
+    setAlertConfig({
+      visible: true,
+      type,
+      title,
+      message,
+      buttons: buttons || [{ text: "OK", style: "default" }],
+    });
+  };
+
+  const hideAlert = () => {
+    setAlertConfig((prev) => ({ ...prev, visible: false }));
+  };
 
   // Cài đặt animation nhấp nháy cho chỉ báo ghi âm
   useEffect(() => {
@@ -94,7 +278,11 @@ const AudioSection: React.FC<AudioSectionProps> = ({
       if (!permissionResponse?.granted) {
         const permission = await requestPermission();
         if (!permission.granted) {
-          Alert.alert("Thông báo", "Cần quyền truy cập microphone để ghi âm");
+          showAlert(
+            "error",
+            "Notification",
+            "Need microphone access to record"
+          );
           return;
         }
       }
@@ -118,7 +306,7 @@ const AudioSection: React.FC<AudioSectionProps> = ({
       setRecording(recording);
     } catch (err) {
       console.error("Không thể bắt đầu ghi âm", err);
-      Alert.alert("Lỗi", "Không thể bắt đầu ghi âm");
+      showAlert("error", "Error", "Cannot start recording");
     }
   }
 
@@ -144,7 +332,7 @@ const AudioSection: React.FC<AudioSectionProps> = ({
       console.log("URI bản ghi âm vừa tạo:", uri);
 
       if (!uri) {
-        Alert.alert("Lỗi", "Không thể lưu bản ghi âm");
+        showAlert("error", "Error", "Cannot save recording");
         return;
       }
 
@@ -162,7 +350,7 @@ const AudioSection: React.FC<AudioSectionProps> = ({
       // Kiểm tra xem file có tồn tại không trước khi copy
       const fileInfo = await FileSystem.getInfoAsync(uri);
       if (!fileInfo.exists) {
-        throw new Error("File tạm thời không tồn tại");
+        throw new Error("Temporary file does not exist");
       }
 
       await FileSystem.copyAsync({
@@ -184,7 +372,7 @@ const AudioSection: React.FC<AudioSectionProps> = ({
           file: permanentUri,
           isPlaying: false,
           isPaused: false,
-          name: `Bản ghi ${recordings.length + 1}`,
+          name: `Recording ${recordings.length + 1}`,
         },
       ];
 
@@ -196,7 +384,7 @@ const AudioSection: React.FC<AudioSectionProps> = ({
       console.log("Kiểm tra tệp đã lưu:", permAccessInfo);
     } catch (error) {
       console.error("Lỗi khi lưu tệp ghi âm:", error);
-      Alert.alert("Lỗi", "Không thể lưu bản ghi âm");
+      showAlert("error", "Error", "Cannot save recording");
     }
   }
 
@@ -260,7 +448,7 @@ const AudioSection: React.FC<AudioSectionProps> = ({
       // Kiểm tra xem file có tồn tại không
       const fileInfo = await FileSystem.getInfoAsync(fileUri);
       if (!fileInfo.exists) {
-        throw new Error("File không tồn tại");
+        throw new Error("File does not exist");
       }
 
       // Tạo thư mục audio nếu chưa tồn tại
@@ -312,10 +500,10 @@ const AudioSection: React.FC<AudioSectionProps> = ({
         name: fileName,
       });
 
-      Alert.alert("Thành công", `Đã thêm file nhạc: ${fileName}`);
+      showAlert("success", "Success", `Added music: ${fileName}`);
     } catch (error) {
       console.error("Lỗi khi chọn file nhạc:", error);
-      Alert.alert("Lỗi", "Không thể thêm file nhạc");
+      showAlert("error", "Error", "Cannot add music");
     }
   }
 
@@ -354,7 +542,7 @@ const AudioSection: React.FC<AudioSectionProps> = ({
 
       if (!status.isLoaded) {
         console.error("Âm thanh không được tải: isLoaded = false");
-        Alert.alert("Lỗi", "Không thể tải âm thanh");
+        showAlert("error", "Error", "Cannot load sound");
         return;
       }
 
@@ -383,7 +571,7 @@ const AudioSection: React.FC<AudioSectionProps> = ({
       setupPlaybackEvents(newSound, index);
     } catch (error) {
       console.error("Lỗi khi phát âm thanh", error);
-      Alert.alert("Lỗi", "Không thể phát bản ghi âm");
+      showAlert("error", "Error", "Cannot play recording");
 
       // Đặt lại trạng thái khi có lỗi
       setRecordings((prevRecordings) =>
@@ -414,7 +602,7 @@ const AudioSection: React.FC<AudioSectionProps> = ({
       }
     } catch (error) {
       console.error("Lỗi khi tạm dừng âm thanh", error);
-      Alert.alert("Lỗi", "Không thể tạm dừng âm thanh");
+      showAlert("error", "Error", "Cannot pause recording");
     }
   }
 
@@ -435,7 +623,7 @@ const AudioSection: React.FC<AudioSectionProps> = ({
       }
     } catch (error) {
       console.error("Lỗi khi tiếp tục phát âm thanh", error);
-      Alert.alert("Lỗi", "Không thể tiếp tục phát âm thanh");
+      showAlert("error", "Error", "Cannot resume recording");
     }
   }
 
@@ -460,7 +648,7 @@ const AudioSection: React.FC<AudioSectionProps> = ({
       }
     } catch (error) {
       console.error("Lỗi khi dừng phát âm thanh", error);
-      Alert.alert("Lỗi", "Không thể dừng âm thanh");
+      showAlert("error", "Error", "Cannot stop playback");
     }
   }
 
@@ -545,14 +733,14 @@ const AudioSection: React.FC<AudioSectionProps> = ({
       // Xử lý tên file nhạc quá dài
       let itemTitle = "";
       if (isMusic) {
-        const originalName = recordingLine.name || `Nhạc #${index + 1}`;
+        const originalName = recordingLine.name || `Music #${index + 1}`;
         // Giới hạn tên file nhạc tối đa 25 ký tự
         itemTitle =
           originalName.length > 25
             ? originalName.substring(0, 22) + "..."
             : originalName;
       } else {
-        itemTitle = recordingLine.name || `Bản ghi #${index + 1}`;
+        itemTitle = recordingLine.name || `Recording #${index + 1}`;
       }
 
       return (
@@ -757,9 +945,104 @@ const AudioSection: React.FC<AudioSectionProps> = ({
           <View style={styles.recordingsList}>{getRecordingLines()}</View>
         </View>
       )}
+
+      {/* Custom Alert */}
+      <CustomAlert
+        visible={alertConfig.visible}
+        type={alertConfig.type}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        buttons={alertConfig.buttons}
+        onClose={hideAlert}
+      />
     </View>
   );
 };
+
+const customAlertStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: wp(5),
+  },
+  alertContainer: {
+    backgroundColor: "white",
+    borderRadius: wp(4),
+    padding: wp(6),
+    width: "100%",
+    maxWidth: wp(80),
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 10,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  iconContainer: {
+    width: wp(16),
+    height: wp(16),
+    borderRadius: wp(8),
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: hp(2),
+  },
+  title: {
+    fontSize: wp(5),
+    fontFamily: "Quicksand-Bold",
+    color: "#1F2937",
+    textAlign: "center",
+    marginBottom: hp(1),
+  },
+  message: {
+    fontSize: wp(3.8),
+    fontFamily: "Quicksand-Medium",
+    color: "#6B7280",
+    textAlign: "center",
+    lineHeight: wp(5.5),
+    marginBottom: hp(3),
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    width: "100%",
+    gap: wp(3),
+  },
+  button: {
+    flex: 1,
+    backgroundColor: "#32B768",
+    paddingVertical: hp(1.5),
+    paddingHorizontal: wp(4),
+    borderRadius: wp(3),
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  singleButton: {
+    flex: 1,
+  },
+  cancelButton: {
+    backgroundColor: "#F3F4F6",
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+  },
+  destructiveButton: {
+    backgroundColor: "#EF4444",
+  },
+  buttonText: {
+    fontSize: wp(4),
+    fontFamily: "Quicksand-SemiBold",
+    color: "white",
+  },
+  cancelButtonText: {
+    color: "#6B7280",
+  },
+  destructiveButtonText: {
+    color: "white",
+  },
+});
 
 const styles = StyleSheet.create({
   mediaSection: {

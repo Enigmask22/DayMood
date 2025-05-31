@@ -104,7 +104,13 @@ const FeelingRecord = ({
           style={[styles.button, { backgroundColor: buttonColor }]}
           onPress={handleViewRecord}
         >
-          <Text style={styles.buttonText}>{feeling}</Text>
+          <Text
+            style={[styles.buttonText, { paddingHorizontal: width * 0.02 }]}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {feeling}
+          </Text>
         </TouchableOpacity>
       </View>
 

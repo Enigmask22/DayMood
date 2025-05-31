@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   Dimensions,
   ActivityIndicator,
+  Animated,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { wp, hp } from "@/components/newemoji/utils";
@@ -31,6 +32,146 @@ import NoteCard from "@/components/carddetail/NoteCard";
 import ImagesGrid from "@/components/carddetail/ImagesGrid";
 import RecordingsList from "@/components/carddetail/RecordingsList";
 import MusicPlayer from "@/components/carddetail/MusicPlayer";
+
+// Custom Alert Component
+interface CustomAlertProps {
+  visible: boolean;
+  type: "success" | "error" | "warning" | "info";
+  title: string;
+  message: string;
+  buttons?: Array<{
+    text: string;
+    style?: "default" | "cancel" | "destructive";
+    onPress?: () => void;
+  }>;
+  onClose: () => void;
+}
+
+const CustomAlert: React.FC<CustomAlertProps> = ({
+  visible,
+  type,
+  title,
+  message,
+  buttons = [{ text: "OK", style: "default" }],
+  onClose,
+}) => {
+  const [fadeAnim] = useState(new Animated.Value(0));
+  const [scaleAnim] = useState(new Animated.Value(0.8));
+
+  useEffect(() => {
+    if (visible) {
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          tension: 100,
+          friction: 8,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 0.8,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [visible]);
+
+  const getIconAndColor = () => {
+    switch (type) {
+      case "success":
+        return { icon: "check-circle", color: "#10B981", bgColor: "#ECFDF5" };
+      case "error":
+        return {
+          icon: "exclamation-circle",
+          color: "#EF4444",
+          bgColor: "#FEF2F2",
+        };
+      case "warning":
+        return {
+          icon: "exclamation-triangle",
+          color: "#F59E0B",
+          bgColor: "#FFFBEB",
+        };
+      case "info":
+        return { icon: "info-circle", color: "#3B82F6", bgColor: "#EFF6FF" };
+      default:
+        return { icon: "info-circle", color: "#6B7280", bgColor: "#F9FAFB" };
+    }
+  };
+
+  const { icon, color, bgColor } = getIconAndColor();
+
+  if (!visible) return null;
+
+  return (
+    <Modal transparent visible={visible} animationType="none">
+      <Animated.View style={[customAlertStyles.overlay, { opacity: fadeAnim }]}>
+        <Animated.View
+          style={[
+            customAlertStyles.alertContainer,
+            { transform: [{ scale: scaleAnim }] },
+          ]}
+        >
+          <View
+            style={[
+              customAlertStyles.iconContainer,
+              { backgroundColor: bgColor },
+            ]}
+          >
+            <FontAwesome5 name={icon} size={wp(6)} color={color} />
+          </View>
+
+          <Text style={customAlertStyles.title}>{title}</Text>
+          <Text style={customAlertStyles.message}>{message}</Text>
+
+          <View style={customAlertStyles.buttonContainer}>
+            {buttons.map((button, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  customAlertStyles.button,
+                  button.style === "cancel" && customAlertStyles.cancelButton,
+                  button.style === "destructive" &&
+                    customAlertStyles.destructiveButton,
+                  buttons.length === 1 && customAlertStyles.singleButton,
+                ]}
+                onPress={() => {
+                  button.onPress?.();
+                  onClose();
+                }}
+              >
+                <Text
+                  style={[
+                    customAlertStyles.buttonText,
+                    button.style === "cancel" &&
+                      customAlertStyles.cancelButtonText,
+                    button.style === "destructive" &&
+                      customAlertStyles.destructiveButtonText,
+                  ]}
+                >
+                  {button.text}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </Animated.View>
+      </Animated.View>
+    </Modal>
+  );
+};
 
 // Map emoji IDs to emoji images
 const emojiMap: { [key: number]: any } = {
@@ -143,8 +284,12 @@ const ImageViewer = ({
 // Cập nhật ImagesGrid để hỗ trợ phóng to ảnh
 const EnhancedImagesGrid = ({ images }: { images: string[] }) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [loadingStates, setLoadingStates] = useState<{ [key: number]: boolean }>({});
-  const [errorStates, setErrorStates] = useState<{ [key: number]: boolean }>({});
+  const [loadingStates, setLoadingStates] = useState<{
+    [key: number]: boolean;
+  }>({});
+  const [errorStates, setErrorStates] = useState<{ [key: number]: boolean }>(
+    {}
+  );
 
   if (!images || images.length === 0) return null;
 
@@ -158,16 +303,16 @@ const EnhancedImagesGrid = ({ images }: { images: string[] }) => {
 
   // Handle image loading states
   const handleImageLoadStart = (index: number) => {
-    setLoadingStates(prev => ({ ...prev, [index]: true }));
+    setLoadingStates((prev) => ({ ...prev, [index]: true }));
   };
 
   const handleImageLoad = (index: number) => {
-    setLoadingStates(prev => ({ ...prev, [index]: false }));
+    setLoadingStates((prev) => ({ ...prev, [index]: false }));
   };
 
   const handleImageError = (index: number) => {
-    setLoadingStates(prev => ({ ...prev, [index]: false }));
-    setErrorStates(prev => ({ ...prev, [index]: true }));
+    setLoadingStates((prev) => ({ ...prev, [index]: false }));
+    setErrorStates((prev) => ({ ...prev, [index]: true }));
   };
 
   const getImageType = (uri: string) => {
@@ -193,21 +338,20 @@ const EnhancedImagesGrid = ({ images }: { images: string[] }) => {
                   <Text style={styles.loadingImageText}>Loading...</Text>
                 </View>
               )}
-              
+
               {/* Error overlay */}
               {errorStates[index] && (
                 <View style={styles.imageErrorOverlay}>
                   <Text style={styles.errorImageText}>Failed to load</Text>
-                  <Text style={styles.errorImageSubText}>{getImageType(imageUrl)}</Text>
+                  <Text style={styles.errorImageSubText}>
+                    {getImageType(imageUrl)}
+                  </Text>
                 </View>
               )}
-              
-              <Image 
-                source={{ uri: imageUrl }} 
-                style={[
-                  styles.image,
-                  errorStates[index] && styles.errorImage
-                ]} 
+
+              <Image
+                source={{ uri: imageUrl }}
+                style={[styles.image, errorStates[index] && styles.errorImage]}
                 onLoadStart={() => handleImageLoadStart(index)}
                 onLoad={() => handleImageLoad(index)}
                 onError={() => handleImageError(index)}
@@ -234,6 +378,49 @@ export default function CardDetailScreen() {
   const dateParam = params.date as string;
   const [user, setUser] = useState<any>(null);
 
+  // Custom Alert State
+  const [alertConfig, setAlertConfig] = useState<{
+    visible: boolean;
+    type: "success" | "error" | "warning" | "info";
+    title: string;
+    message: string;
+    buttons: Array<{
+      text: string;
+      style?: "default" | "cancel" | "destructive";
+      onPress?: () => void;
+    }>;
+  }>({
+    visible: false,
+    type: "info",
+    title: "",
+    message: "",
+    buttons: [{ text: "OK", style: "default" }],
+  });
+
+  // Helper function to show custom alert
+  const showAlert = (
+    type: "success" | "error" | "warning" | "info",
+    title: string,
+    message: string,
+    buttons?: Array<{
+      text: string;
+      style?: "default" | "cancel" | "destructive";
+      onPress?: () => void;
+    }>
+  ) => {
+    setAlertConfig({
+      visible: true,
+      type,
+      title,
+      message,
+      buttons: buttons || [{ text: "OK", style: "default" }],
+    });
+  };
+
+  const hideAlert = () => {
+    setAlertConfig((prev) => ({ ...prev, visible: false }));
+  };
+
   // Load user data on component mount
   useEffect(() => {
     const loadUser = async () => {
@@ -247,7 +434,11 @@ export default function CardDetailScreen() {
         }
       } catch (err) {
         console.error("Failed to load user data:", err);
-        Alert.alert("Error", "Please log in again to continue");
+        showAlert(
+          "error",
+          "Authentication Error",
+          "Please log in again to continue"
+        );
         router.push("/(auth)/login" as any);
       }
     };
@@ -378,15 +569,17 @@ export default function CardDetailScreen() {
 
             if (validRecordings.length === 0 && loadedRecordings.length > 0) {
               // Nếu không có bản ghi nào hợp lệ
-              Alert.alert(
-                "Thông báo",
-                "Không thể tải các bản ghi âm. Các file có thể đã bị xóa hoặc di chuyển."
+              showAlert(
+                "warning",
+                "Warning",
+                "Unable to load audio recordings. Files may have been deleted or moved."
               );
             } else if (validRecordings.length < loadedRecordings.length) {
               // Nếu chỉ một phần bản ghi hợp lệ
-              Alert.alert(
-                "Thông báo",
-                `Đã tải ${validRecordings.length}/${loadedRecordings.length} bản ghi âm. Một số file có thể đã bị xóa.`
+              showAlert(
+                "info",
+                "Info",
+                `Loaded ${validRecordings.length}/${loadedRecordings.length} audio recordings. Some files may have been deleted.`
               );
             }
 
@@ -399,7 +592,7 @@ export default function CardDetailScreen() {
         }
       } catch (error) {
         console.error("Lỗi khi tải dữ liệu bản ghi âm:", error);
-        Alert.alert("Lỗi", "Không thể tải dữ liệu bản ghi âm");
+        showAlert("error", "Error", "Unable to load audio recording data");
       }
     };
 
@@ -438,7 +631,7 @@ export default function CardDetailScreen() {
 
       if (!currentRecording) {
         console.log("Không tìm thấy bản ghi");
-        Alert.alert("Lỗi", "Không thể phát âm thanh");
+        showAlert("error", "Error", "Unable to play audio");
         return;
       }
 
@@ -447,7 +640,11 @@ export default function CardDetailScreen() {
       console.log("Kiểm tra file trước khi phát:", fileInfo);
 
       if (!fileInfo.exists) {
-        Alert.alert("Thông báo", "File âm thanh không tồn tại hoặc đã bị xóa");
+        showAlert(
+          "warning",
+          "Warning",
+          "Audio file does not exist or has been deleted"
+        );
         // Cập nhật lại danh sách recordings để loại bỏ file không tồn tại
         setRecordings((prev) => prev.filter((rec) => rec.id !== recording.id));
         return;
@@ -510,7 +707,7 @@ export default function CardDetailScreen() {
           setupPlaybackEvents(soundToPlay, recording);
         } catch (err) {
           console.error("Không thể tạo đối tượng sound:", err);
-          Alert.alert("Lỗi", "Không thể phát âm thanh");
+          showAlert("error", "Error", "Unable to play audio");
           return;
         }
       } else {
@@ -547,7 +744,7 @@ export default function CardDetailScreen() {
       }
     } catch (error) {
       console.error("Lỗi khi phát âm thanh:", error);
-      Alert.alert("Lỗi", "Không thể phát âm thanh");
+      showAlert("error", "Error", "Unable to play audio");
       setRecordings((prev) =>
         prev.map((rec) =>
           rec.id === recording.id
@@ -579,7 +776,7 @@ export default function CardDetailScreen() {
       }
     } catch (error) {
       console.error("Lỗi khi tạm dừng âm thanh:", error);
-      Alert.alert("Lỗi", "Không thể tạm dừng âm thanh");
+      showAlert("error", "Error", "Unable to pause audio");
     }
   };
 
@@ -599,19 +796,19 @@ export default function CardDetailScreen() {
           prev.map((rec) =>
             rec.id === recording.id
               ? {
-                ...rec,
-                isPlaying: false,
-                isPaused: false,
-                currentPosition: "00:00",
-                currentMillis: 0,
-              }
+                  ...rec,
+                  isPlaying: false,
+                  isPaused: false,
+                  currentPosition: "00:00",
+                  currentMillis: 0,
+                }
               : rec
           )
         );
       }
     } catch (error) {
       console.error("Lỗi khi dừng âm thanh:", error);
-      Alert.alert("Lỗi", "Không thể dừng âm thanh");
+      showAlert("error", "Error", "Unable to stop audio");
     }
   };
 
@@ -627,7 +824,7 @@ export default function CardDetailScreen() {
 
       if (!currentRecording || !currentRecording.sound) {
         console.log("Không tìm thấy bản ghi hoặc sound không tồn tại");
-        Alert.alert("Lỗi", "Không thể tiếp tục phát âm thanh");
+        showAlert("error", "Error", "Unable to resume audio playback");
         return;
       }
 
@@ -645,7 +842,7 @@ export default function CardDetailScreen() {
       );
     } catch (error) {
       console.error("Lỗi khi tiếp tục phát âm thanh:", error);
-      Alert.alert("Lỗi", "Không thể tiếp tục phát âm thanh");
+      showAlert("error", "Error", "Unable to resume audio playback");
     }
   };
 
@@ -668,10 +865,10 @@ export default function CardDetailScreen() {
           prev.map((rec) =>
             rec.id === recording.id
               ? {
-                ...rec,
-                currentMillis: currentMillis,
-                currentPosition: formattedPosition,
-              }
+                  ...rec,
+                  currentMillis: currentMillis,
+                  currentPosition: formattedPosition,
+                }
               : rec
           )
         );
@@ -684,12 +881,12 @@ export default function CardDetailScreen() {
           prev.map((rec) =>
             rec.id === recording.id
               ? {
-                ...rec,
-                isPlaying: false,
-                isPaused: false,
-                currentPosition: "00:00",
-                currentMillis: 0,
-              }
+                  ...rec,
+                  isPlaying: false,
+                  isPaused: false,
+                  currentPosition: "00:00",
+                  currentMillis: 0,
+                }
               : rec
           )
         );
@@ -794,12 +991,16 @@ export default function CardDetailScreen() {
   const handleBackToHome = async () => {
     try {
       if (!user || !user.id) {
-        Alert.alert("Error", "User information not found. Please log in again.");
+        showAlert(
+          "error",
+          "Error",
+          "User information not found. Please log in again."
+        );
         router.push("/(auth)/login" as any);
         return;
       }
       // Hiển thị loading alert
-      Alert.alert("Đang xử lý", "Đang lưu dữ liệu và tải lên file media...", [
+      showAlert("info", "Processing", "Saving data and uploading media...", [
         { text: "OK", style: "default" },
       ]);
 
@@ -834,9 +1035,9 @@ export default function CardDetailScreen() {
         console.log("Response text:", responseText);
         throw new Error(
           "Không thể tạo record. Status: " +
-          recordResponse.status +
-          " - " +
-          responseText
+            recordResponse.status +
+            " - " +
+            responseText
         );
       }
 
@@ -857,7 +1058,7 @@ export default function CardDetailScreen() {
               imageBase64,
               "image/jpeg",
               "images",
-              `user_${user.id}` 
+              `user_${user.id}`
             );
 
             console.log("File đã upload:", fileInfo);
@@ -892,7 +1093,7 @@ export default function CardDetailScreen() {
             const fileInfo = await uploadAudioFromUri(
               recording.uri,
               recording.isMusic ? "audio/mpeg" : "audio/m4a",
-              `user_${user.id}` 
+              `user_${user.id}`
             );
 
             // Lưu thông tin file vào database
@@ -917,18 +1118,20 @@ export default function CardDetailScreen() {
       }
 
       // Hiển thị thông báo thành công
-      Alert.alert("Thành công", "Đã lưu ghi chú và tải lên media thành công!", [
-        { text: "OK", style: "default" },
-      ]);
+      showAlert(
+        "success",
+        "Success",
+        "Saved note and uploaded media successfully!"
+      );
 
       // Điều hướng về trang chủ
       router.push("/(main)" as any);
     } catch (error) {
       console.error("Lỗi khi lưu dữ liệu:", error);
-      Alert.alert(
-        "Lỗi",
-        "Không thể lưu dữ liệu. Vui lòng thử lại sau. " + error,
-        [{ text: "OK", style: "cancel" }]
+      showAlert(
+        "error",
+        "Error",
+        "Failed to save data. Please try again later. " + error
       );
     }
   };
@@ -992,9 +1195,104 @@ export default function CardDetailScreen() {
           )} */}
         </View>
       </ScrollView>
+
+      {/* Custom Alert */}
+      <CustomAlert
+        visible={alertConfig.visible}
+        type={alertConfig.type}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        buttons={alertConfig.buttons}
+        onClose={hideAlert}
+      />
     </SafeAreaView>
   );
 }
+
+const customAlertStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: wp(5),
+  },
+  alertContainer: {
+    backgroundColor: "white",
+    borderRadius: wp(4),
+    padding: wp(6),
+    width: "100%",
+    maxWidth: wp(80),
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 10,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  iconContainer: {
+    width: wp(16),
+    height: wp(16),
+    borderRadius: wp(8),
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: hp(2),
+  },
+  title: {
+    fontSize: wp(5),
+    fontFamily: "Quicksand-Bold",
+    color: "#1F2937",
+    textAlign: "center",
+    marginBottom: hp(1),
+  },
+  message: {
+    fontSize: wp(3.8),
+    fontFamily: "Quicksand-Medium",
+    color: "#6B7280",
+    textAlign: "center",
+    lineHeight: wp(5.5),
+    marginBottom: hp(3),
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    width: "100%",
+    gap: wp(3),
+  },
+  button: {
+    flex: 1,
+    backgroundColor: "#32B768",
+    paddingVertical: hp(1.5),
+    paddingHorizontal: wp(4),
+    borderRadius: wp(3),
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  singleButton: {
+    flex: 1,
+  },
+  cancelButton: {
+    backgroundColor: "#F3F4F6",
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+  },
+  destructiveButton: {
+    backgroundColor: "#EF4444",
+  },
+  buttonText: {
+    fontSize: wp(4),
+    fontFamily: "Quicksand-SemiBold",
+    color: "white",
+  },
+  cancelButtonText: {
+    color: "#6B7280",
+  },
+  destructiveButtonText: {
+    color: "white",
+  },
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -1093,56 +1391,57 @@ const styles = StyleSheet.create({
     marginBottom: wp(1),
     borderRadius: wp(2),
     overflow: "hidden",
-  },  image: {
+  },
+  image: {
     width: "100%",
     height: "100%",
   },
 
   // Enhanced image grid styles
   imageItemContainer: {
-    position: 'relative',
-    width: '100%',
-    height: '100%',
+    position: "relative",
+    width: "100%",
+    height: "100%",
   },
   imageLoadingOverlay: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    justifyContent: "center",
+    alignItems: "center",
     zIndex: 2,
   },
   loadingImageText: {
     marginTop: 8,
     fontSize: wp(3),
-    color: '#666',
-    fontFamily: 'Quicksand-Medium',
+    color: "#666",
+    fontFamily: "Quicksand-Medium",
   },
   imageErrorOverlay: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(255, 0, 0, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(255, 0, 0, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
     zIndex: 2,
   },
   errorImageText: {
     fontSize: wp(3),
-    color: '#ff4444',
-    fontFamily: 'Quicksand-Bold',
-    textAlign: 'center',
+    color: "#ff4444",
+    fontFamily: "Quicksand-Bold",
+    textAlign: "center",
   },
   errorImageSubText: {
     fontSize: wp(2.5),
-    color: '#ff6666',
-    fontFamily: 'Quicksand-Regular',
-    textAlign: 'center',
+    color: "#ff6666",
+    fontFamily: "Quicksand-Regular",
+    textAlign: "center",
     marginTop: 4,
   },
   errorImage: {
