@@ -22,6 +22,7 @@ import MoodTooltip from './MoodTooltip';
 
 // Import types
 import { ChartWeekData, DayData, TooltipData, DailyMoodStat } from './types';
+import { selectTimezone } from '@/store/slices/timezoneSlice';
 
 const { width, height } = Dimensions.get('window');
 
@@ -61,7 +62,7 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
 
   // Redux store
   const { records } = useAppSelector((state) => state.records);
-
+  const timezone = useAppSelector(selectTimezone);
   // Process the API data into weekly charts data
   const processChartData = () => {
     if (!statistic || !statistic.monthly || !statistic.monthly.dailyMoodStats) {
@@ -329,7 +330,7 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
         const year = currentDate.getFullYear();
 
         const response = await fetch(
-          `${API_ENDPOINTS.RECORDS}/statistic/mood?user_id=${user.id}&month=${month}&year=${year}`
+          `${API_ENDPOINTS.RECORDS}/statistic/mood?user_id=${user.id}&month=${month}&year=${year}&timezone=${timezone}`,
         );
 
         const data = await response.json();

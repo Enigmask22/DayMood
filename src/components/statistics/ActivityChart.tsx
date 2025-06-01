@@ -24,54 +24,39 @@ const ActivityChart = ({
   // Activity name mappings for better display
   const activityDisplayNames: Record<string, string> = {
     "1": "Work",
-    "2": "Exercise",
-    "3": "Biking",
-    "4": "Music",
-    "5": "Dishes",
-    "6": "Reading",
-    "7": "Shopping",
-    "8": "Travel",
-    "9": "Study",
-    "10": "Gaming",
-    "11": "Cooking",
-    "12": "Cleaning",
-    "13": "Meditation",
-    "14": "Social",
-    "15": "Outdoors",
-    "Activity 1": "Work",
-    "Activity 2": "Exercise",
-    "Activity 3": "Biking",
-    "Activity 4": "Music",
-    "Activity 5": "Dishes",
-    "Activity 6": "Reading",
-    "Activity 7": "Shopping",
-    "Activity 8": "Travel",
-    "Activity 9": "Study",
-    "Activity 10": "Gaming",
-    "Activity 11": "Cooking",
-    "Activity 12": "Cleaning",
-    "Activity 13": "Meditation",
-    "Activity 14": "Social",
-    "Activity 15": "Outdoors",
+    "2": "Sport",
+    "3": "Walking",
+    "4": "Exercise",
+    "5": "Music",
+    "6": "Dishes",
+    "7": "Reading",
+    "8": "Study",
+    "9": "Sleep",
+    "10": "Camping",
+    "11": "Shopping",
+    "12": "Travel",
+    "13": "Chat",
+    "14": "Coffee",
+    "15": "Swimming",
   };
 
   // Fixed color mapping for activities with more distinct colors
   const activityColors: Record<string, string> = {
     Work: "#8c4A4A", // Dark Gray
-    Exercise: "#4CAF50", // Green
-    Biking: "#FF5722", // Deep Orange
-    Music: "#2196F3", // Blue
-    Dishes: "#F44336", // Red
-    Reading: "#9C27B0", // Purple
-    Shopping: "#FFB300", // Amber
-    Travel: "#00BCD4", // Cyan
-    Study: "#607D8B", // Blue Gray
-    Gaming: "#673AB7", // Deep Purple
-    Cooking: "#E91E63", // Pink
-    Cleaning: "#3F51B5", // Indigo
-    Meditation: "#009688", // Teal
-    Social: "#CDDC39", // Lime
-    Outdoors: "#8BC34A", // Light Green
+    Sport: "#4CAF50", // Green
+    Walking: "#FF5722", // Deep Orange
+    Excercise: "#2196F3", // Blue
+    Music: "#F44336", // Red
+    Dishes: "#9C27B0", // Purple
+    Reading: "#FFB300", // Amber
+    Study: "#00BCD4", // Cyan
+    Sleep: "#607D8B", // Blue Gray
+    Camping: "#673AB7", // Deep Purple
+    Shopping: "#E91E63", // Pink
+    Travel: "#3F51B5", // Indigo
+    Chat: "#009688", // Teal
+    Coffee: "#CDDC39", // Lime
+    Swimming: "#8BC34A", // Light Green
     Other: "#BDBDBD", // Light Gray
   };
 

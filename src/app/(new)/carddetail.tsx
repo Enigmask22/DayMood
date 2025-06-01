@@ -1244,7 +1244,7 @@ export default function CardDetailScreen() {
   console.log("loadedImages.length:", loadedImages.length);
   console.log("images.length:", images.length);
   console.log("hasImages:", cardData.hasImages);
-  console.log("loadedImages:", loadedImages);
+  //console.log("loadedImages:", loadedImages);
   console.log("imageLoading:", imageLoading);
   if (loadedImages.length > 0) {
     console.log("Sample loadedImage:", loadedImages[0]?.substring(0, 100) + "...");

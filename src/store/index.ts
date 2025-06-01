@@ -1,11 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import { recordSlice } from './slices/recordSlice';
+import timezoneReducer from './slices/timezoneSlice';
 
 // Configure Redux store
 export const store = configureStore({
   reducer: {
     records: recordSlice.reducer,
+    timezone: timezoneReducer,
   },
 });
 

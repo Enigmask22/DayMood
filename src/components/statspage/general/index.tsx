@@ -16,6 +16,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAppSelector } from "@/store";
 import { HOME_COLOR } from "@/utils/constant";
 import { API_URL } from "@/utils/config";
+import { selectTimezone } from "@/store/slices/timezoneSlice";
 const { height } = Dimensions.get("window");
 
 interface GeneralPageProps {
@@ -45,6 +46,7 @@ const GeneralPage: React.FC<GeneralPageProps> = ({
 
     // Get records from Redux store
     const { records } = useAppSelector((state) => state.records);
+    const timezone = useAppSelector(selectTimezone);;
 
     // Load user data and streaks on component mount
     useEffect(() => {
@@ -60,7 +62,7 @@ const GeneralPage: React.FC<GeneralPageProps> = ({
                     const month = currentDate.getMonth() + 1;
                     
                     const res = await fetch(
-                        `${API_URL}/api/v1/records/statistic/mood?user_id=${parsedUser.id}&month=${month}&year=${year}`,
+                        `${API_URL}/api/v1/records/statistic/mood?user_id=${parsedUser.id}&month=${month}&year=${year}&timezone=${timezone}`,
                         {
                             method: "GET",
                             headers: {
@@ -161,7 +163,7 @@ const GeneralPage: React.FC<GeneralPageProps> = ({
                 setDaysInMonth(daysInCurrentMonth);
 
                 // Fetch activity statistics using the user ID
-                const response = await fetchActivityStatistics(user.id, month, year);
+                const response = await fetchActivityStatistics(user.id, month, year,timezone);
 
                 if (response.statusCode === 200 && response.data?.monthly) {
                     const { activityData, dates } = response.data.monthly;

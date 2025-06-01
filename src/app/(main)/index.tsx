@@ -7,11 +7,18 @@ import MoodPromptCard from "src/components/homepage/MoodPromptCard";
 import { useAppSelector, useAppDispatch } from "src/store";
 import { fetchRecords } from "src/store/slices/recordSlice";
 import { useFocusEffect } from "expo-router";
+import { selectTimezone, selectOffsetString } from "src/store/slices/timezoneSlice";
 
 const { width, height } = Dimensions.get("window");
 const HomePage = () => {
   const dispatch = useAppDispatch();
   const { records, loading, error } = useAppSelector((state) => state.records);
+  // const timezone = useAppSelector(selectTimezone);
+  // const timezoneOffset = useAppSelector(selectOffsetString);
+
+  // useEffect(() => {
+  //   console.log(`Using timezone: ${timezone} (${timezoneOffset})`);
+  // }, [timezone, timezoneOffset]);
 
   // Sử dụng useFocusEffect thay vì useEffect để tải lại dữ liệu mỗi khi màn hình được focus
   useFocusEffect(

@@ -15,7 +15,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { store } from "src/store";
 import { Provider } from "react-redux";
 import 'stream-browserify';
-// Import the SystemBars APIs from react-native-edge-to-edge
+import { fetchDeviceTimezone } from '@/store/slices/timezoneSlice';
 import { SystemBars, SystemBarsEntry } from 'react-native-edge-to-edge';
 
 SplashScreen.preventAutoHideAsync();
@@ -34,6 +34,11 @@ const RootLayout = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const systemBarsEntry = useRef<SystemBarsEntry | null>(null);
+
+  useEffect(() => {
+    // Directly dispatch to the store - no hooks needed
+    store.dispatch(fetchDeviceTimezone());
+  }, []);
 
   useEffect(() => {
     const checkOnboardingStatus = async () => {

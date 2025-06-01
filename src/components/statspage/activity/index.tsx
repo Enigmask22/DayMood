@@ -14,6 +14,7 @@ import ActivityChart from "@/components/statistics/ActivityChart";
 import { fetchActivityStatistics } from "./datafetching";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAppSelector } from "@/store";
+import { selectTimezone } from "@/store/slices/timezoneSlice";
 const { height } = Dimensions.get("window");
 
 interface ActivityPageProps {
@@ -35,7 +36,10 @@ const ActivityPage = ({ currentDate, setCurrentDate }: ActivityPageProps) => {
   const [activityStats, setActivityStats] = useState<ActivityStats | null>(null);
   const [user, setUser] = useState<any>(null);
   const [hasRealData, setHasRealData] = useState<boolean>(false);
-  
+  const timezone = useAppSelector(selectTimezone);
+  useEffect(() => {
+      console.log(`Using timezone: ${timezone}`);
+    }, [timezone]);
   // Get records from Redux store
   const { records } = useAppSelector((state) => state.records);
 
@@ -70,7 +74,7 @@ const ActivityPage = ({ currentDate, setCurrentDate }: ActivityPageProps) => {
         const year = currentDate.getFullYear();
         
         // Fetch activity statistics using the user ID
-        const response = await fetchActivityStatistics(user.id, month, year);
+        const response = await fetchActivityStatistics(user.id, month, year, timezone);
         console.log("Fetched activity statistics:", response);
         
         if (response.statusCode === 200 && response.data?.monthly) {

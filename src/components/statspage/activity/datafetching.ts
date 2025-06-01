@@ -19,11 +19,12 @@ interface ActivityStatisticsResponse {
 export const fetchActivityStatistics = async (
   userId: string,
   month: number,
-  year: number
+  year: number,
+  timezone: string = 'UTC' // Default to UTC if timezone is not provided
 ): Promise<ActivityStatisticsResponse> => {
   try {
     const response = await fetch(
-      `${API_ENDPOINTS.RECORDS}/statistic/activity?user_id=${userId}&month=${month}&year=${year}`,
+      `${API_ENDPOINTS.RECORDS}/statistic/activity?user_id=${userId}&month=${month}&year=${year}&timezone=${timezone}`,
       {
         method: 'GET',
         headers: {
@@ -31,7 +32,7 @@ export const fetchActivityStatistics = async (
         },
       }
     );
-
+    console.log('Fetching activity statistics:', response);
     if (!response.ok) {
       throw new Error('Failed to fetch activity statistics');
     }

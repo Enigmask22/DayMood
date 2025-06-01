@@ -22,6 +22,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons, FontAwesome5, Ionicons } from '@expo/vector-icons';
 import { HOME_COLOR } from "@/utils/constant";
+import { useAppSelector } from "@/store";
+import { selectTimezone } from "@/store/slices/timezoneSlice";
 
 // Configure language
 LocaleConfig.locales["en"] = LocaleConfig.locales[""];
@@ -86,6 +88,7 @@ const CalendarPage = () => {
   const calendarTranslateY = useRef(new Animated.Value(20)).current;
   const summaryOpacity = useRef(new Animated.Value(0)).current;
   const summaryTranslateY = useRef(new Animated.Value(30)).current;
+  const timezone = useAppSelector(selectTimezone);
 
   // Fetch mood statistics from API
   const fetchMoodStatistics = async (month: number, year: number) => {
@@ -98,7 +101,7 @@ const CalendarPage = () => {
       }
       const userData = JSON.parse(user);
       const response = await fetch(
-        `${API_URL}/api/v1/records/statistic/mood?user_id=${userData.id}&month=${month}&year=${year}`,
+        `${API_URL}/api/v1/records/statistic/mood?user_id=${userData.id}&month=${month}&year=${year}&timezone=${timezone}`,
         {
           method: "GET",
           headers: {

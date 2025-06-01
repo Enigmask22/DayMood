@@ -108,7 +108,7 @@ export default function Login() {
 
   return (
     <>
-      <StatusBar backgroundColor={"#E0F1E6"} />
+      {/* <StatusBar backgroundColor={"#E0F1E6"} /> */}
       <View
         style={{
           height: height * 1.1,

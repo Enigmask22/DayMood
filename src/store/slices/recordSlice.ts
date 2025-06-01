@@ -55,7 +55,7 @@ export const fetchRecords = createAsyncThunk(
       }
 
       const data = await response.json();
-      console.log("Nhận được dữ liệu API:", JSON.stringify(data));
+      //console.log("Nhận được dữ liệu API:", JSON.stringify(data));
 
       // Kiểm tra cấu trúc dữ liệu
       if (
