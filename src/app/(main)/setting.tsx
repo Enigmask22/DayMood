@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Switch,
-  Alert,
   Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -15,6 +14,7 @@ import { HOME_COLOR } from "@/utils/constant";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Avatar from "@/components/settingpage/Avatar";
 import SettingOption from "@/components/settingpage/SettingOption";
+import CustomAlert from "@/components/common/CustomAlert";
 
 const { width, height } = Dimensions.get("window");
 const SettingPage = () => {
@@ -23,6 +23,49 @@ const SettingPage = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [dataSync, setDataSync] = useState(true);
+
+  // Custom Alert State
+  const [alertConfig, setAlertConfig] = useState<{
+    visible: boolean;
+    type: "success" | "error" | "warning" | "info";
+    title: string;
+    message: string;
+    buttons: Array<{
+      text: string;
+      style?: "default" | "cancel" | "destructive";
+      onPress?: () => void;
+    }>;
+  }>({
+    visible: false,
+    type: "info",
+    title: "",
+    message: "",
+    buttons: [{ text: "OK", style: "default" }],
+  });
+
+  // Helper function to show custom alert
+  const showAlert = (
+    type: "success" | "error" | "warning" | "info",
+    title: string,
+    message: string,
+    buttons?: Array<{
+      text: string;
+      style?: "default" | "cancel" | "destructive";
+      onPress?: () => void;
+    }>
+  ) => {
+    setAlertConfig({
+      visible: true,
+      type,
+      title,
+      message,
+      buttons: buttons || [{ text: "OK", style: "default" }],
+    });
+  };
+
+  const hideAlert = () => {
+    setAlertConfig((prev) => ({ ...prev, visible: false }));
+  };
 
   // Profile information
   const userProfile = {
@@ -48,7 +91,7 @@ const SettingPage = () => {
 
   // Logout handler
   const handleLogout = async () => {
-    Alert.alert("Logout", "Are you sure you want to logout?", [
+    showAlert("warning", "Logout", "Are you sure you want to logout?", [
       { text: "Cancel", style: "cancel" },
       {
         text: "Logout",
@@ -65,10 +108,10 @@ const SettingPage = () => {
             router.replace("/login");
           } catch (error) {
             console.error("Error during logout:", error);
-            Alert.alert(
+            showAlert(
+              "error",
               "Error",
-              "An error occurred during logout. Please try again.",
-              [{ text: "OK" }]
+              "An error occurred during logout. Please try again."
             );
           }
         },
@@ -90,159 +133,178 @@ const SettingPage = () => {
   };
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Profile Section */}
-      <View style={styles.profileContainer}>
-        <Avatar 
-          size={80} 
-          source={{ uri: "https://randomuser.me/api/portraits/people/42.jpg" }}
-        />
-        <View style={styles.profileInfo}>
-          <Text style={styles.profileName}>{userProfile.name}</Text>
-          <Text style={styles.profileEmail}>{userProfile.email}</Text>
-          <View style={styles.membershipBadge}>
-            <Ionicons name="star" size={12} color={HOME_COLOR.HOMETABBAR} />
-            <Text style={styles.membershipText}>{userProfile.level}</Text>
+    <>
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+        {/* Profile Section */}
+        <View style={styles.profileContainer}>
+          <Avatar
+            size={80}
+            source={{
+              uri: "https://randomuser.me/api/portraits/people/42.jpg",
+            }}
+          />
+          <View style={styles.profileInfo}>
+            <Text style={styles.profileName}>{userProfile.name}</Text>
+            <Text style={styles.profileEmail}>{userProfile.email}</Text>
+            <View style={styles.membershipBadge}>
+              <Ionicons name="star" size={12} color={HOME_COLOR.HOMETABBAR} />
+              <Text style={styles.membershipText}>{userProfile.level}</Text>
+            </View>
           </View>
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={() => router.push("/")}
+          >
+            <Text style={styles.editButtonText}>Edit</Text>
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          style={styles.editButton}
-          onPress={() => router.push("/")}
-        >
-          <Text style={styles.editButtonText}>Edit</Text>
+
+        {/* Account Settings */}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>Account</Text>
+          <SettingOption
+            icon="person-outline"
+            title="Personal Information"
+            onPress={() => router.push("/")}
+            showChevron
+          />
+          <SettingOption
+            icon="notifications-outline"
+            title="Notifications"
+            rightElement={
+              <Switch
+                value={notificationsEnabled}
+                onValueChange={setNotificationsEnabled}
+                trackColor={{ false: "#D1D1D6", true: HOME_COLOR.HOMESTATUS1 }}
+                thumbColor={
+                  notificationsEnabled ? HOME_COLOR.HOMETABBAR : "#F4F3F4"
+                }
+              />
+            }
+          />
+          <SettingOption
+            icon="lock-closed-outline"
+            title="Privacy & Security"
+            onPress={() => router.push("/")}
+            showChevron
+          />
+        </View>
+
+        {/* Preferences */}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>Preferences</Text>
+          <SettingOption
+            icon="moon-outline"
+            title="Dark Mode"
+            rightElement={
+              <Switch
+                value={darkMode}
+                onValueChange={toggleDarkMode}
+                trackColor={{ false: "#D1D1D6", true: HOME_COLOR.HOMESTATUS1 }}
+                thumbColor={darkMode ? HOME_COLOR.HOMETABBAR : "#F4F3F4"}
+              />
+            }
+          />
+          <SettingOption
+            icon="language-outline"
+            title="Language"
+            subtitle={
+              languages.find((l) => l.code === selectedLanguage)?.name ||
+              "English"
+            }
+            onPress={() => router.push("/")}
+            showChevron
+          />
+          <SettingOption
+            icon="color-palette-outline"
+            title="Appearance"
+            onPress={() => router.push("/")}
+            showChevron
+          />
+          <SettingOption
+            icon="volume-high-outline"
+            title="Sounds"
+            rightElement={
+              <Switch
+                value={soundEnabled}
+                onValueChange={setSoundEnabled}
+                trackColor={{ false: "#D1D1D6", true: HOME_COLOR.HOMESTATUS1 }}
+                thumbColor={soundEnabled ? HOME_COLOR.HOMETABBAR : "#F4F3F4"}
+              />
+            }
+          />
+        </View>
+
+        {/* Data Management */}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>Data</Text>
+          <SettingOption
+            icon="cloud-upload-outline"
+            title="Sync Data"
+            subtitle="Last synced: Today, 10:45 AM"
+            rightElement={
+              <Switch
+                value={dataSync}
+                onValueChange={setDataSync}
+                trackColor={{ false: "#D1D1D6", true: HOME_COLOR.HOMESTATUS1 }}
+                thumbColor={dataSync ? HOME_COLOR.HOMETABBAR : "#F4F3F4"}
+              />
+            }
+          />
+          <SettingOption
+            icon="download-outline"
+            title="Export Your Data"
+            onPress={() => router.push("/")}
+            showChevron
+          />
+        </View>
+
+        {/* Support and About */}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>Support</Text>
+          <SettingOption
+            icon="help-circle-outline"
+            title="Help Center"
+            onPress={() => router.push("/")}
+            showChevron
+          />
+          <SettingOption
+            icon="information-circle-outline"
+            title="About DayMood"
+            subtitle="Version 1.2.3"
+            onPress={() => router.push("/")}
+            showChevron
+          />
+          <SettingOption
+            icon="chatbox-ellipses-outline"
+            title="Feedback"
+            onPress={() => router.push("/")}
+            showChevron
+          />
+        </View>
+
+        {/* Logout Button */}
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Ionicons name="log-out-outline" size={20} color="#FF3B30" />
+          <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
-      </View>
 
-      {/* Account Settings */}
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>Account</Text>
-        <SettingOption
-          icon="person-outline"
-          title="Personal Information"
-          onPress={() => router.push("/")}
-          showChevron
-        /> 
-        <SettingOption
-          icon="notifications-outline"
-          title="Notifications"
-          rightElement={
-            <Switch
-              value={notificationsEnabled}
-              onValueChange={setNotificationsEnabled}
-              trackColor={{ false: "#D1D1D6", true: HOME_COLOR.HOMESTATUS1 }}
-              thumbColor={notificationsEnabled ? HOME_COLOR.HOMETABBAR : "#F4F3F4"}
-            />
-          }
-        />
-        <SettingOption
-          icon="lock-closed-outline"
-          title="Privacy & Security"
-          onPress={() => router.push("/")}
-          showChevron
-        />
-      </View>
+        {/* Footer with copyright */}
+        <Text style={styles.copyrightText}>
+          © {new Date().getFullYear()} DayMood App. All rights reserved.
+        </Text>
+      </ScrollView>
 
-      {/* Preferences */}
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>Preferences</Text>
-        <SettingOption
-          icon="moon-outline"
-          title="Dark Mode"
-          rightElement={
-            <Switch
-              value={darkMode}
-              onValueChange={toggleDarkMode}
-              trackColor={{ false: "#D1D1D6", true: HOME_COLOR.HOMESTATUS1 }}
-              thumbColor={darkMode ? HOME_COLOR.HOMETABBAR : "#F4F3F4"}
-            />
-          }
-        />
-        <SettingOption
-          icon="language-outline"
-          title="Language"
-          subtitle={languages.find(l => l.code === selectedLanguage)?.name || "English"}
-          onPress={() => router.push("/")}
-          showChevron
-        />
-        <SettingOption
-          icon="color-palette-outline"
-          title="Appearance"
-          onPress={() => router.push("/")}
-          showChevron
-        />
-        <SettingOption
-          icon="volume-high-outline"
-          title="Sounds"
-          rightElement={
-            <Switch
-              value={soundEnabled}
-              onValueChange={setSoundEnabled}
-              trackColor={{ false: "#D1D1D6", true: HOME_COLOR.HOMESTATUS1 }}
-              thumbColor={soundEnabled ? HOME_COLOR.HOMETABBAR : "#F4F3F4"}
-            />
-          }
-        />
-      </View>
-
-      {/* Data Management */}
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>Data</Text>
-        <SettingOption
-          icon="cloud-upload-outline"
-          title="Sync Data"
-          subtitle="Last synced: Today, 10:45 AM"
-          rightElement={
-            <Switch
-              value={dataSync}
-              onValueChange={setDataSync}
-              trackColor={{ false: "#D1D1D6", true: HOME_COLOR.HOMESTATUS1 }}
-              thumbColor={dataSync ? HOME_COLOR.HOMETABBAR : "#F4F3F4"}
-            />
-          }
-        />
-        <SettingOption
-          icon="download-outline"
-          title="Export Your Data"
-          onPress={() => router.push("/")}
-          showChevron
-        />
-      </View>
-
-      {/* Support and About */}
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>Support</Text>
-        <SettingOption
-          icon="help-circle-outline"
-          title="Help Center"
-          onPress={() => router.push("/")}
-          showChevron
-        />
-        <SettingOption
-          icon="information-circle-outline"
-          title="About DayMood"
-          subtitle="Version 1.2.3"
-          onPress={() => router.push("/")}
-          showChevron
-        />
-        <SettingOption
-          icon="chatbox-ellipses-outline"
-          title="Feedback"
-          onPress={() => router.push("/")}
-          showChevron
-        />
-      </View>
-
-      {/* Logout Button */}
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Ionicons name="log-out-outline" size={20} color="#FF3B30" />
-        <Text style={styles.logoutText}>Log Out</Text>
-      </TouchableOpacity>
-
-      {/* Footer with copyright */}
-      <Text style={styles.copyrightText}>
-        © {new Date().getFullYear()} DayMood App. All rights reserved.
-      </Text>
-    </ScrollView>
+      {/* Custom Alert */}
+      <CustomAlert
+        visible={alertConfig.visible}
+        type={alertConfig.type}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        buttons={alertConfig.buttons}
+        onClose={hideAlert}
+      />
+    </>
   );
 };
 
@@ -347,7 +409,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 12,
     color: "#999",
-    paddingBottom: height*0.08,
+    paddingBottom: height * 0.08,
   },
 });
 

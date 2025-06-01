@@ -4,7 +4,7 @@ import InputUserNameBox from "@/components/authpage/InputUserNameBox";
 import { API_URL } from "@/utils/config";
 import { Ionicons } from "@expo/vector-icons";
 import { Redirect, useRouter } from "expo-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ScrollView,
   StatusBar,
@@ -29,7 +29,9 @@ export default function Register() {
     title: "",
     message: "",
     type: "info" as "success" | "error" | "info",
-    onConfirm: () => {},
+    buttons: [{ text: "OK", style: "default" as const }],
+    autoDismiss: false,
+    tapToDismiss: false,
   });
 
   const showAlert = (
@@ -38,16 +40,33 @@ export default function Register() {
     type: "success" | "error" | "info",
     onConfirm?: () => void
   ) => {
+    const isSuccess = type === "success";
+    const buttons =
+      onConfirm && !isSuccess
+        ? [{ text: "OK", style: "default" as const, onPress: onConfirm }]
+        : [{ text: "OK", style: "default" as const }];
+
     setAlertConfig({
       visible: true,
       title,
       message,
       type,
-      onConfirm:
-        onConfirm ||
-        (() => setAlertConfig((prev) => ({ ...prev, visible: false }))),
+      buttons,
+      autoDismiss: isSuccess,
+      tapToDismiss: true,
     });
   };
+
+  // Auto navigation for success alert
+  useEffect(() => {
+    if (alertConfig.visible && alertConfig.type === "success") {
+      const timer = setTimeout(() => {
+        router.replace("/login");
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [alertConfig.visible, alertConfig.type]);
 
   const handleReturnToLogin = () => {
     router.back();
@@ -82,11 +101,7 @@ export default function Register() {
         showAlert(
           "Success",
           "Registration successful! Please login to continue.",
-          "success",
-          () => {
-            setAlertConfig((prev) => ({ ...prev, visible: false }));
-            router.replace("/login");
-          }
+          "success"
         );
       } else {
         showAlert(
@@ -170,9 +185,10 @@ export default function Register() {
         title={alertConfig.title}
         message={alertConfig.message}
         type={alertConfig.type}
+        buttons={alertConfig.buttons}
+        autoDismiss={alertConfig.autoDismiss}
+        tapToDismiss={alertConfig.tapToDismiss}
         onClose={() => setAlertConfig((prev) => ({ ...prev, visible: false }))}
-        onConfirm={alertConfig.onConfirm}
-        showConfirmButton={alertConfig.type === "success"}
       />
     </ScrollView>
   );

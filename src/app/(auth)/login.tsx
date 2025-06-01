@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -30,7 +30,9 @@ export default function Login() {
     title: "",
     message: "",
     type: "info" as "success" | "error" | "info",
-    onConfirm: () => {},
+    buttons: [{ text: "OK", style: "default" as const }],
+    autoDismiss: false,
+    tapToDismiss: false,
   });
 
   const showAlert = (
@@ -39,16 +41,33 @@ export default function Login() {
     type: "success" | "error" | "info",
     onConfirm?: () => void
   ) => {
+    const isSuccess = type === "success";
+    const buttons =
+      onConfirm && !isSuccess
+        ? [{ text: "OK", style: "default" as const, onPress: onConfirm }]
+        : [{ text: "OK", style: "default" as const }];
+
     setAlertConfig({
       visible: true,
       title,
       message,
       type,
-      onConfirm:
-        onConfirm ||
-        (() => setAlertConfig((prev) => ({ ...prev, visible: false }))),
+      buttons,
+      autoDismiss: isSuccess,
+      tapToDismiss: true,
     });
   };
+
+  // Auto navigation for success alert
+  useEffect(() => {
+    if (alertConfig.visible && alertConfig.type === "success") {
+      const timer = setTimeout(() => {
+        router.push("/(main)");
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [alertConfig.visible, alertConfig.type]);
 
   const handleCheckboxPress = () => {
     setChecked((prev) => !prev);
@@ -78,17 +97,14 @@ export default function Login() {
       if (data.statusCode === 201) {
         await AsyncStorage.setItem("access_token", data.data.access_token);
         await AsyncStorage.setItem("user", JSON.stringify(data.data.user));
-        
+
         const cookies = response.headers.get("set-cookie");
         if (cookies) {
           const refreshToken = cookies.split(";")[0].split("=")[1];
           await AsyncStorage.setItem("refresh_token", refreshToken);
         }
 
-        showAlert("Success", "Login successful!", "success", () => {
-          setAlertConfig((prev) => ({ ...prev, visible: false }));
-          router.push("/(main)");
-        });
+        showAlert("Success", "Login successful!", "success");
       } else {
         showAlert(
           "Error",
@@ -216,9 +232,10 @@ export default function Login() {
         title={alertConfig.title}
         message={alertConfig.message}
         type={alertConfig.type}
+        buttons={alertConfig.buttons}
+        autoDismiss={alertConfig.autoDismiss}
+        tapToDismiss={alertConfig.tapToDismiss}
         onClose={() => setAlertConfig((prev) => ({ ...prev, visible: false }))}
-        onConfirm={alertConfig.onConfirm}
-        showConfirmButton={alertConfig.type === "success"}
       />
     </>
   );

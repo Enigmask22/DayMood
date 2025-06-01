@@ -1,110 +1,177 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   Modal,
   StyleSheet,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   Dimensions,
   Animated,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
+import { wp, hp } from "@/components/newemoji/utils";
 
 const { width, height } = Dimensions.get("window");
 
 interface CustomAlertProps {
   visible: boolean;
+  type: "success" | "error" | "warning" | "info";
   title: string;
   message: string;
-  type?: "success" | "error" | "info";
+  buttons?: Array<{
+    text: string;
+    style?: "default" | "cancel" | "destructive";
+    onPress?: () => void;
+  }>;
   onClose: () => void;
-  onConfirm?: () => void;
-  showConfirmButton?: boolean;
+  autoDismiss?: boolean;
+  autoDismissTime?: number;
+  tapToDismiss?: boolean;
 }
 
-const CustomAlert = ({
+const CustomAlert: React.FC<CustomAlertProps> = ({
   visible,
+  type,
   title,
   message,
-  type = "info",
+  buttons = [{ text: "OK", style: "default" }],
   onClose,
-  onConfirm,
-  showConfirmButton = false,
-}: CustomAlertProps) => {
-  const getIconName = () => {
+  autoDismiss = false,
+  autoDismissTime = 2000,
+  tapToDismiss = false,
+}) => {
+  const [fadeAnim] = useState(new Animated.Value(0));
+  const [scaleAnim] = useState(new Animated.Value(0.8));
+
+  useEffect(() => {
+    if (visible) {
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          tension: 100,
+          friction: 8,
+          useNativeDriver: true,
+        }),
+      ]).start();
+
+      // Auto dismiss functionality
+      if (autoDismiss) {
+        const timer = setTimeout(() => {
+          onClose();
+        }, autoDismissTime);
+
+        return () => clearTimeout(timer);
+      }
+    } else {
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 0.8,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [visible, autoDismiss, autoDismissTime]);
+
+  const getIconAndColor = () => {
     switch (type) {
       case "success":
-        return "checkmark-circle";
+        return { icon: "check-circle", color: "#10B981", bgColor: "#ECFDF5" };
       case "error":
-        return "close-circle";
+        return {
+          icon: "exclamation-circle",
+          color: "#EF4444",
+          bgColor: "#FEF2F2",
+        };
+      case "warning":
+        return {
+          icon: "exclamation-triangle",
+          color: "#F59E0B",
+          bgColor: "#FFFBEB",
+        };
+      case "info":
+        return { icon: "info-circle", color: "#3B82F6", bgColor: "#EFF6FF" };
       default:
-        return "information-circle";
+        return { icon: "info-circle", color: "#6B7280", bgColor: "#F9FAFB" };
     }
   };
 
-  const getIconColor = () => {
-    switch (type) {
-      case "success":
-        return "#16A34A";
-      case "error":
-        return "#DC2626";
-      default:
-        return "#3B82F6";
-    }
-  };
+  const { icon, color, bgColor } = getIconAndColor();
 
-  const getBackgroundColor = () => {
-    switch (type) {
-      case "success":
-        return "#DCFCE7";
-      case "error":
-        return "#FEE2E2";
-      default:
-        return "#DBEAFE";
+  if (!visible) return null;
+
+  const handleOverlayPress = () => {
+    if (tapToDismiss) {
+      onClose();
     }
   };
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
-    >
-      <View style={styles.overlay}>
-        <View
-          style={[
-            styles.alertContainer,
-            { backgroundColor: getBackgroundColor() },
-          ]}
-        >
-          <View style={styles.iconContainer}>
-            <Ionicons name={getIconName()} size={40} color={getIconColor()} />
-          </View>
-
-          <Text style={styles.title}>{title}</Text>
-          <Text style={styles.message}>{message}</Text>
-
-          <View style={styles.buttonContainer}>
-            {showConfirmButton && onConfirm && (
-              <TouchableOpacity
-                style={[styles.button, styles.confirmButton]}
-                onPress={onConfirm}
-              >
-                <Text style={styles.buttonText}>OK</Text>
-              </TouchableOpacity>
-            )}
-            <TouchableOpacity
-              style={[styles.button, styles.closeButton]}
-              onPress={onClose}
+    <Modal transparent visible={visible} animationType="none">
+      <TouchableWithoutFeedback onPress={handleOverlayPress}>
+        <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
+          <TouchableWithoutFeedback onPress={() => {}}>
+            <Animated.View
+              style={[
+                styles.alertContainer,
+                { transform: [{ scale: scaleAnim }] },
+              ]}
             >
-              <Text style={styles.closeButtonText}>
-                {showConfirmButton ? "Cancel" : "OK"}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
+              <View
+                style={[styles.iconContainer, { backgroundColor: bgColor }]}
+              >
+                <FontAwesome5 name={icon} size={wp(6)} color={color} />
+              </View>
+
+              <Text style={styles.title}>{title}</Text>
+              <Text style={styles.message}>{message}</Text>
+
+              {!autoDismiss && (
+                <View style={styles.buttonContainer}>
+                  {buttons.map((button, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      style={[
+                        styles.button,
+                        button.style === "cancel" && styles.cancelButton,
+                        button.style === "destructive" &&
+                          styles.destructiveButton,
+                        buttons.length === 1 && styles.singleButton,
+                      ]}
+                      onPress={() => {
+                        button.onPress?.();
+                        onClose();
+                      }}
+                    >
+                      <Text
+                        style={[
+                          styles.buttonText,
+                          button.style === "cancel" && styles.cancelButtonText,
+                          button.style === "destructive" &&
+                            styles.destructiveButtonText,
+                        ]}
+                      >
+                        {button.text}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </Animated.View>
+          </TouchableWithoutFeedback>
+        </Animated.View>
+      </TouchableWithoutFeedback>
     </Modal>
   );
 };
@@ -115,66 +182,82 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "center",
     alignItems: "center",
+    padding: wp(5),
   },
   alertContainer: {
-    width: width * 0.85,
-    borderRadius: 20,
-    padding: 20,
+    backgroundColor: "white",
+    borderRadius: wp(4),
+    padding: wp(6),
+    width: "100%",
+    maxWidth: wp(80),
     alignItems: "center",
-    elevation: 5,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 10,
     },
     shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowRadius: 20,
+    elevation: 10,
   },
   iconContainer: {
-    marginBottom: 15,
+    width: wp(16),
+    height: wp(16),
+    borderRadius: wp(8),
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: hp(2),
   },
   title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 10,
-    textAlign: "center",
+    fontSize: wp(5),
+    fontFamily: "Quicksand-Bold",
     color: "#1F2937",
+    textAlign: "center",
+    marginBottom: hp(1),
   },
   message: {
-    fontSize: 16,
+    fontSize: wp(3.8),
+    fontFamily: "Quicksand-Medium",
+    color: "#6B7280",
     textAlign: "center",
-    marginBottom: 20,
-    color: "#4B5563",
-    lineHeight: 22,
+    lineHeight: wp(5.5),
+    marginBottom: hp(3),
   },
   buttonContainer: {
     flexDirection: "row",
-    justifyContent: "center",
     width: "100%",
-    gap: 10,
+    gap: wp(3),
   },
   button: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    minWidth: 100,
+    flex: 1,
+    backgroundColor: "#32B768",
+    paddingVertical: hp(1.5),
+    paddingHorizontal: wp(4),
+    borderRadius: wp(3),
     alignItems: "center",
+    justifyContent: "center",
   },
-  confirmButton: {
-    backgroundColor: "#16A34A",
+  singleButton: {
+    flex: 1,
   },
-  closeButton: {
+  cancelButton: {
     backgroundColor: "#F3F4F6",
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+  },
+  destructiveButton: {
+    backgroundColor: "#EF4444",
   },
   buttonText: {
+    fontSize: wp(4),
+    fontFamily: "Quicksand-SemiBold",
     color: "white",
-    fontSize: 16,
-    fontWeight: "600",
   },
-  closeButtonText: {
-    color: "#4B5563",
-    fontSize: 16,
-    fontWeight: "600",
+  cancelButtonText: {
+    color: "#6B7280",
+  },
+  destructiveButtonText: {
+    color: "white",
   },
 });
 
