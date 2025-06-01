@@ -26,14 +26,28 @@
       },
       "enableEdgeToEdge": false,
       "package": "com.dkdh.DayMood",
-      "permissions": ["INTERNET"]
+      "permissions": [
+        "INTERNET"
+      ]
     },
     "web": {
       "bundler": "metro",
       "output": "static",
       "favicon": "./src/assets/images/react_temp/favicon.png"
     },
-    "plugins": ["expo-router", "expo-font", "react-native-edge-to-edge"],
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "react-native-edge-to-edge",
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "react-native",
+          "organization": "enigmas-x5"
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true
     },

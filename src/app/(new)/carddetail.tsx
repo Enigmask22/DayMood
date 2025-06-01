@@ -24,6 +24,7 @@ import { ACTIVITIES } from "@/utils/constant";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import { API_ENDPOINTS, DEFAULT_USER_ID } from "@/utils/config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Sentry from "@sentry/react-native";
 
 // Import các component đã tách
 import DateTimeHeader from "@/components/carddetail/DateTimeHeader";
@@ -145,7 +146,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
                   customAlertStyles.button,
                   button.style === "cancel" && customAlertStyles.cancelButton,
                   button.style === "destructive" &&
-                  customAlertStyles.destructiveButton,
+                    customAlertStyles.destructiveButton,
                   buttons.length === 1 && customAlertStyles.singleButton,
                 ]}
                 onPress={() => {
@@ -157,9 +158,9 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
                   style={[
                     customAlertStyles.buttonText,
                     button.style === "cancel" &&
-                    customAlertStyles.cancelButtonText,
+                      customAlertStyles.cancelButtonText,
                     button.style === "destructive" &&
-                    customAlertStyles.destructiveButtonText,
+                      customAlertStyles.destructiveButtonText,
                   ]}
                 >
                   {button.text}
@@ -289,7 +290,8 @@ const EnhancedImagesGrid = ({ images }: { images: string[] }) => {
   }>({});
   const [errorStates, setErrorStates] = useState<{ [key: number]: boolean }>(
     {}
-  ); console.log("=== EnhancedImagesGrid DEBUG ===");
+  );
+  console.log("=== EnhancedImagesGrid DEBUG ===");
   //console.log("Received images array:", images);
   console.log("Images length:", images?.length || 0);
   console.log("First image sample:", images?.[0]?.substring(0, 100) + "...");
@@ -501,7 +503,11 @@ export default function CardDetailScreen() {
           for (let i = 0; i < imageRefs.length; i++) {
             const filePath = imageRefs[i]; // The ref IS the file path directly
             try {
-              console.log(`Processing image file ${i + 1}/${imageRefs.length}: ${filePath}`);
+              console.log(
+                `Processing image file ${i + 1}/${
+                  imageRefs.length
+                }: ${filePath}`
+              );
 
               // Check if file exists
               const fileInfo = await FileSystem.getInfoAsync(filePath);
@@ -510,13 +516,18 @@ export default function CardDetailScreen() {
               if (fileInfo.exists) {
                 // Read the file content
                 const base64 = await FileSystem.readAsStringAsync(filePath, {
-                  encoding: FileSystem.EncodingType.Base64
+                  encoding: FileSystem.EncodingType.Base64,
                 });
 
                 // Add data URL prefix back for display
                 const imageDataUrl = `data:image/jpeg;base64,${base64}`;
                 loadedImages.push(imageDataUrl);
-                console.log(`Successfully loaded image ${i + 1}: ${imageDataUrl.substring(0, 50)}...`);
+                console.log(
+                  `Successfully loaded image ${i + 1}: ${imageDataUrl.substring(
+                    0,
+                    50
+                  )}...`
+                );
               } else {
                 console.log(`File doesn't exist: ${filePath}`);
               }
@@ -526,7 +537,9 @@ export default function CardDetailScreen() {
           }
 
           console.log(`=== Image loading complete ===`);
-          console.log(`Successfully loaded ${loadedImages.length} of ${imageRefs.length} images`);
+          console.log(
+            `Successfully loaded ${loadedImages.length} of ${imageRefs.length} images`
+          );
           console.log("Final loaded images array:", loadedImages);
 
           // Set both state variables
@@ -549,7 +562,9 @@ export default function CardDetailScreen() {
       } catch (error: any) {
         console.error(`Error loading images: ${error.message}`);
       } finally {
-        console.log("Image loading process finished, setting imageLoading to false");
+        console.log(
+          "Image loading process finished, setting imageLoading to false"
+        );
         setImageLoading(false);
       }
     };
@@ -570,7 +585,9 @@ export default function CardDetailScreen() {
             try {
               const fileInfo = await FileSystem.getInfoAsync(filePath);
               if (fileInfo.exists) {
-                console.log(`Cleaning up temporary file: ${filePath.substring(0, 30)}...`);
+                console.log(
+                  `Cleaning up temporary file: ${filePath.substring(0, 30)}...`
+                );
                 await FileSystem.deleteAsync(filePath);
               }
             } catch (err) {
@@ -894,12 +911,12 @@ export default function CardDetailScreen() {
           prev.map((rec) =>
             rec.id === recording.id
               ? {
-                ...rec,
-                isPlaying: false,
-                isPaused: false,
-                currentPosition: "00:00",
-                currentMillis: 0,
-              }
+                  ...rec,
+                  isPlaying: false,
+                  isPaused: false,
+                  currentPosition: "00:00",
+                  currentMillis: 0,
+                }
               : rec
           )
         );
@@ -963,10 +980,10 @@ export default function CardDetailScreen() {
           prev.map((rec) =>
             rec.id === recording.id
               ? {
-                ...rec,
-                currentMillis: currentMillis,
-                currentPosition: formattedPosition,
-              }
+                  ...rec,
+                  currentMillis: currentMillis,
+                  currentPosition: formattedPosition,
+                }
               : rec
           )
         );
@@ -979,12 +996,12 @@ export default function CardDetailScreen() {
           prev.map((rec) =>
             rec.id === recording.id
               ? {
-                ...rec,
-                isPlaying: false,
-                isPaused: false,
-                currentPosition: "00:00",
-                currentMillis: 0,
-              }
+                  ...rec,
+                  isPlaying: false,
+                  isPaused: false,
+                  currentPosition: "00:00",
+                  currentMillis: 0,
+                }
               : rec
           )
         );
@@ -1075,7 +1092,7 @@ export default function CardDetailScreen() {
     time: formattedTime,
     emoji: emojiMap[moodId],
     title: moodTitles[moodId] || "How I feel today",
-    note: note || 'Lorem ipsum...',
+    note: note || "Lorem ipsum...",
     hasImages: loadedImages.length > 0, // Use loadedImages instead of images
     hasMusic: true,
     music: {
@@ -1083,10 +1100,53 @@ export default function CardDetailScreen() {
     },
   };
 
+  // Test Sentry function
+  const testSentry = () => {
+    console.log("Testing Sentry...");
+
+    // Test breadcrumb
+    Sentry.addBreadcrumb({
+      message: "Test breadcrumb from carddetail",
+      level: "info",
+      category: "test",
+    });
+
+    // Test user context
+    Sentry.setUser({
+      id: "test-user-123",
+      email: "test@example.com",
+    });
+
+    // Test exception
+    try {
+      throw new Error("Test error from carddetail - Sentry working!");
+    } catch (error) {
+      Sentry.captureException(error, {
+        tags: { test: "true", component: "carddetail" },
+        extra: { testData: "This is a test error" },
+      });
+    }
+
+    // Test message
+    Sentry.captureMessage("Test message from carddetail", "info");
+
+    console.log("Sentry test completed - check your Sentry dashboard");
+  };
+
   // Xử lý quay về trang chính
   const handleBackToHome = async () => {
+    Sentry.addBreadcrumb({
+      message: "User initiated save record and navigate to home",
+      level: "info",
+      category: "user.action",
+    });
+
     try {
       if (!user || !user.id) {
+        Sentry.addBreadcrumb({
+          message: "User validation failed - no user or user.id",
+          level: "warning",
+        });
         showAlert(
           "error",
           "Error",
@@ -1095,6 +1155,13 @@ export default function CardDetailScreen() {
         router.push("/(auth)/login" as any);
         return;
       }
+
+      // Set user context
+      Sentry.setUser({
+        id: user.id.toString(),
+        email: user.email,
+      });
+
       // Hiển thị loading alert
       showAlert("info", "Processing", "Saving data and uploading media...", [
         { text: "OK", style: "default" },
@@ -1118,6 +1185,18 @@ export default function CardDetailScreen() {
 
       console.log("Bắt đầu tạo record:", recordData);
 
+      Sentry.addBreadcrumb({
+        message: "Creating new record",
+        level: "info",
+        data: {
+          mood_id: moodId,
+          activities_count: activities.length,
+          has_content: !!noteContent,
+          images_count: images.length,
+          recordings_count: recordings.length,
+        },
+      });
+
       // Tạo record với activities đã đính kèm
       const recordResponse = await fetch(API_ENDPOINTS.RECORDS, {
         method: "POST",
@@ -1131,19 +1210,29 @@ export default function CardDetailScreen() {
         console.log("Response text:", responseText);
         throw new Error(
           "Không thể tạo record. Status: " +
-          recordResponse.status +
-          " - " +
-          responseText
+            recordResponse.status +
+            " - " +
+            responseText
         );
       }
 
       const recordResult = await recordResponse.json();
-      console.log("Đã tạo record với ID:", recordResult);
       const recordId = recordResult.data.id;
       console.log("Đã tạo record với ID:", recordId);
 
+      Sentry.addBreadcrumb({
+        message: "Record created successfully",
+        level: "info",
+        data: { record_id: recordId },
+      });
+
       // Upload hình ảnh lên Supabase và lưu thông tin vào database
       if (images.length > 0) {
+        Sentry.addBreadcrumb({
+          message: `Starting image upload - ${images.length} images`,
+          level: "info",
+        });
+
         console.log(`Đang tải lên ${images.length} hình ảnh`);
 
         // Upload từng hình ảnh lên Supabase
@@ -1175,12 +1264,21 @@ export default function CardDetailScreen() {
             });
           } catch (error) {
             console.error("Lỗi khi upload hình ảnh:", error);
+            Sentry.captureException(error, {
+              tags: { operation: "image_upload" },
+              extra: { record_id: recordId },
+            });
           }
         }
       }
 
       // Upload recordings
       if (recordings.length > 0) {
+        Sentry.addBreadcrumb({
+          message: `Starting audio upload - ${recordings.length} recordings`,
+          level: "info",
+        });
+
         console.log(`Đang tải lên ${recordings.length} bản ghi âm`);
 
         for (const recording of recordings) {
@@ -1209,6 +1307,13 @@ export default function CardDetailScreen() {
             });
           } catch (error) {
             console.error("Lỗi khi upload bản ghi âm:", error);
+            Sentry.captureException(error, {
+              tags: { operation: "audio_upload" },
+              extra: {
+                record_id: recordId,
+                recording_type: recording.isMusic ? "music" : "voice",
+              },
+            });
           }
         }
       }
@@ -1220,10 +1325,30 @@ export default function CardDetailScreen() {
         "Saved note and uploaded media successfully!"
       );
 
+      Sentry.addBreadcrumb({
+        message: "Record saved successfully, navigating to home",
+        level: "info",
+        data: { record_id: recordId },
+      });
+
       // Điều hướng về trang chủ
       router.push("/(main)");
     } catch (error) {
       console.error("Lỗi khi lưu dữ liệu:", error);
+
+      Sentry.captureException(error, {
+        tags: {
+          operation: "save_record_and_home",
+          user_id: user?.id?.toString() || "unknown",
+        },
+        extra: {
+          mood_id: moodId,
+          has_images: images.length > 0,
+          has_recordings: recordings.length > 0,
+          has_activities: activities.length > 0,
+        },
+      });
+
       showAlert(
         "error",
         "Error",
@@ -1239,7 +1364,7 @@ export default function CardDetailScreen() {
     } catch (error) {
       console.error("Navigation error:", error);
     }
-  };  // Debug logging before render
+  }; // Debug logging before render
   console.log("=== RENDER DEBUG ===");
   console.log("loadedImages.length:", loadedImages.length);
   console.log("images.length:", images.length);
@@ -1247,7 +1372,10 @@ export default function CardDetailScreen() {
   //console.log("loadedImages:", loadedImages);
   console.log("imageLoading:", imageLoading);
   if (loadedImages.length > 0) {
-    console.log("Sample loadedImage:", loadedImages[0]?.substring(0, 100) + "...");
+    console.log(
+      "Sample loadedImage:",
+      loadedImages[0]?.substring(0, 100) + "..."
+    );
   }
 
   return (
@@ -1271,14 +1399,14 @@ export default function CardDetailScreen() {
           {activities.length > 0 && <ActivitiesList activities={activities} />}
 
           {/* Hiển thị ghi chú - đã tách title và content trước khi truyền vào NoteCard */}
-          {note && <NoteCard title={noteTitle} content={noteContent} />}          
+          {note && <NoteCard title={noteTitle} content={noteContent} />}
           {/* Image Loading State */}
           {imageLoading && (
             <View style={styles.imageLoadingContainer}>
               <ActivityIndicator size="large" color="#32B768" />
               <Text style={styles.imageLoadingText}>Loading images...</Text>
             </View>
-          )}          
+          )}
           {!imageLoading && loadedImages.length === 0 && (
             <View style={styles.noImagesContainer}>
               <Text style={styles.noImagesText}>No images available</Text>
@@ -1293,13 +1421,19 @@ export default function CardDetailScreen() {
 
           {/* Hiển thị hình ảnh nếu có - Debug the condition */}
           {(() => {
-            console.log("JSX Render Check - loadedImages.length:", loadedImages.length);
-            console.log("JSX Render Check - about to render EnhancedImagesGrid:", loadedImages.length > 0);
+            console.log(
+              "JSX Render Check - loadedImages.length:",
+              loadedImages.length
+            );
+            console.log(
+              "JSX Render Check - about to render EnhancedImagesGrid:",
+              loadedImages.length > 0
+            );
             if (loadedImages.length > 0) {
               return <EnhancedImagesGrid images={loadedImages} />;
             }
             return null;
-          }) ()}
+          })()}
 
           {/* Hiển thị danh sách bản ghi âm */}
           {recordings.length > 0 && (
@@ -1319,6 +1453,62 @@ export default function CardDetailScreen() {
               onPlayMusic={handlePlayMusic}
             />
           )} */}
+          {/* Test handleBackToHome with Sentry */}
+          {__DEV__ && (
+            <TouchableOpacity
+              style={{
+                backgroundColor: "#32B768",
+                padding: 15,
+                borderRadius: 10,
+                marginVertical: 10,
+                alignItems: "center",
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.2,
+                shadowRadius: 4,
+                elevation: 3,
+              }}
+              onPress={handleBackToHome}
+            >
+              <Text
+                style={{
+                  color: "white",
+                  fontWeight: "bold",
+                  fontSize: 16,
+                }}
+              >
+                🚀 Save Record + Sentry
+              </Text>
+              <Text
+                style={{
+                  color: "white",
+                  fontSize: 12,
+                  marginTop: 4,
+                  opacity: 0.9,
+                }}
+              >
+                Save record with full Sentry monitoring
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Temporary Sentry Test Button - Hidden for future reference */}
+          {__DEV__ && (
+            <TouchableOpacity
+              style={{
+                backgroundColor: "#FF6B6B",
+                padding: 15,
+                borderRadius: 10,
+                marginVertical: 10,
+                alignItems: "center",
+              }}
+              onPress={testSentry}
+            >
+              <Text style={{ color: "white", fontWeight: "bold" }}>
+                🔥 Test Sentry (Dev Only)
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </ScrollView>
 
@@ -1569,7 +1759,8 @@ const styles = StyleSheet.create({
     fontFamily: "Quicksand-Regular",
     textAlign: "center",
     marginTop: 4,
-  }, errorImage: {
+  },
+  errorImage: {
     opacity: 0.3,
   },
   // Image loading styles
@@ -1587,7 +1778,8 @@ const styles = StyleSheet.create({
     elevation: 2,
     borderWidth: 1,
     borderColor: "rgba(34, 197, 94, 0.1)",
-  }, imageLoadingText: {
+  },
+  imageLoadingText: {
     marginTop: hp(1),
     fontSize: wp(3.5),
     color: "#32B768",
@@ -1614,7 +1806,8 @@ const styles = StyleSheet.create({
     color: "#666",
     fontFamily: "Quicksand-Bold",
     marginBottom: hp(1),
-  }, debugText: {
+  },
+  debugText: {
     fontSize: wp(3),
     color: "#999",
     fontFamily: "Quicksand-Regular",

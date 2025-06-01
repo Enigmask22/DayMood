@@ -1,10 +1,26 @@
-import 'react-native-url-polyfill/auto'; // For Supabase URL needs
-import 'react-native-get-random-values'; // If you encounter crypto issues, Supabase relies on a global 
+import "react-native-url-polyfill/auto"; // For Supabase URL needs
+import "react-native-get-random-values"; // If you encounter crypto issues, Supabase relies on a global
 // Buffer polyfill
-import { Buffer } from 'buffer';
-if (typeof global.Buffer === 'undefined') {
+import { Buffer } from "buffer";
+if (typeof global.Buffer === "undefined") {
   global.Buffer = Buffer;
 }
+
+// Initialize Sentry
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "https://f33481725bcc898aec47c4440808f974@o4509424068067328.ingest.de.sentry.io/4509424070754384", // Replace with your actual DSN
+  debug: true, // Enable debug mode for testing
+  environment: __DEV__ ? "development" : "production",
+  beforeSend(event) {
+    // Log events to console for debugging
+    if (__DEV__) {
+      console.log("Sentry Event:", event);
+    }
+    return event;
+  },
+});
 
 import { Stack, useRouter } from "expo-router";
 import { View, Text, Platform, StatusBar } from "react-native";
@@ -14,9 +30,9 @@ import { useEffect, useState, useRef } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { store } from "src/store";
 import { Provider } from "react-redux";
-import 'stream-browserify';
-import { fetchDeviceTimezone } from '@/store/slices/timezoneSlice';
-import { SystemBars, SystemBarsEntry } from 'react-native-edge-to-edge';
+import "stream-browserify";
+import { fetchDeviceTimezone } from "@/store/slices/timezoneSlice";
+import { SystemBars, SystemBarsEntry } from "react-native-edge-to-edge";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -76,23 +92,23 @@ const RootLayout = () => {
 
   //Configure system bars using the SystemBars API
   useEffect(() => {
-    if (Platform.OS !== 'android') return;
-    
+    if (Platform.OS !== "android") return;
+
     // Use a ref to track if we've already configured the system bars
     if (systemBarsEntry.current !== null) return;
-    
+
     try {
       // Push a new entry to the SystemBars stack with desired properties
       systemBarsEntry.current = SystemBars.pushStackEntry({
         // Light content for better visibility on dark backgrounds
-        style: { statusBar: 'dark', navigationBar: 'light' },
+        style: { statusBar: "dark", navigationBar: "light" },
         // Hide the navigation bar initially
         hidden: { navigationBar: true, statusBar: false },
       });
-      
+
       //console.log('SystemBars configured successfully');
     } catch (error) {
-      console.error('Failed to configure SystemBars:', error);
+      console.error("Failed to configure SystemBars:", error);
     }
   }, []); // Empty dependency array to ensure it only runs once
 
@@ -103,7 +119,7 @@ const RootLayout = () => {
   return (
     <Provider store={store}>
       <SystemBars
-        style={{ statusBar: 'dark', navigationBar: 'light' }}
+        style={{ statusBar: "dark", navigationBar: "light" }}
         hidden={{ navigationBar: true, statusBar: false }}
       />
       <Stack screenOptions={{ headerShown: false }}>
@@ -111,7 +127,6 @@ const RootLayout = () => {
         <Stack.Screen name="(main)" />
         <Stack.Screen name="(onboarding)" />
         <Stack.Screen name="(auth)" />
-       
       </Stack>
     </Provider>
   );
