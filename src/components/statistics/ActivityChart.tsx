@@ -70,6 +70,7 @@ const ActivityChart = ({
   } = useMemo(() => {
     console.log("Processing activities data:", activities);
     console.log("Using hasRealData value:", hasRealData);
+    console.log("Current month:", pieChartData);
 
     // Calculate days in month and current day
     const daysInMonth = new Date(
