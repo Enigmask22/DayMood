@@ -9,7 +9,10 @@ interface SelectedEmojiProps {
 }
 
 const SelectedEmoji: React.FC<SelectedEmojiProps> = ({ selectedMood }) => {
-  if (!selectedMood) return null;
+  if (!selectedMood) return (
+    <View style={styles.placeholderContainer}>
+    </View>
+  );
 
   const selectedMoodObj = moods.find((m) => m.id === selectedMood);
   if (!selectedMoodObj) return null;
@@ -36,6 +39,11 @@ const styles = StyleSheet.create({
   selectedEmoji: {
     width: wp(25),
     height: wp(25),
+  },
+  placeholderContainer: {
+    height: wp(38.7),
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 

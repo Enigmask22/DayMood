@@ -35,7 +35,7 @@ const MoodChart: React.FC<MoodChartProps> = ({ weekData, onDayPress }) => {
   const maxValue = calculateMaxValue();
   
   // Generate y-axis values
-  const yAxisValues = [];
+  const yAxisValues: number[] = [];
   for (let i = maxValue; i >= 0; i -= Math.ceil(maxValue / 5)) {
     yAxisValues.push(i);
   }
@@ -45,6 +45,40 @@ const MoodChart: React.FC<MoodChartProps> = ({ weekData, onDayPress }) => {
 
   // Calculate the distance between grid lines
   const gridSpacing = CHART_HEIGHT / (yAxisValues.length - 1);
+
+  const getPixelHeightForValue = (
+    valueToConvert: number,
+    yAxisLabelsDesc: number[], // e.g., [9, 7, 5, 3, 1, 0]
+    pixelSpacePerSegment: number // This is gridSpacing
+  ): number => {
+    let totalPixelHeight = 0;
+    // Iterate through the visual segments of the Y-axis from bottom to top
+    // yAxisLabelsDesc is sorted high to low.
+    // Example: [9, 7, 5, 3, 1, 0]. Length = 6. numVisualSegments = 5.
+    // Bottom segment is between yAxisLabelsDesc[4] (value 1) and yAxisLabelsDesc[5] (value 0)
+    for (let i = yAxisLabelsDesc.length - 2; i >= 0; i--) {
+      const segmentUpperValue = yAxisLabelsDesc[i]; // Upper value of the current Y-axis segment
+      const segmentLowerValue = yAxisLabelsDesc[i + 1]; // Lower value of the current Y-axis segment
+      const valueCapacityOfSegment = segmentUpperValue - segmentLowerValue;
+
+      if (valueCapacityOfSegment <= 0) {
+        // This case should ideally not happen if yAxisLabels are distinct and ordered
+        continue;
+      }
+
+      if (valueToConvert > segmentLowerValue) {
+        // Determine how much of the valueToConvert falls into this specific segment's range
+        const valuePortionInSegment = Math.min(
+          valueToConvert - segmentLowerValue,
+          valueCapacityOfSegment
+        );
+        totalPixelHeight +=
+          (valuePortionInSegment / valueCapacityOfSegment) *
+          pixelSpacePerSegment;
+      }
+    }
+    return totalPixelHeight;
+  };
 
   return (
     <View style={styles.chartContainer}>
@@ -63,11 +97,13 @@ const MoodChart: React.FC<MoodChartProps> = ({ weekData, onDayPress }) => {
         ))}
       </View>
 
-      <View style={[styles.barsContainer, { height: CHART_HEIGHT }]}>
+<View style={[styles.barsContainer, { height: CHART_HEIGHT }]}>
         {weekData.days.map((dayData, index) => {
+          let cumulativeValue = 0; // Reset for each day's bar
+
           return (
-            <TouchableOpacity 
-              key={index} 
+            <TouchableOpacity
+              key={index}
               style={styles.barColumn}
               onPress={() => dayData.hasData && onDayPress(dayData, index)}
               activeOpacity={dayData.hasData ? 0.7 : 1}
@@ -75,20 +111,37 @@ const MoodChart: React.FC<MoodChartProps> = ({ weekData, onDayPress }) => {
               <View style={[styles.barContainer, { height: CHART_HEIGHT }]}>
                 {dayData.hasData ? (
                   <View style={styles.bar}>
+                    {/* MOODS are iterated in their defined order.
+                        With flexDirection: 'column-reverse', MOODS[0] will be at the bottom.
+                    */}
                     {MOODS.map(mood => {
                       const count = dayData.moodCounts[mood.id] || 0;
                       if (count === 0) return null;
-                      
-                      // Calculate height based on grid spacing
-                      const heightValue = (count / maxValue) * CHART_HEIGHT;
-                      
+
+                      const previousCumulativeValue = cumulativeValue;
+                      cumulativeValue += count;
+
+                      const heightAtTopOfSegment = getPixelHeightForValue(
+                        cumulativeValue,
+                        yAxisValues, // This is your yAxisLabelsDesc
+                        gridSpacing
+                      );
+                      const heightAtBottomOfSegment = getPixelHeightForValue(
+                        previousCumulativeValue,
+                        yAxisValues, // This is your yAxisLabelsDesc
+                        gridSpacing
+                      );
+
+                      const segmentPixelHeight =
+                        heightAtTopOfSegment - heightAtBottomOfSegment;
+
                       return (
                         <View
                           key={mood.id}
                           style={[
                             styles.barSegment,
                             {
-                              height: heightValue,
+                              height: segmentPixelHeight,
                               backgroundColor: mood.color,
                             },
                           ]}
@@ -101,6 +154,7 @@ const MoodChart: React.FC<MoodChartProps> = ({ weekData, onDayPress }) => {
                     })}
                   </View>
                 ) : (
+                  // ... existing emptyBar ...
                   <View style={styles.emptyBar}>
                     <View style={styles.emptyDash} />
                   </View>

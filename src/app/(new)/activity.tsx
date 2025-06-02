@@ -14,7 +14,6 @@ import ImageSection from "@/components/activity/ImageSection";
 import AudioSection from "@/components/activity/AudioSection";
 import SaveButton from "@/components/activity/SaveButton";
 import * as ImagePicker from "expo-image-picker";
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system';
 
 const { width, height } = Dimensions.get("window");

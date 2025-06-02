@@ -14,6 +14,7 @@ const { width, height } = Dimensions.get("window");
 export const renderSlideCard = ({
   item,
   index,
+  monthType = 'current' // 'current', 'past', or 'future'
 }: {
   item: {
     title: string;
@@ -22,13 +23,43 @@ export const renderSlideCard = ({
     indicator: boolean[];
   };
   index: number;
+  monthType?: 'current' | 'past' | 'future';
 }) => {
-  // Define gradient colors based on card type
+  if ((monthType === 'past' && index !== 1) ||
+    (monthType === 'future' && index !== 2)) {
+    return null;
+  }
+
+  // Define gradient colors based on card type and month
   const getGradientColors = (): [string, string] => {
     if (index === 2) {
-      return ["#667eea", "#764ba2"]; // Purple gradient for advice
+      // Tip/advice card
+      if (monthType === 'future') {
+        return ["#3B82F6", "#1D4ED8"]; // Blue gradient for future month
+      }
+      return ["#667eea", "#764ba2"]; // Purple gradient for regular advice
     }
     return ["#11998e", "#38ef7d"]; // Green gradient for stats
+  };
+
+  // Modify content for future months
+  const getContent = () => {
+    if (monthType === 'future' && index === 2) {
+      return (
+        <Text style={[styles.modernContentText, styles.adviceContentText]}>
+          No data available for future months. Use this time to plan activities that improve your mood!
+        </Text>
+      );
+    }
+    return item.content;
+  };
+
+  // Modify title for future months
+  const getTitle = () => {
+    if (monthType === 'future' && index === 2) {
+      return "Looking ahead";
+    }
+    return item.title;
   };
 
   return (
@@ -52,35 +83,54 @@ export const renderSlideCard = ({
           </View>
         )}
 
+        {/* Future month icon (calendar) */}
+        {monthType === 'future' && (
+          <View style={styles.modernEmojiContainer}>
+            <View style={styles.emojiBackdrop}>
+              <Ionicons name="calendar-outline" size={width * 0.12} color="#FFF" />
+            </View>
+          </View>
+        )}
+
         {/* Content Section */}
         <View style={styles.modernContentContainer}>
           <View style={styles.modernContentCard}>
-            <Text style={styles.modernTitle}>{item.title}</Text>
+            <Text style={styles.modernTitle}>{getTitle()}</Text>
 
             <View style={styles.contentDivider} />
 
             <Text
               style={[
                 styles.modernContentText,
-                index === 2
+                index === 2 || monthType === 'future'
                   ? styles.adviceContentText
                   : styles.statsContentText,
               ]}
             >
-              {item.content}
+              {getContent()}
             </Text>
 
-            {index === 2 && (
+            {/* Footer for advice cards */}
+            {(index === 2 || monthType === 'future') && (
               <View style={styles.modernAdviceFooter}>
                 <View style={styles.modernDividerContainer}>
                   <View style={styles.modernDivider} />
                   <View style={styles.iconContainer}>
-                    <Ionicons name="bulb" size={20} color="#667eea" />
+                    <Ionicons
+                      name={monthType === 'future' ? "time-outline" : "bulb"}
+                      size={20}
+                      color={monthType === 'future' ? "#3B82F6" : "#667eea"}
+                    />
                   </View>
                   <View style={styles.modernDivider} />
                 </View>
-                <Text style={styles.adviceFooterText}>
-                  Personalized recommendation
+                <Text style={[
+                  styles.adviceFooterText,
+                  monthType === 'future' && { color: '#3B82F6' }
+                ]}>
+                  {monthType === 'future'
+                    ? "Future planning"
+                    : "Personalized recommendation"}
                 </Text>
               </View>
             )}
@@ -96,7 +146,8 @@ const styles = StyleSheet.create({
   modernSlideContainer: {
     width: width,
     paddingHorizontal: width * 0.04,
-    marginVertical: 8,
+    marginTop: height * 0.02,
+    paddingBottom: height * 0.08
   },
   modernCardGradient: {
     borderRadius: 20,
@@ -146,11 +197,11 @@ const styles = StyleSheet.create({
   },
   modernTitle: {
     fontSize: width * 0.05,
-    fontWeight: "700",
+    //fontWeight: "700",
     color: "#1a202c",
     textAlign: "center",
     marginBottom: 8,
-    fontFamily: "System",
+    fontFamily: "Quicksand-Bold",
   },
   contentDivider: {
     height: 2,
@@ -163,12 +214,12 @@ const styles = StyleSheet.create({
   modernContentText: {
     textAlign: "center",
     lineHeight: width * 0.06,
-    fontFamily: "System",
+    fontFamily: "Quicksand-Semibold",
   },
   statsContentText: {
     fontSize: width * 0.042,
     color: "#2d3748",
-    fontWeight: "500",
+    fontFamily: "Quicksand-Bold",
   },
   adviceContentText: {
     fontSize: width * 0.04,

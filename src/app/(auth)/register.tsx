@@ -169,7 +169,7 @@ export default function Register() {
             <TouchableOpacity onPress={handleReturnToLogin}>
               <View style={styles.buttonInnerBox}>
                 <Ionicons
-                  name="return-down-back-sharp"
+                  name="chevron-back"
                   size={24}
                   color="#6F6D6C"
                 />
@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
   containerLogo: {
     height: height * 0.1,
     marginTop: height * 0.1,
-    paddingVertical: height * 0.02,
+    paddingVertical: height * 0.025,
   },
   logoBox: {
     margin: 0,
@@ -216,6 +216,7 @@ const styles = StyleSheet.create({
   navigateBox: {
     flexDirection: "row",
     justifyContent: "flex-end",
+    alignItems: "center",
     marginVertical: height * 0.02,
     marginBottom: 30,
   },

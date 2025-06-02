@@ -57,6 +57,8 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
   const [fadeAnim] = useState(new Animated.Value(0));
   const [scaleAnim] = useState(new Animated.Value(0.8));
 
+  const isProcessingAlert = type === "info" && title === "Processing";
+
   useEffect(() => {
     if (visible) {
       Animated.parallel([
@@ -89,6 +91,9 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
   }, [visible]);
 
   const getIconAndColor = () => {
+    if (isProcessingAlert) {
+      return { icon: "spinner", color: "#3B82F6", bgColor: "#EFF6FF" }; // Using spinner icon
+    }
     switch (type) {
       case "success":
         return { icon: "check-circle", color: "#10B981", bgColor: "#ECFDF5" };
@@ -130,42 +135,48 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
               { backgroundColor: bgColor },
             ]}
           >
-            <FontAwesome5 name={icon} size={wp(6)} color={color} />
+            {isProcessingAlert ? (
+              <ActivityIndicator size="large" color={color} />
+            ) : (
+              <FontAwesome5 name={icon} size={wp(6)} color={color} />
+            )}
           </View>
 
           <Text style={customAlertStyles.title}>{title}</Text>
           <Text style={customAlertStyles.message}>{message}</Text>
 
-          <View style={customAlertStyles.buttonContainer}>
-            {buttons.map((button, index) => (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  customAlertStyles.button,
-                  button.style === "cancel" && customAlertStyles.cancelButton,
-                  button.style === "destructive" &&
-                    customAlertStyles.destructiveButton,
-                  buttons.length === 1 && customAlertStyles.singleButton,
-                ]}
-                onPress={() => {
-                  button.onPress?.();
-                  onClose();
-                }}
-              >
-                <Text
+          {!isProcessingAlert && buttons.length > 0 && (
+            <View style={customAlertStyles.buttonContainer}>
+              {buttons.map((button, index) => (
+                <TouchableOpacity
+                  key={index}
                   style={[
-                    customAlertStyles.buttonText,
-                    button.style === "cancel" &&
-                      customAlertStyles.cancelButtonText,
+                    customAlertStyles.button,
+                    button.style === "cancel" && customAlertStyles.cancelButton,
                     button.style === "destructive" &&
-                      customAlertStyles.destructiveButtonText,
+                      customAlertStyles.destructiveButton,
+                    buttons.length === 1 && customAlertStyles.singleButton,
                   ]}
+                  onPress={() => {
+                    button.onPress?.();
+                    onClose();
+                  }}
                 >
-                  {button.text}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+                  <Text
+                    style={[
+                      customAlertStyles.buttonText,
+                      button.style === "cancel" &&
+                        customAlertStyles.cancelButtonText,
+                      button.style === "destructive" &&
+                        customAlertStyles.destructiveButtonText,
+                    ]}
+                  >
+                    {button.text}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
         </Animated.View>
       </Animated.View>
     </Modal>
@@ -209,12 +220,13 @@ export default function EditRecordScreen() {
       onPress?: () => void;
     }>
   ) => {
+    const isProcessing = type === "info" && title === "Processing";
     setAlertConfig({
       visible: true,
       type,
       title,
       message,
-      buttons: buttons || [{ text: "OK", style: "default" }],
+      buttons: isProcessing ? [] : buttons || [{ text: "OK", style: "default" }],
     });
   };
 
@@ -580,7 +592,7 @@ export default function EditRecordScreen() {
       const newFiles = [];
 
       // Hiển thị dialog loading
-      showAlert("info", "Processing", "Uploading files, please wait...");
+      showAlert("info", "Processing", "Updating record, please wait...");
 
       // Upload ảnh mới lên Supabase Storage
       const newImages = images.filter((img) => img.id === 0);
@@ -910,7 +922,6 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     alignItems: "center",
-    marginVertical: hp(2),
   },
   loadingContainer: {
     flex: 1,

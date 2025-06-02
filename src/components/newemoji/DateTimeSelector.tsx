@@ -46,7 +46,7 @@ const DateTimeSelector: React.FC<DateTimeSelectorProps> = ({
       "November",
       "December",
     ];
-
+    const dayInWeek = days[date.getDay()];
     const day = date.getDate();
     const month = months[date.getMonth()];
 
@@ -55,20 +55,17 @@ const DateTimeSelector: React.FC<DateTimeSelectorProps> = ({
     else if (day === 2 || day === 22) daySuffix = "nd";
     else if (day === 3 || day === 23) daySuffix = "rd";
 
-    return `Today, ${day}${daySuffix} ${month}`;
+    return `${dayInWeek}, ${day}${daySuffix} ${month}`;
   };
-
   const formatTime = (date: Date) => {
-    let hours = date.getHours();
+    const hours = date.getHours();
     const minutes = date.getMinutes();
-    const ampm = hours >= 12 ? "PM" : "AM";
-
-    hours = hours % 12;
-    hours = hours ? hours : 12;
-
+    
+    // Format with leading zeros for both hours and minutes
+    const hoursFormatted = hours < 10 ? `0${hours}` : hours;
     const minutesFormatted = minutes < 10 ? `0${minutes}` : minutes;
 
-    return `${hours}:${minutesFormatted}`;
+    return `${hoursFormatted}:${minutesFormatted}`;
   };
 
   const onChangeDate = (event: any, selectedDate?: Date) => {

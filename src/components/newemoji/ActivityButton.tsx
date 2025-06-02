@@ -16,7 +16,7 @@ const ActivityButton: React.FC<ActivityButtonProps> = ({ onPress }) => {
 
 const styles = StyleSheet.create({
   activityButton: {
-    backgroundColor: "#E9FFCB",
+    backgroundColor: "#99FFCB",
     paddingVertical: hp(2),
     paddingHorizontal: wp(5),
     borderRadius: wp(10),

@@ -63,7 +63,7 @@ export default function Login() {
     if (alertConfig.visible && alertConfig.type === "success") {
       const timer = setTimeout(() => {
         router.push("/(main)");
-      }, 2000);
+      }, 1000);
 
       return () => clearTimeout(timer);
     }
@@ -136,16 +136,16 @@ export default function Login() {
           {/* Logo */}
           <View style={styles.containerLogo}>
             <View style={styles.logoBox}>
-              <Text style={styles.logoText}>Welcome To</Text>
+              <Text style={styles.logoText1}>Welcome to</Text>
             </View>
             <View style={styles.logoBox}>
-              <Text style={styles.logoText}>DayMood</Text>
+              <Text style={styles.logoText2}>DayMood</Text>
             </View>
 
             {/* sign up */}
             <View style={styles.signupLabel}>
               <View>
-                <Text style={styles.normalText}>Don't have account? </Text>
+                <Text style={styles.normalText}>Don't have an account? </Text>
               </View>
               <TouchableOpacity onPress={() => router.push("/register")}>
                 <View>
@@ -160,7 +160,7 @@ export default function Login() {
           {/* Input Box */}
           <View>
             <InputUserNameBox
-              title={"Email address or user name"}
+              title={"Email address"}
               data={email}
               setData={setEmail}
             />
@@ -234,7 +234,7 @@ export default function Login() {
         type={alertConfig.type}
         buttons={alertConfig.buttons}
         autoDismiss={alertConfig.autoDismiss}
-        tapToDismiss={alertConfig.tapToDismiss}
+        tapToDismiss={false}
         onClose={() => setAlertConfig((prev) => ({ ...prev, visible: false }))}
       />
     </>
@@ -255,10 +255,13 @@ const styles = StyleSheet.create({
   logoBox: {
     margin: 0,
     padding: 0,
-    // borderColor: "black",
-    // borderWidth: 2,
   },
-  logoText: {
+  logoText1: {
+    color: "#FF6633",
+    fontSize: 33,
+    fontFamily: "Poppins-Bold",
+  },
+  logoText2: {
     color: "#16A34A",
     fontSize: 33,
     fontFamily: "Poppins-Bold",

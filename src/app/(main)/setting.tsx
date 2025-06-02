@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -12,9 +12,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
 import { HOME_COLOR } from "@/utils/constant";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import Avatar from "@/components/settingpage/Avatar";
 import SettingOption from "@/components/settingpage/SettingOption";
 import CustomAlert from "@/components/common/CustomAlert";
+import { Image } from "expo-image";
 
 const { width, height } = Dimensions.get("window");
 const SettingPage = () => {
@@ -23,6 +23,23 @@ const SettingPage = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [dataSync, setDataSync] = useState(true);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const userData = await AsyncStorage.getItem("user");
+        if (userData) {
+          setUser(JSON.parse(userData));
+        }
+      } catch (err) {
+        console.error("Failed to load user data:", err);
+        setError("Failed to load user data");
+      }
+    };
+
+    loadUser();
+  }, []);
 
   // Custom Alert State
   const [alertConfig, setAlertConfig] = useState<{
@@ -72,7 +89,7 @@ const SettingPage = () => {
     name: "Alex Johnson",
     email: "alex.johnson@example.com",
     memberSince: "January 2025",
-    level: "Premium",
+    level: "7-day Trial",
   };
 
   // Sample languages
@@ -137,15 +154,13 @@ const SettingPage = () => {
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         {/* Profile Section */}
         <View style={styles.profileContainer}>
-          <Avatar
-            size={80}
-            source={{
-              uri: "https://randomuser.me/api/portraits/people/42.jpg",
-            }}
+          <Image
+            source={require("@/assets/images/home/home_avatar.png")}
+            style={{ width: 60, height: 60, borderRadius: 100 }}
           />
           <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>{userProfile.name}</Text>
-            <Text style={styles.profileEmail}>{userProfile.email}</Text>
+            <Text style={styles.profileName}>{user?.username}</Text>
+            <Text style={styles.profileEmail}>{user?.email}</Text>
             <View style={styles.membershipBadge}>
               <Ionicons name="star" size={12} color={HOME_COLOR.HOMETABBAR} />
               <Text style={styles.membershipText}>{userProfile.level}</Text>
@@ -153,9 +168,9 @@ const SettingPage = () => {
           </View>
           <TouchableOpacity
             style={styles.editButton}
-            onPress={() => router.push("/")}
+            onPress={() => router.push("/(user)/user")}
           >
-            <Text style={styles.editButtonText}>Edit</Text>
+            <Ionicons name="create-outline" size={20} color="#fff" />
           </TouchableOpacity>
         </View>
 
@@ -165,7 +180,7 @@ const SettingPage = () => {
           <SettingOption
             icon="person-outline"
             title="Personal Information"
-            onPress={() => router.push("/")}
+            onPress={() => {}}
             showChevron
           />
           <SettingOption
@@ -185,7 +200,7 @@ const SettingPage = () => {
           <SettingOption
             icon="lock-closed-outline"
             title="Privacy & Security"
-            onPress={() => router.push("/")}
+            onPress={() => {}}
             showChevron
           />
         </View>
@@ -212,13 +227,13 @@ const SettingPage = () => {
               languages.find((l) => l.code === selectedLanguage)?.name ||
               "English"
             }
-            onPress={() => router.push("/")}
+            onPress={() => {}}
             showChevron
           />
           <SettingOption
             icon="color-palette-outline"
             title="Appearance"
-            onPress={() => router.push("/")}
+            onPress={() => {}}
             showChevron
           />
           <SettingOption
@@ -254,7 +269,7 @@ const SettingPage = () => {
           <SettingOption
             icon="download-outline"
             title="Export Your Data"
-            onPress={() => router.push("/")}
+            onPress={() => {}}
             showChevron
           />
         </View>
@@ -265,20 +280,18 @@ const SettingPage = () => {
           <SettingOption
             icon="help-circle-outline"
             title="Help Center"
-            onPress={() => router.push("/")}
+            onPress={() => {}}
             showChevron
           />
           <SettingOption
             icon="information-circle-outline"
             title="About DayMood"
-            subtitle="Version 1.2.3"
-            onPress={() => router.push("/")}
-            showChevron
+            subtitle="Version 1.0.0"
           />
           <SettingOption
             icon="chatbox-ellipses-outline"
             title="Feedback"
-            onPress={() => router.push("/")}
+            onPress={() => {}}
             showChevron
           />
         </View>
@@ -313,7 +326,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: HOME_COLOR.HOMEBACKGROUND,
     paddingTop: height * 0.035,
-    marginBottom: height * 0.08,
+    marginBottom: height * 0.065,
   },
   profileContainer: {
     backgroundColor: "white",
@@ -336,7 +349,7 @@ const styles = StyleSheet.create({
   },
   profileName: {
     fontSize: 18,
-    fontWeight: "600",
+    fontFamily: "Quicksand-Semibold",
     marginBottom: 2,
   },
   profileEmail: {
@@ -360,9 +373,11 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   editButton: {
-    padding: 8,
-    borderRadius: 16,
-    backgroundColor: HOME_COLOR.HOMEBACKGROUND,
+    padding: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 50,
+    backgroundColor: HOME_COLOR.HOMEPLUS,
   },
   editButtonText: {
     color: HOME_COLOR.HOMESTATUS2,
@@ -382,8 +397,8 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   sectionTitle: {
-    fontSize: 14,
-    fontWeight: "600",
+    fontSize: 18,
+    fontFamily: "Quicksand-Bold",
     color: HOME_COLOR.HOMESTATUS2,
     marginLeft: 16,
     marginTop: 10,
@@ -414,3 +429,7 @@ const styles = StyleSheet.create({
 });
 
 export default SettingPage;
+function setError(arg0: string) {
+  throw new Error("Function not implemented.");
+}
+

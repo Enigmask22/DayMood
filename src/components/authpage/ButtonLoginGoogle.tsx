@@ -33,6 +33,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: 40,
     borderWidth: 1,
+    borderColor: "#AAA",
   },
   buttonInnerBox: {
     flexDirection: "row",
@@ -42,7 +43,7 @@ const styles = StyleSheet.create({
   logoButton: { width: 24, height: 24, marginRight: 10, overflow: "hidden" },
   buttonText: {
     color: "black",
-    fontSize: 20,
+    fontSize: 18,
     textAlign: "center",
     alignItems: "center",
   },

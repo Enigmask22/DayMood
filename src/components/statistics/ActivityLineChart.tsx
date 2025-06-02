@@ -1,14 +1,9 @@
 import React, { useState, useRef, useMemo, useEffect } from "react";
-import { View, Text, StyleSheet, Dimensions, Animated } from "react-native";
+import { View, Text, StyleSheet, Dimensions } from "react-native";
 import { LineChart } from "react-native-chart-kit";
 import { HOME_COLOR } from "@/utils/constant";
-import {
-  GestureHandlerRootView,
-  PanGestureHandler,
-  State,
-  HandlerStateChangeEvent,
-  PanGestureHandlerEventPayload
-} from "react-native-gesture-handler";
+import { GestureHandlerRootView, Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, runOnJS } from "react-native-reanimated";
 import { SegmentedControl } from "@/components/statistics/SegmentedControl";
 import { FontAwesome5 } from "@expo/vector-icons";
 
@@ -30,9 +25,9 @@ const ActivityLineChart = ({ lineChartData, daysInMonth, hasRealData = true }: A
   const [displayMode, setDisplayMode] = useState<'daily' | '2day' | '5day'>('5day');
 
 
-  // For horizontal scrolling
-  const [panX, setPanX] = useState(0);
-  const translateX = useRef(new Animated.Value(0)).current;
+  // For horizontal scrolling (Reanimated 2)
+  const panX = useSharedValue(0);
+  const contextX = useSharedValue(0);
 
   // Derive zoom level from display mode
   const zoomLevel = useMemo(() => {
@@ -44,59 +39,59 @@ const ActivityLineChart = ({ lineChartData, daysInMonth, hasRealData = true }: A
     }
   }, [displayMode]);
 
-// Update the zoomedLineChartData useMemo function:
+  // Update the zoomedLineChartData useMemo function:
 
-// Create zoomed data based on zoom level
-const zoomedLineChartData = useMemo(() => {
-  const { labels, datasets } = lineChartData;
-  const data = datasets[0].data;
+  // Create zoomed data based on zoom level
+  const zoomedLineChartData = useMemo(() => {
+    const { labels, datasets } = lineChartData;
+    const data = datasets[0].data;
 
-  if (zoomLevel === 1) {
-    // Show all days (maximum detail)
-    return lineChartData;
-  }
-
-  // Aggregate data points based on zoom level
-  const aggregatedLabels: string[] = [];
-  const aggregatedData: number[] = [];
-
-  for (let i = 0; i < labels.length; i += zoomLevel) {
-    // Calculate SUM for this group (not average)
-    let sum = 0;
-    let count = 0;
-    let startDay = parseInt(labels[i]);
-    let endDay = startDay;
-
-    for (let j = 0; j < zoomLevel && i + j < data.length; j++) {
-      sum += data[i + j];
-      count++;
-      endDay = parseInt(labels[i + j]);
+    if (zoomLevel === 1) {
+      // Show all days (maximum detail)
+      return lineChartData;
     }
 
-    if (count > 0) {
-      // Use sum directly instead of average to maintain proper scaling
-      aggregatedData.push(sum);
-      
-      // Show date range in label
-      if (startDay === endDay) {
-        aggregatedLabels.push(`${startDay}`);
-      } else {
-        aggregatedLabels.push(`${startDay}-${endDay}`);
+    // Aggregate data points based on zoom level
+    const aggregatedLabels: string[] = [];
+    const aggregatedData: number[] = [];
+
+    for (let i = 0; i < labels.length; i += zoomLevel) {
+      // Calculate SUM for this group (not average)
+      let sum = 0;
+      let count = 0;
+      let startDay = parseInt(labels[i]);
+      let endDay = startDay;
+
+      for (let j = 0; j < zoomLevel && i + j < data.length; j++) {
+        sum += data[i + j];
+        count++;
+        endDay = parseInt(labels[i + j]);
+      }
+
+      if (count > 0) {
+        // Use sum directly instead of average to maintain proper scaling
+        aggregatedData.push(sum);
+
+        // Show date range in label
+        if (startDay === endDay) {
+          aggregatedLabels.push(`${startDay}`);
+        } else {
+          aggregatedLabels.push(`${startDay}-${endDay}`);
+        }
       }
     }
-  }
 
-  return {
-    labels: aggregatedLabels,
-    datasets: [
-      {
-        data: aggregatedData,
-        color: datasets[0].color,
-        strokeWidth: datasets[0].strokeWidth,
-      }
-    ]
-  };
-}, [lineChartData, zoomLevel]);
+    return {
+      labels: aggregatedLabels,
+      datasets: [
+        {
+          data: aggregatedData,
+          color: datasets[0].color,
+          strokeWidth: datasets[0].strokeWidth,
+        }
+      ]
+    };
+  }, [lineChartData, zoomLevel]);
 
   // Calculate chart dimensions based on display mode
   const chartWidth = Dimensions.get('window').width - 40; // Base width
@@ -104,47 +99,41 @@ const zoomedLineChartData = useMemo(() => {
 
   // Calculate width based on display mode (wider for more detailed views)
   const displayWidth = displayMode === 'daily' ? chartWidth * 2 : // Double width for daily view
-    displayMode === '2day' ? chartWidth * 1.8: // Slightly wider for 2-day
+    displayMode === '2day' ? chartWidth * 1.8 : // Slightly wider for 2-day
       chartWidth; // Regular width for 5-day (fits whole month)
 
-  // Event handler for pan gesture
-  const onPanGestureEvent = Animated.event(
-    [{ nativeEvent: { translationX: translateX } }],
-    { useNativeDriver: false }
-  );
-
-  const onPanHandlerStateChange = (event: HandlerStateChangeEvent<PanGestureHandlerEventPayload>) => {
-    if (event.nativeEvent.state === State.END) {
-      // Update pan position
-      let newPanX = panX + event.nativeEvent.translationX;
-
+  // Modern gesture system
+  const panGesture = Gesture.Pan()
+    .enabled(displayMode !== '5day')
+    .onStart(() => {
+      contextX.value = panX.value;
+    })
+    .onUpdate((event) => {
       // Calculate boundaries for horizontal scrolling
       const maxPanX = Math.max(0, (displayWidth - chartWidth) / 2);
 
-      // Apply boundaries
+      // Apply boundaries with smooth movement
+      let newPanX = contextX.value + event.translationX;
       newPanX = Math.min(Math.max(newPanX, -maxPanX), maxPanX);
 
-      setPanX(newPanX);
+      panX.value = newPanX;
+    });
 
-      // Reset animated values
-      translateX.setValue(0);
-    }
-  };
-
-  // Add this useEffect after the existing state declarations and before the zoomedLineChartData useMemo:
+  // Create animated styles for chart panning
+  const animatedChartStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: panX.value }]
+  }));
 
   // Set initial position to show most recent data (right edge)
   React.useEffect(() => {
     if (displayMode !== '5day') {
-      // Calculate the position to show the right edge of the chart
+      // Calculate position to show right edge of chart
       const maxPanX = Math.max(0, (displayWidth - chartWidth) / 2);
       const initialPosition = -maxPanX; // Negative to show right side
-      setPanX(initialPosition);
-      translateX.setValue(0);
+      panX.value = withSpring(initialPosition);
     } else {
       // Reset for 5-day view
-      setPanX(0);
-      translateX.setValue(0);
+      panX.value = withSpring(0);
     }
   }, [displayMode, displayWidth, chartWidth]);
 
@@ -170,20 +159,11 @@ const zoomedLineChartData = useMemo(() => {
       {/* Chart Window Container with relative positioning for overlay */}
       <View style={styles.chartWindowContainer}>
         <GestureHandlerRootView style={styles.gestureContainer}>
-          <PanGestureHandler
-            onGestureEvent={onPanGestureEvent}
-            onHandlerStateChange={onPanHandlerStateChange}
-            minDist={10}
-            enabled={displayMode !== '5day'}
-          >
+          <GestureDetector gesture={panGesture}>
             <Animated.View
               style={[
                 styles.scrollableChartContent,
-                {
-                  transform: [
-                    { translateX: Animated.add(translateX, new Animated.Value(panX)) }
-                  ]
-                }
+                animatedChartStyle
               ]}
             >
               <LineChart
@@ -212,9 +192,8 @@ const zoomedLineChartData = useMemo(() => {
                 style={styles.chart}
               />
             </Animated.View>
-          </PanGestureHandler>
+          </GestureDetector>
         </GestureHandlerRootView>
-
         {/* Sample data overlay - only show when no real data */}
         {!hasRealData && (
           <View style={styles.sampleDataOverlay}>
@@ -293,7 +272,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0)',
     borderRadius: 10,
     padding: 12,
-    width: '80%',
+    width: '90%',
     alignItems: 'center',
     flexDirection: 'row',
   },
@@ -304,9 +283,9 @@ const styles = StyleSheet.create({
   },
 
   sampleDataTitle: {
-    fontSize: 16,
+    fontSize: 20,
     color: '#333',
-    fontWeight: '700',
+    fontFamily: 'Quicksand-Bold',
     textAlign: 'center',
     marginBottom: 2,
   },
@@ -314,7 +293,7 @@ const styles = StyleSheet.create({
   sampleDataSubtitle: {
     fontSize: 12,
     color: '#666',
-    fontWeight: '500',
+    fontFamily: 'Inter-Light',
     textAlign: 'center',
     lineHeight: 14,
   },

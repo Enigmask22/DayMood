@@ -53,7 +53,7 @@ export const fetchDeviceTimezone = createAsyncThunk(
     // Format offset for API calls
     const offsetString = formatTimezoneOffset(offset);
     
-    console.log(`Device timezone: ${timezone}, offset: ${offset} (${offsetString})`);
+    //console.log(`Device timezone: ${timezone}, offset: ${offset} (${offsetString})`);
     
     return {
       timezone,

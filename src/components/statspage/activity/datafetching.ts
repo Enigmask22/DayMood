@@ -32,7 +32,7 @@ export const fetchActivityStatistics = async (
         },
       }
     );
-    console.log('Fetching activity statistics:', response);
+    //console.log('Fetching activity statistics:', response);
     if (!response.ok) {
       throw new Error('Failed to fetch activity statistics');
     }

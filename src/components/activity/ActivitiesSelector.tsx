@@ -67,8 +67,7 @@ const ActivitiesSelector: React.FC<ActivitiesSelectorProps> = ({
             onPress={handleMorePress}
           >
             <FontAwesome5 name={moreButton.icon} size={wp(5)} color="#fff" />
-            <Text style={styles.activityName}>{moreButton.name}</Text>
-          </TouchableOpacity>
+            </TouchableOpacity>
         )}
       </View>
 
@@ -84,16 +83,15 @@ const ActivitiesSelector: React.FC<ActivitiesSelectorProps> = ({
 
 const styles = StyleSheet.create({
   activitiesSection: {
-    marginTop: hp(2.5),
+    marginTop: hp(0.5),
   },
   sectionTitleContainer: {
     alignItems: "center",
     marginBottom: hp(1.5),
   },
   sectionTitle: {
-    fontSize: wp(4.5),
-    fontWeight: "bold",
-    fontFamily: "Quicksand-Bold",
+    fontSize: wp(5),
+    fontFamily: "Inter-ExtraBold",
     letterSpacing: 1.5,
     color: "#333",
   },
@@ -127,7 +125,6 @@ const styles = StyleSheet.create({
   },
   selectedActivity: {
     backgroundColor: "#A3E635", // Màu xanh lá nhạt hơn, gần với thiết kế
-    borderWidth: 1,
     borderColor: "white",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
@@ -135,13 +132,19 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 3,
   },
-
   moreButton: {
     backgroundColor: "rgba(255, 255, 255, 0.5)", // Màu nền hơi khác để phân biệt
   },
   activityName: {
     fontSize: wp(2.8),
     color: "#fff",
+    marginTop: hp(0.5),
+    textAlign: "center",
+    fontFamily: "Quicksand-Regular",
+  },
+  selectActivitiesText: {
+    fontSize: wp(2.8),
+    color: "#888",
     marginTop: hp(0.5),
     textAlign: "center",
     fontFamily: "Quicksand-Regular",
@@ -175,14 +178,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -wp(2.5),
     alignSelf: "center",
-  },
-  selectActivitiesText: {
-    fontSize: wp(3.5),
-    color: "#888",
-    marginTop: hp(0.5),
-    textAlign: "center",
-    fontWeight: "700",
-    fontFamily: "Quicksand-Regular",
   },
 });
 

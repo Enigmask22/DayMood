@@ -93,8 +93,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   gradientButton: {
-    width: wp(18),
-    height: wp(18),
+    width: wp(15),
+    height: wp(15),
     borderRadius: wp(9),
     justifyContent: "center",
     alignItems: "center",
@@ -128,7 +128,6 @@ const styles = StyleSheet.create({
   buttonLabel: {
     color: "#333",
     fontSize: wp(4.2),
-    fontWeight: "bold",
     fontFamily: "Quicksand-Bold",
     marginTop: hp(0.5),
   },

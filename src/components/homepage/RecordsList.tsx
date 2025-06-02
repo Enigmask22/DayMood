@@ -12,6 +12,7 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 import { TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { HOME_COLOR } from "@/utils/constant";
+import { Ionicons } from "@expo/vector-icons";
 const { width, height } = Dimensions.get("window");
 
 interface RecordItem extends FeelingRecordProps {
@@ -31,13 +32,15 @@ const RecordsList = ({ records, loading, error }: RecordsListProps) => {
       {/* Navigation Bar */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Recent Records</Text>
-        <TouchableOpacity
-          onPress={() => router.push("/(user)/postlist" as any)}
-        >
-          <AntDesign name="rightcircleo" size={width * 0.06} color="black" />
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.viewMoreContainer}
+            onPress={() => router.push("/(user)/postlist" as any)}
+          >
+            <Text style={styles.viewMoreText}>View details</Text>
+            <Ionicons name="chevron-forward" size={18} color="#666" />
+          </TouchableOpacity>
       </View>
-
+      {/* Content Wrapper */}
       <View style={styles.contentWrapper}>
         {/* Hiển thị loading */}
         {loading && (
@@ -54,10 +57,22 @@ const RecordsList = ({ records, loading, error }: RecordsListProps) => {
           </View>
         )}
 
-        {/* Hiển thị khi không có dữ liệu */}
+        {/* Improved empty state with visual elements */}
         {!loading && !error && records.length === 0 && (
-          <View style={styles.centerContainer}>
-            {/* <Text style={styles.messageText}>No Recording</Text> */}
+          <View style={styles.emptyContainer}>
+            <View style={styles.emptyIconContainer}>
+              <AntDesign name="calendar" size={width * 0.15} color="#BDBDBD" />
+              <AntDesign
+                name="exclamationcircleo"
+                size={width * 0.06}
+                color={HOME_COLOR.HOMETABBAR}
+                style={styles.attentionIcon}
+              />
+            </View>
+            <Text style={styles.emptyTitleText}>No Records Yet</Text>
+            <Text style={styles.emptySubtitleText}>
+              Track your mood daily to see your emotional journey here
+            </Text>
           </View>
         )}
 
@@ -77,7 +92,7 @@ const RecordsList = ({ records, loading, error }: RecordsListProps) => {
             style={styles.scrollContainer}
             contentContainerStyle={styles.contentContainer}
             showsVerticalScrollIndicator={true}
-            scrollIndicatorInsets={{ right: 1 }} // Optional: Adjust the position of the scroll indicator
+            scrollIndicatorInsets={{ right: 1 }} 
           />
         )}
       </View>
@@ -127,14 +142,55 @@ const styles = StyleSheet.create({
   messageText: {
     marginTop: 10,
     fontSize: width * 0.04,
-    fontFamily: "Quicksand-Medium",
+    fontFamily: "Quicksand-Regular",
   },
   errorText: {
     fontSize: width * 0.04,
     color: "red",
-    fontFamily: "Quicksand-Medium",
+    fontFamily: "Quicksand-Regular",
     textAlign: "center",
     padding: width * 0.05,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: width * 0.05,
+    marginTop: height * 0.05,
+  },
+  emptyIconContainer: {
+    position: 'relative',
+    margin: width * 0.05,
+  },
+  attentionIcon: {
+    position: 'absolute',
+    top: -width * 0.02,
+    right: -width * 0.02,
+  },
+  emptyTitleText: {
+    fontSize: width * 0.055,
+    fontFamily: "Quicksand-Bold",
+    color: "#424242",
+    marginBottom: height * 0.015,
+    textAlign: "center",
+  },
+  emptySubtitleText: {
+    fontSize: width * 0.04,
+    fontFamily: "Quicksand-Regular",
+    color: "#757575",
+    textAlign: "center",
+    marginBottom: height * 0.03,
+    paddingHorizontal: width * 0.05,
+  },
+  viewMoreContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  viewMoreText: {
+    fontSize: 14,
+    fontFamily: "Inter-Light",
+    color: "#666",
+    marginRight: 5,
   },
 });
 

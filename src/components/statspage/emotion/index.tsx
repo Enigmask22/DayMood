@@ -154,7 +154,7 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
         title: 'This week',
         content: (
           <Text style={styles.screenContentText}>
-            Your highest % mood is{' '}
+            Your highest mood is{' '}
             <Text
               style={{
                 color: findMoodById(weeklyStats.mostFrequentMood.moodId)?.color,
@@ -172,8 +172,10 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
       {
         title: 'This month',
         content: (
+          findMoodById(monthlyStats.mostFrequentMood.moodId)? 
+           
           <Text style={styles.screenContentText}>
-            Your highest % mood is{' '}
+            Your highest mood is{' '}
             <Text
               style={{
                 color: findMoodById(monthlyStats.mostFrequentMood.moodId)?.color,
@@ -183,6 +185,10 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
               {findMoodById(monthlyStats.mostFrequentMood.moodId)?.name}
             </Text>
             {` (${getPercentage(monthlyStats.mostFrequentMood, monthlyStats.totalRecords)}%)`}
+          </Text>
+          : 
+          <Text style={styles.screenContentText}>
+            You haven't recorded any mood yet.
           </Text>
         ),
         emoji: findMoodById(monthlyStats.mostFrequentMood.moodId)?.emoji || null,
@@ -232,9 +238,22 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
     });
   };
 
-  // Handle slide card navigation
+  // Update handleSlideChange to consider monthType
   const handleSlideChange = (index: number) => {
-    setCurrentScreenIndex(index);
+    const monthType = getMonthType(currentDate);
+
+    // For past months, only slide 1 is visible, so set index to 1
+    if (monthType === 'past') {
+      setCurrentScreenIndex(1);
+    }
+    // For future months, only slide 2 is visible, so set index to 2
+    else if (monthType === 'future') {
+      setCurrentScreenIndex(2);
+    }
+    // For current month, use the calculated index
+    else {
+      setCurrentScreenIndex(index);
+    }
   };
 
   // Event Handlers
@@ -246,16 +265,31 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
     setCurrentWeekIndex(weekIndex);
   };
 
-  // Render helper functions
   const renderIndicator = () => {
+    const monthType = getMonthType(currentDate);
+    //console.log("Current month type:", monthType);
+
+    // Only show indicators for visible slides based on month type
+    const visibleIndices = (() => {
+      if (monthType === 'past') {
+        return [1]; // Only month card (index 1) is visible in past months
+      } else if (monthType === 'future') {
+        return [2]; // Only advice card (index 2) is visible in future months
+      }
+      return [0, 1, 2]; // All cards are visible in current month
+    })();
+
+    // Enhance the indicators to make sure they're visible
     return (
-      <View style={styles.indicatorContainer}>
-        {[0, 1, 2].map(index => (
+      <View style={[styles.indicatorContainer, styles.enhancedIndicatorContainer]}>
+        {visibleIndices.map(index => (
           <View
             key={index}
             style={[
               styles.indicator,
-              currentScreenIndex === index && styles.indicatorActive
+              styles.enhancedIndicator,
+              currentScreenIndex === index && styles.indicatorActive,
+              visibleIndices.length === 1 && styles.singleIndicator
             ]}
           />
         ))}
@@ -267,7 +301,7 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
     if (loading) {
       return (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={HOME_COLOR.HOMETABBAR}/>
+          <ActivityIndicator size="large" color={HOME_COLOR.HOMETABBAR} />
         </View>
       );
     }
@@ -302,6 +336,24 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
         />
       </View>
     );
+  };
+
+  const getMonthType = (date: Date): 'past' | 'current' | 'future' => {
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth();
+
+    const selectedYear = date.getFullYear();
+    const selectedMonth = date.getMonth();
+
+    if (selectedYear < currentYear ||
+      (selectedYear === currentYear && selectedMonth < currentMonth)) {
+      return 'past';
+    } else if (selectedYear > currentYear ||
+      (selectedYear === currentYear && selectedMonth > currentMonth)) {
+      return 'future';
+    }
+    return 'current';
   };
 
   // Effects
@@ -364,6 +416,33 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
     }
   }, [statistic]);
 
+  useEffect(() => {
+    // Reset the currentScreenIndex whenever the month changes
+    const monthType = getMonthType(currentDate);
+
+    // For past months, show the monthly stats card (index 1)
+    if (monthType === 'past') {
+      setCurrentScreenIndex(1);
+      // Optional: scroll to the right position
+      if (flatListRef.current) {
+        flatListRef.current.scrollToOffset({ offset: width, animated: false });
+      }
+    }
+    // For future months, show the advice card (index 2)
+    else if (monthType === 'future') {
+      setCurrentScreenIndex(2);
+      if (flatListRef.current) {
+        flatListRef.current.scrollToOffset({ offset: width * 2, animated: false });
+      }
+    }
+    // For current month, reset to the first card (index 0) 
+    else {
+      setCurrentScreenIndex(0);
+      if (flatListRef.current) {
+        flatListRef.current.scrollToOffset({ offset: 0, animated: false });
+      }
+    }
+  }, [currentDate]); // Only watch for month changes
   // Main render
   return (
     <View style={[styles.container, showMoodChartOnly && styles.compactContainer]}>
@@ -392,7 +471,11 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
             <FlatList
               ref={flatListRef}
               data={screens}
-              renderItem={renderSlideCard}
+              renderItem={({ item, index }) => renderSlideCard({
+                item,
+                index,
+                monthType: getMonthType(currentDate)
+              })}
               keyExtractor={(_, index) => index.toString()}
               horizontal
               pagingEnabled
@@ -431,6 +514,7 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
 
 const styles = StyleSheet.create({
   container: {
+    paddingTop: height * 0.01,
     paddingBottom: height * 0.05,
   },
   chartCard: {
@@ -447,13 +531,14 @@ const styles = StyleSheet.create({
   },
   chartTitle: {
     fontSize: 20,
-    fontWeight: '700',
+    fontFamily: 'Quicksand-Bold',
     color: '#1e293b',
     textAlign: 'center',
     marginBottom: 4,
   },
   chartSubtitle: {
     fontSize: 14,
+    fontFamily: 'Inter-Light',
     color: '#64748b',
     textAlign: 'center',
     paddingHorizontal: width * 0.1,
@@ -497,7 +582,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   indicatorActive: {
-    width: 20,
+    width: 30,
     backgroundColor: '#4CAF50',
   },
   screenContentText: {
@@ -509,6 +594,23 @@ const styles = StyleSheet.create({
   compactContainer: {
     paddingBottom: 0,
     height: 200,
+  },
+  singleIndicator: {
+    width: 30, // Make single indicators more prominent
+    backgroundColor: '#4CAF50',
+  },
+  enhancedIndicatorContainer: {
+    position: 'absolute',
+    bottom: height * 0.04,
+    left: 0,
+    right: 0,
+    zIndex: 1000,
+    paddingVertical: 8,
+  },
+  enhancedIndicator: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
   },
 });
 

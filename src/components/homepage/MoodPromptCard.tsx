@@ -40,14 +40,14 @@ const MoodPromptCard = () => {
 
   // Định nghĩa màu sắc cho gradient border
   const rainbowColors = [
-    "#FF00FF", // Magenta
-    "#0000FF", // Blue
+    "#EE00FF", // Magenta
+    "#4400FF", // Blue
     "#00FFFF", // Cyan
-    "#00FF00", // Green
-    "#FFFF00", // Yellow
-    "#FFA500", // Orange
-    "#FF0000", // Red
-    "#FF00FF", // Loop back to Magenta for smoothness
+    "#00FF55", // Green
+    "#FFEE22", // Yellow
+    "#FFA522", // Orange
+    "#FF0022", // Red
+    "#EE00FF", // Loop back to Magenta for smoothness
   ];
 
   return (
@@ -74,7 +74,7 @@ const MoodPromptCard = () => {
               onPress={() => navigation.navigate("(new)/newemoj")}
             >
               <Ionicons
-                name="chevron-forward-outline"
+                name="add"
                 size={wp(4)}
                 color="white"
               />
@@ -129,9 +129,9 @@ const styles = StyleSheet.create({
   titleText: {
     fontFamily: "Quicksand-Bold",
     fontSize: baseFontSize * 1.125, // ~18px (1.125 * 16)
-    fontWeight: "bold",
     color: "#000", // Có thể cần đổi màu chữ nếu nền mới làm khó đọc
     marginBottom: hp(1), // ~8px
+    alignContent: "center" // Căn chỉnh chữ về bên trái
   },
   recordMoodContainer: {
     flexDirection: "row",
@@ -139,16 +139,16 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
   subtitleText: {
-    fontFamily: "Quicksand-Regular",
+    fontFamily: "Quicksand-Semibold",
     fontSize: baseFontSize * 0.875, // ~14px (0.875 * 16)
     color: "#888", // Có thể cần đổi màu chữ nếu nền mới làm khó đọc
     marginRight: wp(2), // ~8px
   },
   recordButton: {
     backgroundColor: "#34C759",
-    width: wp(8),
+    width: wp(6),
     height: wp(6),
-    borderRadius: wp(3),
+    borderRadius: wp(100),
     justifyContent: "center",
     alignItems: "center",
   },

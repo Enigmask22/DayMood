@@ -4,7 +4,6 @@ import {
   StyleSheet,
   SafeAreaView,
   ScrollView,
-  Alert,
   Text,
   Modal,
   Image,
@@ -138,7 +137,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
           <Text style={customAlertStyles.title}>{title}</Text>
           <Text style={customAlertStyles.message}>{message}</Text>
 
-          <View style={customAlertStyles.buttonContainer}>
+          {buttons.length == 0 ? null : <View style={customAlertStyles.buttonContainer}>
             {buttons.map((button, index) => (
               <TouchableOpacity
                 key={index}
@@ -167,7 +166,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
                 </Text>
               </TouchableOpacity>
             ))}
-          </View>
+          </View>}
         </Animated.View>
       </Animated.View>
     </Modal>
@@ -444,7 +443,7 @@ export default function CardDetailScreen() {
       type,
       title,
       message,
-      buttons: buttons || [{ text: "OK", style: "default" }],
+      buttons: buttons || [],
     });
   };
 
@@ -1163,9 +1162,7 @@ export default function CardDetailScreen() {
       });
 
       // Hiển thị loading alert
-      showAlert("info", "Processing", "Saving data and uploading media...", [
-        { text: "OK", style: "default" },
-      ]);
+      showAlert("info", "Processing", "Saving data and uploading media...");
 
       // Lấy tiêu đề từ note nếu có, hoặc sử dụng tiêu đề từ mood
       const { title: extractedTitle } = extractTitleAndContent(note);
@@ -1407,7 +1404,7 @@ export default function CardDetailScreen() {
               <Text style={styles.imageLoadingText}>Loading images...</Text>
             </View>
           )}
-          {!imageLoading && loadedImages.length === 0 && (
+          {/* {!imageLoading && loadedImages.length === 0 && (
             <View style={styles.noImagesContainer}>
               <Text style={styles.noImagesText}>No images available</Text>
               <Text style={styles.debugText}>
@@ -1417,7 +1414,7 @@ export default function CardDetailScreen() {
                 params.images: {params.images ? "present" : "undefined"}
               </Text>
             </View>
-          )}
+          )} */}
 
           {/* Hiển thị hình ảnh nếu có - Debug the condition */}
           {(() => {
@@ -1622,7 +1619,7 @@ const styles = StyleSheet.create({
   },
   // Styles cho phần activities
   activitiesContainer: {
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    backgroundColor: "rgba(255, 255, 255, 1)",
     borderRadius: wp(4),
     padding: wp(4),
     marginVertical: hp(1.5),
@@ -1685,7 +1682,7 @@ const styles = StyleSheet.create({
   // Thêm styles cho ImagesGrid (nếu không có sẵn)
   imageContainer: {
     marginVertical: hp(1.5),
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    backgroundColor: "rgba(255, 255, 255, 1)",
     borderRadius: wp(4),
     padding: wp(3),
     shadowColor: "#000",

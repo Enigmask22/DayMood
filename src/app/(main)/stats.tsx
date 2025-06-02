@@ -117,7 +117,7 @@ const StatsPage = () => {
               <View style={styles.otherTabContent}>
                 <Text style={styles.comingSoonText}>
                   {selectedTab.charAt(0).toUpperCase() + selectedTab.slice(1)}{" "}
-                  tab content coming soon
+                  Coming soon
                 </Text>
               </View>
             );
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
   },
   monthText: {
     fontSize: width * 0.06,
-    fontWeight: "700",
+    fontFamily: "Quicksand-Bold",
     color: "#000",
   },
   navButton: {
@@ -170,6 +170,8 @@ const styles = StyleSheet.create({
     marginHorizontal: width * 0.01,
     borderRadius: 20,
     backgroundColor: "#f1f1f1",
+    borderColor: "#eee",
+    borderWidth: 1,
   },
   selectedTabButton: {
     backgroundColor: "#4CAF50",
@@ -194,9 +196,9 @@ const styles = StyleSheet.create({
   },
   statisticsHeader: {
     fontSize: 24,
-    fontWeight: "bold",
+    fontFamily: "Quicksand-Bold",
     textAlign: "center",
-    marginVertical: 24,
+    marginVertical: 22,
     color: "#333",
   },
 });

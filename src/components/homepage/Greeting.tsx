@@ -15,6 +15,8 @@ const { width, height } = Dimensions.get("window");
 
 const Greeting = () => {
   const [user, setUser] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     const loadUser = async () => {
       try {
@@ -27,7 +29,7 @@ const Greeting = () => {
         setError("Failed to load user data");
       }
     };
-    
+
     loadUser();
   }, []);
 
@@ -79,12 +81,12 @@ const styles = StyleSheet.create({
   },
   greetingText: {
     fontFamily: "Quicksand-Semibold",
-    fontSize: width * 0.035,
+    fontSize: width * 0.045,
     color: "#000",
   },
   nameText: {
     fontFamily: "Quicksand-Bold",
-    fontSize: width * 0.045,
+    fontSize: width * 0.055,
     fontWeight: "600",
     color: "#000",
   },
@@ -111,7 +113,7 @@ const styles = StyleSheet.create({
     width: width * 0.9,
     alignSelf: "center",
     backgroundColor: "#fff",
-    opacity: 0.97,
+    opacity: 0.90,
     padding: width * 0.04,
     borderRadius: width * 0.04,
     marginBottom: height * 0.02,
@@ -123,10 +125,12 @@ const styles = StyleSheet.create({
     color: "#333",
     textAlign: "center",
   },
+  errorText: {
+    color: 'red',
+    fontFamily: 'Quicksand-Medium',
+    textAlign: 'center',
+    marginTop: 8,
+  },
 });
 
 export default Greeting;
-function setError(arg0: string) {
-  throw new Error("Function not implemented.");
-}
-

@@ -65,7 +65,7 @@ const CustomCalendarHeader = ({
           <Text
             style={{
               fontSize: 22,
-              fontWeight: "bold",
+              fontFamily: "Quicksand-Bold",
               color: "#232B3A",
               textAlign: "center",
             }}
@@ -77,6 +77,7 @@ const CustomCalendarHeader = ({
           <Text
             style={{
               fontSize: 16,
+              fontFamily: "Quicksand-Semibold",
               color: "#AEB8C4",
               textAlign: "center",
               marginTop: 0,

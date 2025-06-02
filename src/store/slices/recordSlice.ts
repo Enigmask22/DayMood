@@ -64,10 +64,10 @@ export const fetchRecords = createAsyncThunk(
         data.data.items &&
         Array.isArray(data.data.items)
       ) {
-        console.log("Dữ liệu có cấu trúc { data: { items: [] } }");
+        //console.log("Dữ liệu có cấu trúc { data: { items: [] } }");
         return data.data.items;
       } else if (data && data.items && Array.isArray(data.items)) {
-        console.log("Dữ liệu có cấu trúc { items: [] }");
+        //console.log("Dữ liệu có cấu trúc { items: [] }");
         return data.items;
       } else if (data && Array.isArray(data)) {
         console.log("Dữ liệu là một mảng trực tiếp");

@@ -17,9 +17,13 @@ const emojiMap: { [key: string]: any } = {
 const Feeling = ({
     emoji = "normal",
     showVerticalLine = true,
+    isFirst = false,
+    isLast = false,
 }: {
     emoji: string,
     showVerticalLine?: boolean,
+    isFirst?: boolean,
+    isLast?: boolean,
 }) => {
 
     const emojiSource = emojiMap[emoji] || emojiMap["normal"]; // Fallback to a default emoji if not found
@@ -38,8 +42,7 @@ const Feeling = ({
             default:
                 return "#2E7D32"; // Màu mặc định nếu không khớp
         }
-    };
-    const styles = StyleSheet.create({
+    };    const styles = StyleSheet.create({
         wrapper: {
             position: 'relative',
             alignItems: 'center',
@@ -58,18 +61,18 @@ const Feeling = ({
             height: width * 0.15,
             justifyContent: "center",
             alignItems: "center",
-        },
-        verticalElement: {
+        },        verticalElement: {
             width: 5,
-            height: width * 0.5,
+            height: isFirst ? width * 0.35 : isLast ? width * 0.35 : width * 0.7,
             backgroundColor: "#A3A0A0",
             position: "absolute",
             left: '50%',
             marginLeft: -2.5, // Half of the width to center it
-            top: '50%',
+            top: isFirst ? '50%' : isLast ? '-35%' : '-35%',
             zIndex: 0,
         }
     });
+    
     return (
         <View style={styles.wrapper}>
             {showVerticalLine && <View style={styles.verticalElement} />}

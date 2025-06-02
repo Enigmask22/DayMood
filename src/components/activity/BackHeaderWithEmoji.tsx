@@ -38,7 +38,7 @@ const BackHeaderWithEmoji: React.FC<BackHeaderWithEmojiProps> = ({
   return (
     <View style={styles.backHeader}>
       <LinearGradient
-        colors={["#E0F7ED", "#B9F0DA"]}
+        colors={["#22c55e", "#2ca148"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.buttonGradient, backPressed && styles.buttonPressed]}
@@ -50,7 +50,7 @@ const BackHeaderWithEmoji: React.FC<BackHeaderWithEmojiProps> = ({
           onPressOut={() => setBackPressed(false)}
           activeOpacity={0.7}
         >
-          <Ionicons name="chevron-back" size={wp(6)} color="#32B768" />
+          <Ionicons name="chevron-back" size={wp(6)} color="#fff" />
         </TouchableOpacity>
       </LinearGradient>
       <Image source={emojiSource} style={styles.emojiImage} />
@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
   backHeader: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: wp(5),
+    marginBottom: wp(1),
   },
   buttonGradient: {
     width: wp(12),

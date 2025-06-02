@@ -244,6 +244,7 @@ const ActivityPage = ({ currentDate, setCurrentDate }: ActivityPageProps) => {
         <View style={styles.contentContainer}>
           <ActivityCount 
             activities={formattedActivitiesForCount} 
+            month={currentDate}
             hasRealData={hasRealData}
           />
           <ActivityChart 
@@ -279,6 +280,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 10,
     fontSize: 16,
+    fontFamily: 'Inter-Light',
     color: HOME_COLOR.HOMETEXT,
   },
   errorContainer: {

@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
   },
   moodsTitle: {
     fontSize: wp(5),
-    fontWeight: "bold",
+    fontFamily: "Inter-ExtraBold",
     color: "#333",
   },
   moodsTitleLine: {
@@ -130,6 +130,7 @@ const styles = StyleSheet.create({
   },
   promptText: {
     fontSize: wp(4),
+    fontFamily: "Inter-Light",
     color: "#888",
   },
 });

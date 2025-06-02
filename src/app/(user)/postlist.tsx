@@ -60,7 +60,7 @@ const PostlistPage = () => {
       <Greeting />
       <View style={styles.monthSelectorContainer}>
         <LinearGradient
-          colors={['#ffff', '#DFE6DA']}
+          colors={["#22ee99", "#2ceeAA"]}
           style={styles.monthSelector}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
@@ -91,7 +91,9 @@ const PostlistPage = () => {
           </TouchableOpacity>
         </LinearGradient>
       </View>
-      <RecordsList records={filteredRecords} loading={loading} error={error} />
+      <View style={styles.recordsListContainer}>
+        <RecordsList records={filteredRecords} loading={loading} error={error} />
+      </View>
     </View>
   );
 };
@@ -136,6 +138,11 @@ const styles = StyleSheet.create({
     fontFamily: 'Quicksand-Medium', // Use your app's font family
     color: '#666',
     marginTop: 2,
+  },
+  recordsListContainer: {
+    flex: 1,
+    paddingHorizontal: width * 0.05,
+    paddingTop: height * 0.01,
   },
 });
 

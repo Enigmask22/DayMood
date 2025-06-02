@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
   },
   headerText: {
     fontSize: 28,
-    fontWeight: "bold",
+    fontFamily: "Quicksand-Bold",
     color: "#000",
   },
   rowBox: {

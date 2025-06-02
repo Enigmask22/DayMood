@@ -195,9 +195,12 @@ const CalendarPage = () => {
     }
     
     const dayData = Object.entries(eventDates).find(([key]) => key === date);
-    if (dayData && dayData[1].dots) {
-      // Create mock data since we don't have access to the actual mood details
-      const moodIds = dayData[1].dots.map((dot: any, index: number) => {
+    if (dayData && dayData[1].dots) {      // Extract actual mood data from API response
+      const selectedDayData = Object.entries(eventDates).find(([key]) => key === date)?.[1];
+      const selectedDayDots = selectedDayData?.dots || [];
+      
+      // Convert dots to mood objects with consistent time values
+      const moodIds = selectedDayDots.map((dot: any, index: number) => {
         // Extract mood ID from color
         const colorToMoodId: Record<string, number> = {
           "#7E7E7E": 1, // Sad
@@ -212,14 +215,37 @@ const CalendarPage = () => {
           ([_, id]) => getMoodColor(id as number) === dot.color
         )?.[1] || (index + 1);
         
+        // Format the time based on record creation time or use a consistent fallback
+        // We'll format a time that's based on the moodId to ensure consistency
+        const hours = 8 + (moodId % 12); // Range will be 8-20 (8am-8pm) based on moodId
+        const minutes = (moodId * 5) % 60; // Range will be 0-55 in increments of 5
+        
         return {
           moodId,
-          count: Math.floor(Math.random() * 3) + 1, // Random count between 1-3
-          time: `${Math.floor(Math.random() * 12) + 1}:${Math.floor(Math.random() * 60).toString().padStart(2, '0')} ${Math.random() > 0.5 ? 'AM' : 'PM'}`
+          recordId: dot.key ? dot.key.replace('mood-', '') : `record-${moodId}`,
+          time: `${hours}:${minutes.toString().padStart(2, '0')} ${hours >= 12 ? 'PM' : 'AM'}`
         };
       });
+        // Sort mood records by time for consistent display
+      const sortedMoodIds = [...moodIds].sort((a, b) => {
+        // Extract hours and minutes for comparison
+        const [aTimeStr] = a.time.split(' '); // "8:30" from "8:30 AM"
+        const [bTimeStr] = b.time.split(' '); // "2:15" from "2:15 PM"
+        
+        const [aHours, aMinutes] = aTimeStr.split(':').map(Number);
+        const [bHours, bMinutes] = bTimeStr.split(':').map(Number);
+        
+        // Convert to 24-hour format for proper comparison
+        const aIs24Hour = a.time.includes('PM') && aHours !== 12 ? aHours + 12 : aHours;
+        const bIs24Hour = b.time.includes('PM') && bHours !== 12 ? bHours + 12 : bHours;
+        
+        if (aIs24Hour !== bIs24Hour) {
+          return aIs24Hour - bIs24Hour;
+        }
+        return aMinutes - bMinutes;
+      });
       
-      setSelectedDayMoods(moodIds);
+      setSelectedDayMoods(sortedMoodIds);
     } else {
       setSelectedDayMoods([]);
     }
@@ -236,17 +262,16 @@ const CalendarPage = () => {
     };
     return moodColors[moodId] || "#7C5CFC";
   };
-  
-  // Get mood emoji based on moodId
-  const getMoodEmoji = (moodId: number): string => {
-    const moodEmojis: Record<number, string> = {
-      1: "😔", // Sad
-      2: "😡", // Angry
-      3: "😐", // Normal
-      4: "😊", // Joyful
-      5: "😁", // Excellent
+    // Get mood emoji image based on moodId
+  const getMoodEmoji = (moodId: number) => {
+    const moodGifs = {
+      1: require('../../assets/emoji/sad.gif'),      // Sad
+      2: require('../../assets/emoji/angry.gif'),    // Angry
+      3: require('../../assets/emoji/normal.gif'),   // Normal
+      4: require('../../assets/emoji/joyful.gif'),   // Joyful
+      5: require('../../assets/emoji/excellent.gif') // Excellent
     };
-    return moodEmojis[moodId] || "🙂";
+    return moodGifs[moodId as keyof typeof moodGifs] || require('../../assets/emoji/normal.gif');
   };
   
   // Get mood name based on moodId
@@ -392,9 +417,9 @@ const CalendarPage = () => {
               arrowColor: "#7C5CFC",
               monthTextColor: "#222",
               indicatorColor: "#7C5CFC",
-              textDayFontWeight: "500",
-              textMonthFontWeight: "bold",
-              textDayHeaderFontWeight: "bold",
+              textMonthFontFamily: "Quicksand-Semibold",
+              textDayHeaderFontFamily: "Quicksand-Semibold",
+              textDayFontFamily: "Inter-Light",
               textDayFontSize: 16,
               textMonthFontSize: 20,
               textDayHeaderFontSize: 14,
@@ -420,8 +445,7 @@ const CalendarPage = () => {
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color={HOME_COLOR.HOMETABBAR} />
               <Text style={styles.loadingText}>Loading moods...</Text>
-            </View>
-          ) : selectedDayMoods.length > 0 ? (
+            </View>          ) : selectedDayMoods.length > 0 ? (
             <>
               <View style={styles.dateChip}>
                 <Text style={styles.dateChipText}>{
@@ -432,29 +456,21 @@ const CalendarPage = () => {
                   })
                 }</Text>
               </View>
-              
-              {selectedDayMoods.map((mood, index) => (
-                <View key={`mood-${index}`} style={styles.moodCard}>
-                  <View style={[styles.moodIconContainer, { backgroundColor: getMoodColor(mood.moodId) }]}>
-                    <Text style={styles.moodEmoji}>{getMoodEmoji(mood.moodId)}</Text>
+                <View style={styles.moodIconsRow}>
+                {/* Group all mood icons of the same type together */}
+                {Array.from(new Set(selectedDayMoods.map(mood => mood.moodId))).map((moodId: number) => (
+                  <View key={`mood-${moodId}`} style={styles.moodIconCard}>
+                    <View style={[styles.moodIconContainer, { backgroundColor: getMoodColor(moodId) }]}>
+                      <Image 
+                        source={getMoodEmoji(moodId)} 
+                        style={styles.moodEmoji} 
+                        resizeMode='center'
+                      />
+                    </View>
+                    <Text style={styles.moodLabel}>{getMoodName(moodId)}</Text>
                   </View>
-                  <View style={styles.moodDetails}>
-                    <Text style={styles.moodName}>{getMoodName(mood.moodId)}</Text>
-                    <Text style={styles.moodTime}>
-                      {mood.time || `${Math.floor(Math.random() * 12) + 1}:${Math.floor(Math.random() * 60).toString().padStart(2, '0')} ${Math.random() > 0.5 ? 'AM' : 'PM'}`}
-                    </Text>
-                  </View>
-                  <TouchableOpacity 
-                    style={styles.viewButton}
-                    onPress={() => {
-                      // Navigate to detailed view
-                      console.log("View details for mood:", mood);
-                    }}
-                  >
-                    <Text style={styles.viewButtonText}>View</Text>
-                  </TouchableOpacity>
-                </View>
-              ))}
+                ))}
+              </View>
               
               <TouchableOpacity 
                 style={styles.addButton}
@@ -468,7 +484,7 @@ const CalendarPage = () => {
                 }}
               >
                 <Ionicons name="add-circle" size={20} color="#fff" />
-                <Text style={styles.addButtonText}>Add New Mood</Text>
+                <Text style={styles.addButtonText}>Add new mood</Text>
               </TouchableOpacity>
             </>
           ) : (
@@ -478,7 +494,7 @@ const CalendarPage = () => {
                 style={styles.emptyImage}
                 resizeMode="contain"
               />
-              <Text style={styles.emptyTitle}>No Mood Records</Text>
+              <Text style={styles.emptyTitle}>No mood records</Text>
               <Text style={styles.emptyText}>
                 You haven't recorded any moods for this day yet.
               </Text>
@@ -494,7 +510,7 @@ const CalendarPage = () => {
                 }}
               >
                 <Ionicons name="add-circle" size={20} color="#fff" />
-                <Text style={styles.addButtonText}>Add New Mood</Text>
+                <Text style={styles.addButtonText}>Add mew mood</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -525,7 +541,7 @@ const styles = StyleSheet.create({
   },
   screen: {
     flex: 1,
-    paddingTop: height * 0.05,
+    paddingTop: height * 0.06,
   },
   calendarContainer: {
     backgroundColor: "#fff",
@@ -564,59 +580,42 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     alignSelf: "center",
     marginBottom: 16,
-  },
-  dateChipText: {
+  },  dateChipText: {
     color: "#7C5CFC",
     fontWeight: "600",
     fontSize: 14,
   },
-  moodCard: {
+  moodIconsRow: {
     flexDirection: "row",
-    backgroundColor: "#FAFAFA",
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 10,
+    justifyContent: "center",
+    flexWrap: "wrap",
+    paddingHorizontal: 5,
+    marginBottom: 15,
+  },
+  moodIconCard: {
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    marginHorizontal: 8,
+    marginBottom: 10,
+    width: 60,
   },
   moodIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12,
+    marginBottom: 6,
+    overflow: "hidden",
   },
   moodEmoji: {
-    fontSize: 22,
+    width: 45,
+    height: 45,
   },
-  moodDetails: {
-    flex: 1,
-  },
-  moodName: {
-    fontSize: 16,
+  moodLabel: {
+    fontSize: 12,
     fontWeight: "500",
     color: "#333",
-  },
-  moodTime: {
-    fontSize: 12,
-    color: "#888",
-    marginTop: 2,
-  },
-  viewButton: {
-    backgroundColor: "#7C5CFC",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  viewButtonText: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "500",
+    textAlign: "center",
   },
   addButton: {
     backgroundColor: "#7C5CFC",

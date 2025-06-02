@@ -45,7 +45,7 @@ const ActivityChart = ({
     Work: "#8c4A4A", // Dark Gray
     Sport: "#4CAF50", // Green
     Walking: "#FF5722", // Deep Orange
-    Excercise: "#2196F3", // Blue
+    Exercise: "#2196F3", // Blue
     Music: "#F44336", // Red
     Dishes: "#9C27B0", // Purple
     Reading: "#FFB300", // Amber
@@ -68,7 +68,7 @@ const ActivityChart = ({
     daysInMonth,
     recentActivities,
   } = useMemo(() => {
-    console.log("Processing activities data:", activities);
+    //console.log("Processing activities data:", activities);
     console.log("Using hasRealData value:", hasRealData);
     console.log("Current month:", pieChartData);
 
@@ -214,7 +214,7 @@ const ActivityChart = ({
     <View style={styles.container}>
       <Text style={styles.title}>Activity Chart</Text>
       <Text style={styles.subtitle}>
-        Your activity statistic with chart in{" "}
+        Explore your data in{" "}
         {currentMonth.toLocaleString("en", { month: "long" })}
       </Text>
 
@@ -250,10 +250,11 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: "bold",
+    fontFamily: "Quicksand-Bold",
   },
   subtitle: {
     fontSize: 14,
+    fontFamily: "Inter-Light",
     color: HOME_COLOR.HOMETEXT,
     marginBottom: 15,
   },

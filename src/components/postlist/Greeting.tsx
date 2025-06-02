@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
     View,
     Text,
@@ -11,14 +11,32 @@ import {
 } from "react-native";
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width, height } = Dimensions.get("window");
 
 const Greeting = () => {
+    const [user, setUser] = useState<any>(null);
+    const [error, setError] = useState<string | null>(null);
+    useEffect(() => {
+        const loadUser = async () => {
+            try {
+                const userData = await AsyncStorage.getItem("user");
+                if (userData) {
+                    setUser(JSON.parse(userData));
+                }
+            } catch (err) {
+                console.error("Failed to load user data:", err);
+                setError("Failed to load user data");
+            }
+        };
+
+        loadUser();
+    }, []);
     const router = useRouter();
     return (
         <View style={styles.greetingContainer}>
-            <TouchableOpacity onPress={() => router.push('/(main)')} style={{ marginLeft: width * 0.05 }}>
+            <TouchableOpacity onPress={() => router.push('/(main)')} style={{ marginLeft: width * 0.05, borderColor: "black", borderWidth: 1, borderRadius: 50, padding: 5 }}>
                 <AntDesign name="left" size={24} color="black" />
             </TouchableOpacity>
             <View style={styles.infoContainer}>
@@ -27,9 +45,9 @@ const Greeting = () => {
                     {/* Replace the simple Text with this TextWithOutline component */}
                     <View style={styles.nameTextContainer}>
                         {/* Create the outline effect with multiple text shadows */}
-                        <Text style={styles.nameTextOutline}>Hung Jonathan</Text>
+                        <Text style={styles.nameTextOutline}>{(user != null ? user.username : "")}</Text>
                         {/* Main text on top */}
-                        <Text style={styles.nameText}>Hung Jonathan</Text>
+                        <Text style={styles.nameText}>{(user != null ? user.username : "")}</Text>
                     </View>
                 </View>
                 <Image
@@ -78,7 +96,7 @@ const styles = StyleSheet.create({
         fontFamily: "Quicksand-Bold",
         fontSize: width * 0.045,
         fontWeight: "600",
-        color: "#0B6E4F",
+        color: "black",
         position: 'absolute',
         top: 0,
         left: 0,
@@ -88,7 +106,7 @@ const styles = StyleSheet.create({
         fontFamily: "Quicksand-Bold",
         fontSize: width * 0.045,
         fontWeight: "600",
-        color: "white",
+        color: "#222",
         textShadowColor: 'white',
         textShadowOffset: { width: -1, height: -1 },
         textShadowRadius: 3,
@@ -130,3 +148,4 @@ const styles = StyleSheet.create({
 });
 
 export default Greeting;
+

@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 16,
-    fontWeight: '400',
+    fontFamily:'Quicksand-Semibold',
     color: '#000',
   },
   subtitle: {

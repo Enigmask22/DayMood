@@ -1,48 +1,83 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
 interface StreakRowProps {
-  streak: ("check" | "plus" | "bookmark" | "empty" | "rect")[];
+  streak: ("check" | "plus" | "bookmark" | "empty")[];
   longestStreak: number;
+  streakDates?: Date[]; // Optional array of dates corresponding to streak icons
 }
 
 const iconMap = {
   check: <Ionicons name="checkmark" size={20} color="#fff" />,
-  plus: <Ionicons name="add" size={20} color="#22C55E" />,
-  bookmark: <MaterialIcons name="bookmark-border" size={20} color="#FCA10C" />,
+  plus: <Ionicons name="add" size={20} color="#22C55E" />, // Default green color
+  plusToday: <Ionicons name="add" size={20} color="#FCA10C" />, // Orange color for today
+  bookmark: <MaterialIcons name="bookmark-border" size={20} color="#fff" />, // White for orange background
   empty: null,
 };
 
-const StreakRow: React.FC<StreakRowProps> = ({ streak, longestStreak }) => (
-  <View style={styles.container}>
-    <Text style={styles.title}>Mood streak</Text>
-    <Text style={styles.subtitle}>Your recent mood records past 5 days</Text>
-    <View style={styles.row}>
-      {streak.map((type, idx) => (
-        <React.Fragment key={idx}>
-          {type === "rect" ? (
-            <View style={styles.rectBox} />
-          ) : (
-            <View
-              style={[
-                styles.uncheckedCircle,
-                type === "bookmark" && styles.bookmarkCircle,
-                type === "empty" && styles.emptyCircle,
-                type === "plus" && styles.uncheckedCircle,
-                type === "check" && styles.checkedCircle,
-              ]}
-            >
-              {iconMap[type]}
-            </View>
-          )}
-          {idx < streak.length - 1 && <View style={styles.connector} />}
-        </React.Fragment>
-      ))}
+const StreakRow: React.FC<StreakRowProps> = ({ streak, longestStreak, streakDates = [] }) => {
+  const router = useRouter();
+
+  const handlePlusIconPress = (index: number) => {
+    // Get the date for this index if available
+    const dateForIcon = streakDates[index];
+    if (dateForIcon) {
+      router.navigate({
+        pathname: "(new)/newemoj" as any,
+        params: { initialDate: dateForIcon.toISOString() },
+      });
+    }
+  };
+
+  const isToday = (index: number) => {
+    if (!streakDates[index]) return false;
+    const today = new Date();
+    const checkDate = streakDates[index];
+    return today.toDateString() === checkDate.toDateString();
+  };
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Mood streak</Text>
+      <Text style={styles.subtitle}>Your recent mood records past 5 days</Text>      
+      <View style={styles.row}>
+        {streak.map((type, idx) => (
+          <React.Fragment key={idx}>
+            {type === "plus" ? (
+              <TouchableOpacity
+                style={[
+                  styles.uncheckedCircle,
+                  styles.plusCircle,
+                  isToday(idx) && styles.todayCircle,
+                ]}
+                onPress={() => handlePlusIconPress(idx)}
+                activeOpacity={0.7}
+              >
+                {isToday(idx) ? iconMap.plusToday : iconMap.plus}
+              </TouchableOpacity>
+            ) : (
+              <View
+                style={[
+                  styles.uncheckedCircle,
+                  type === "bookmark" && styles.bookmarkCircle,
+                  type === "empty" && styles.emptyCircle,
+                  type === "check" && styles.checkedCircle,
+                  isToday(idx) && type !== "empty" && styles.todayCircle,
+                ]}
+              >
+                {iconMap[type]}
+              </View>
+            )}
+            {idx < streak.length - 1 && <View style={styles.connector} />}
+          </React.Fragment>
+        ))}
+      </View>
+      <Text style={styles.streakText}>Longest streak this month: {longestStreak} {longestStreak > 1 ? "days" : "day"}</Text>
     </View>
-    <Text style={styles.streakText}>Longest streak: {longestStreak}</Text>
-  </View>
-);
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -58,7 +93,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   title: {
-    fontWeight: "600",
+    fontFamily: "Quicksand-Bold",
     fontSize: 24,
     marginBottom: 8,
     color: "#222",
@@ -97,25 +132,24 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#22C55E",
-  },
-  bookmarkCircle: {
+  },  bookmarkCircle: {
     borderColor: "#FCA10C",
-  },
-  emptyCircle: {
+    backgroundColor: "#FCA10C",
+  },emptyCircle: {
     backgroundColor: "#E5E5E5",
     borderColor: "#E5E5E5",
+  },  plusCircle: {
+    // Style for touchable plus icons
+  },  todayCircle: {
+    borderWidth: 3,
+    borderColor: "#FCA10C",
+    // No background color - this will be determined by the circle type
   },
   connector: {
     width: 14,
     height: 2,
     backgroundColor: "#D1D5DB",
     marginHorizontal: 0,
-  },
-  rectBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 20,
-    backgroundColor: "#E5E5E5",
   },
   streakText: {
     fontSize: 14,

@@ -290,8 +290,8 @@ export default function NewEmojiScreen() {
         {
           text: "OK",
           onPress: () => {
-            router.back();
-            // router.push("/(main)" as any);
+            //router.back();
+            router.push("/(main)" as any);
           },
         },
       ]);
@@ -451,6 +451,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#E0F7ED",
+    paddingTop: hp(2),
   },
   content: {
     flex: 1,

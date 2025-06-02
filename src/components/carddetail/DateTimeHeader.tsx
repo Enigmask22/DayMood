@@ -27,7 +27,7 @@ const DateTimeHeader: React.FC<DateTimeHeaderProps> = ({
   return (
     <View style={styles.header}>
       <LinearGradient
-        colors={["#E0F7ED", "#B9F0DA"]}
+        colors={["#22c55e", "#2ca148"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.buttonGradient, submitPressed && styles.buttonPressed]}
@@ -39,12 +39,12 @@ const DateTimeHeader: React.FC<DateTimeHeaderProps> = ({
           onPressOut={() => setSubmitPressed(false)}
           activeOpacity={0.7}
         >
-          <Ionicons name="checkmark" size={wp(6)} color="#32B768" />
+          <Ionicons name="checkmark" size={wp(6)} color="#fff" />
         </TouchableOpacity>
       </LinearGradient>
 
       <LinearGradient
-        colors={["#D5F7E5", "#E8F9F0"]}
+        colors={["#fff", "#fefffe"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.dateTimeContainer}
@@ -76,7 +76,7 @@ const DateTimeHeader: React.FC<DateTimeHeaderProps> = ({
 
       {onEdit && (
         <LinearGradient
-          colors={["#E0F7ED", "#B9F0DA"]}
+          colors={["#22c55e", "#2ca148"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={[styles.buttonGradient, editPressed && styles.buttonPressed]}
@@ -88,7 +88,7 @@ const DateTimeHeader: React.FC<DateTimeHeaderProps> = ({
             onPressOut={() => setEditPressed(false)}
             activeOpacity={0.7}
           >
-            <Feather name="edit-2" size={wp(5)} color="#32B768" />
+            <Feather name="edit-2" size={wp(5)} color="#ffff" />
           </TouchableOpacity>
         </LinearGradient>
       )}
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
   dayName: {
     fontSize: wp(3),
     color: "#333",
-    fontFamily: "Quicksand-SemiBold",
+    fontFamily: "Quicksand-Semibold",
     textTransform: "uppercase",
   },
   dateDetails: {
@@ -185,9 +185,9 @@ const styles = StyleSheet.create({
     marginRight: wp(1),
   },
   monthName: {
-    fontSize: wp(3),
+    fontSize: wp(4),
     color: "#555",
-    fontFamily: "Quicksand-Medium",
+    fontFamily: "Quicksand-Bold",
   },
   divider: {
     height: 1,

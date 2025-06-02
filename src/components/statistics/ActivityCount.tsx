@@ -74,7 +74,7 @@ const ActivityCount = ({
     <View style={styles.container}>
       <Text style={styles.title}>Activity Count</Text>
       <Text style={styles.subtitle}>
-        Your activity statistic with count in {month.toLocaleString('en', { month: 'long' })}
+        In {month.toLocaleString('en', { month: 'long' })}, you have recorded:
       </Text>
 
       <View style={styles.gridContainer}>
@@ -163,9 +163,9 @@ textContainer: {
 },
 
 sampleDataTitle: {
-  fontSize: 16,
+  fontSize: 20,
   color: '#333',
-  fontWeight: '700',
+  fontFamily: 'Quicksand-Bold',
   textAlign: 'center',
   marginBottom: 4,
 },
@@ -173,7 +173,7 @@ sampleDataTitle: {
 sampleDataSubtitle: {
   fontSize: 12,
   color: '#666',
-  fontWeight: '500',
+  fontFamily: 'Inter-Light',
   textAlign: 'center',
   lineHeight: 16,
 },
@@ -183,11 +183,12 @@ infoIcon: {
 },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontFamily: 'Quicksand-Bold',
     marginBottom: 5,
   },
   subtitle: {
     fontSize: 14,
+    fontFamily: 'Inter-Light',
     color: '#7E7E7E',
     marginBottom: 20,
   },
