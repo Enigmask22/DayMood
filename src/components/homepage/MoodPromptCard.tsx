@@ -50,48 +50,55 @@ const MoodPromptCard = () => {
     "#EE00FF", // Loop back to Magenta for smoothness
   ];
 
-  return (
-    <LinearGradient
-      colors={rainbowColors as [string, string, ...string[]]}
-      start={{ x: 0.0, y: 0.5 }} // Bắt đầu từ trái sang
-      end={{ x: 1.0, y: 0.5 }} // Kết thúc ở phải
-      style={styles.gradientBorder}
-    >
-      {/* 3. Thay thế View bằng ImageBackground */}
-      <ImageBackground
-        source={homeBgImage} // 4. Truyền source ảnh
-        style={styles.cardContainer} // Giữ nguyên style chính
-        imageStyle={styles.imageBackgroundStyle} // Style cho chính ảnh nền để bo góc
-        resizeMode="cover" // hoặc 'stretch', 'contain' tùy theo yêu cầu
-      >
-        {/* Phần nội dung bên trái */}
-        <View style={styles.leftContent}>
-          <Text style={styles.titleText}>How are you feeling today?</Text>
-          <View style={styles.recordMoodContainer}>
-            <Text style={styles.subtitleText}>Tap to record mood</Text>
-            <TouchableOpacity
-              style={styles.recordButton}
-              onPress={() => navigation.navigate("(new)/newemoj")}
-            >
-              <Ionicons
-                name="add"
-                size={wp(4)}
-                color="white"
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
+  // Hàm xử lý navigation
+  const handleCardPress = () => {
+    navigation.navigate("(new)/newemoj");
+  };
 
-        {/* Phần hình ảnh bên phải */}
-        <View style={styles.rightContent}>
-          <Image
-            source={homeChangeImage}
-            style={styles.moodImage}
-            resizeMode="contain"
-          />
-        </View>
-      </ImageBackground>
-    </LinearGradient>
+  return (
+    <TouchableOpacity
+      style={styles.touchableCard}
+      onPress={handleCardPress}
+      activeOpacity={0.9}
+    >
+      <LinearGradient
+        colors={rainbowColors as [string, string, ...string[]]}
+        start={{ x: 0.0, y: 0.5 }} // Bắt đầu từ trái sang
+        end={{ x: 1.0, y: 0.5 }} // Kết thúc ở phải
+        style={styles.gradientBorder}
+      >
+        {/* 3. Thay thế View bằng ImageBackground */}
+        <ImageBackground
+          source={homeBgImage} // 4. Truyền source ảnh
+          style={styles.cardContainer} // Giữ nguyên style chính
+          imageStyle={styles.imageBackgroundStyle} // Style cho chính ảnh nền để bo góc
+          resizeMode="cover" // hoặc 'stretch', 'contain' tùy theo yêu cầu
+        >
+          {/* Phần nội dung bên trái */}
+          <View style={styles.leftContent}>
+            <Text style={styles.titleText}>How are you feeling today?</Text>
+            <View style={styles.recordMoodContainer}>
+              <Text style={styles.subtitleText}>Tap to record mood</Text>
+              <TouchableOpacity
+                style={styles.recordButton}
+                onPress={handleCardPress}
+              >
+                <Ionicons name="add" size={wp(4)} color="white" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Phần hình ảnh bên phải */}
+          <View style={styles.rightContent}>
+            <Image
+              source={homeChangeImage}
+              style={styles.moodImage}
+              resizeMode="contain"
+            />
+          </View>
+        </ImageBackground>
+      </LinearGradient>
+    </TouchableOpacity>
   );
 };
 
@@ -131,7 +138,7 @@ const styles = StyleSheet.create({
     fontSize: baseFontSize * 1.125, // ~18px (1.125 * 16)
     color: "#000", // Có thể cần đổi màu chữ nếu nền mới làm khó đọc
     marginBottom: hp(1), // ~8px
-    alignContent: "center" // Căn chỉnh chữ về bên trái
+    alignContent: "center", // Căn chỉnh chữ về bên trái
   },
   recordMoodContainer: {
     flexDirection: "row",
@@ -155,6 +162,9 @@ const styles = StyleSheet.create({
   moodImage: {
     width: wp(25), // Giữ nguyên tỉ lệ %
     height: wp(20), // Giữ nguyên tỉ lệ %
+  },
+  touchableCard: {
+    // Add any necessary styles for the TouchableOpacity
   },
 });
 

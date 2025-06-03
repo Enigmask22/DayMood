@@ -17,6 +17,18 @@ import CustomAlert from "@/components/common/CustomAlert";
 import { Image } from "expo-image";
 
 const { width, height } = Dimensions.get("window");
+
+// Responsive functions
+const wp = (percentage: number) => {
+  const value = (percentage * width) / 100;
+  return Math.round(value);
+};
+
+const hp = (percentage: number) => {
+  const value = (percentage * height) / 100;
+  return Math.round(value);
+};
+
 const SettingPage = () => {
   // Sample state for settings toggles
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -156,13 +168,17 @@ const SettingPage = () => {
         <View style={styles.profileContainer}>
           <Image
             source={require("@/assets/images/home/home_avatar.png")}
-            style={{ width: 60, height: 60, borderRadius: 100 }}
+            style={styles.avatarImage}
           />
           <View style={styles.profileInfo}>
             <Text style={styles.profileName}>{user?.username}</Text>
             <Text style={styles.profileEmail}>{user?.email}</Text>
             <View style={styles.membershipBadge}>
-              <Ionicons name="star" size={12} color={HOME_COLOR.HOMETABBAR} />
+              <Ionicons
+                name="star"
+                size={wp(3)}
+                color={HOME_COLOR.HOMETABBAR}
+              />
               <Text style={styles.membershipText}>{userProfile.level}</Text>
             </View>
           </View>
@@ -170,7 +186,7 @@ const SettingPage = () => {
             style={styles.editButton}
             onPress={() => router.push("/(user)/user")}
           >
-            <Ionicons name="create-outline" size={20} color="#fff" />
+            <Ionicons name="create-outline" size={wp(5)} color="#fff" />
           </TouchableOpacity>
         </View>
 
@@ -298,7 +314,7 @@ const SettingPage = () => {
 
         {/* Logout Button */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Ionicons name="log-out-outline" size={20} color="#FF3B30" />
+          <Ionicons name="log-out-outline" size={wp(5)} color="#FF3B30" />
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
 
@@ -325,17 +341,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: HOME_COLOR.HOMEBACKGROUND,
-    paddingTop: height * 0.035,
-    marginBottom: height * 0.065,
+    paddingTop: 20,
+    marginBottom: 80,
   },
   profileContainer: {
     backgroundColor: "white",
     flexDirection: "row",
-    padding: 20,
-    marginBottom: 16,
-    borderRadius: 12,
-    marginTop: 16,
-    marginHorizontal: 16,
+    padding: wp(5),
+    marginBottom: wp(4),
+    borderRadius: wp(3),
+    marginTop: wp(4),
+    marginHorizontal: wp(4),
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -343,41 +359,48 @@ const styles = StyleSheet.create({
     elevation: 3,
     alignItems: "center",
   },
+  avatarImage: {
+    width: wp(15),
+    height: wp(15),
+    borderRadius: wp(7.5),
+  },
   profileInfo: {
-    marginLeft: 15,
+    marginLeft: wp(4),
     flex: 1,
   },
   profileName: {
-    fontSize: 18,
+    fontSize: wp(4.5),
     fontFamily: "Quicksand-Semibold",
-    marginBottom: 2,
+    marginBottom: hp(0.5),
   },
   profileEmail: {
-    fontSize: 14,
+    fontSize: wp(3.5),
     color: "#666",
-    marginBottom: 6,
+    marginBottom: hp(1),
   },
   membershipBadge: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: HOME_COLOR.HOMEBACKGROUND,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12,
+    paddingHorizontal: wp(2),
+    paddingVertical: hp(0.5),
+    borderRadius: wp(3),
     alignSelf: "flex-start",
   },
   membershipText: {
-    fontSize: 12,
+    fontSize: wp(3),
     color: HOME_COLOR.HOMESTATUS2,
-    marginLeft: 4,
+    marginLeft: wp(1),
     fontWeight: "500",
   },
   editButton: {
-    padding: 10,
-    width: 40,
-    height: 40,
-    borderRadius: 50,
+    padding: wp(2.5),
+    width: wp(10),
+    height: wp(10),
+    borderRadius: wp(5),
     backgroundColor: HOME_COLOR.HOMEPLUS,
+    justifyContent: "center",
+    alignItems: "center",
   },
   editButtonText: {
     color: HOME_COLOR.HOMESTATUS2,
@@ -385,11 +408,11 @@ const styles = StyleSheet.create({
   },
   sectionContainer: {
     backgroundColor: "white",
-    borderRadius: 12,
-    marginHorizontal: 16,
-    marginBottom: 16,
-    paddingTop: 8,
-    paddingBottom: 8,
+    borderRadius: wp(3),
+    marginHorizontal: wp(4),
+    marginBottom: wp(4),
+    paddingTop: hp(1),
+    paddingBottom: hp(1),
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -397,34 +420,35 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: wp(4.5),
     fontFamily: "Quicksand-Bold",
     color: HOME_COLOR.HOMESTATUS2,
-    marginLeft: 16,
-    marginTop: 10,
-    marginBottom: 10,
+    marginLeft: wp(4),
+    marginTop: hp(1.5),
+    marginBottom: hp(1.5),
   },
   logoutButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginVertical: 24,
-    paddingVertical: 12,
+    marginVertical: hp(3),
+    paddingVertical: hp(1.5),
     backgroundColor: "#FEE2E2",
-    marginHorizontal: 16,
-    borderRadius: 12,
+    marginHorizontal: wp(4),
+    borderRadius: wp(3),
   },
   logoutText: {
     color: "#FF3B30",
     fontWeight: "600",
-    fontSize: 16,
-    marginLeft: 8,
+    fontSize: wp(4),
+    marginLeft: wp(2),
   },
   copyrightText: {
     textAlign: "center",
-    fontSize: 12,
+    fontSize: wp(3),
     color: "#999",
-    paddingBottom: height * 0.08,
+    paddingBottom: hp(5),
+    marginHorizontal: wp(4),
   },
 });
 
@@ -432,4 +456,3 @@ export default SettingPage;
 function setError(arg0: string) {
   throw new Error("Function not implemented.");
 }
-
