@@ -1,5 +1,11 @@
 import { PropsWithChildren } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  ActivityIndicator,
+} from "react-native";
 
 import { Dimensions } from "react-native";
 const { width, height } = Dimensions.get("window");
@@ -9,10 +15,25 @@ const ButtonAuth = ({
   children,
   title,
   onPress,
-}: PropsWithChildren & { title: string; onPress: () => void }) => {
+  isLoading = false,
+}: PropsWithChildren & {
+  title: string;
+  onPress: () => void;
+  isLoading?: boolean;
+}) => {
   return (
-    <TouchableOpacity style={styles.buttonBox} onPress={onPress}>
-      <Text style={styles.buttonText}>{title}</Text>
+    <TouchableOpacity
+      style={[styles.buttonBox, isLoading && styles.buttonBoxDisabled]}
+      onPress={isLoading ? undefined : onPress}
+      disabled={isLoading}
+      activeOpacity={isLoading ? 1 : 0.7}
+    >
+      {isLoading && (
+        <ActivityIndicator size="small" color="#fff" style={styles.spinner} />
+      )}
+      <Text style={[styles.buttonText, isLoading && styles.buttonTextLoading]}>
+        {isLoading ? "Signing up..." : title}
+      </Text>
     </TouchableOpacity>
   );
 };
@@ -25,12 +46,24 @@ const styles = StyleSheet.create({
     height: height * 0.06,
     backgroundColor: "#47B069",
     justifyContent: "center",
+    alignItems: "center",
+    flexDirection: "row",
     borderRadius: 40,
+  },
+  buttonBoxDisabled: {
+    backgroundColor: "#9CA3AF",
+    opacity: 0.8,
   },
   buttonText: {
     color: "white",
     fontSize: 20,
-    fontFamily:'Poppins-Medium',
+    fontFamily: "Poppins-Medium",
     textAlign: "center",
+  },
+  buttonTextLoading: {
+    marginLeft: 8,
+  },
+  spinner: {
+    marginRight: 8,
   },
 });

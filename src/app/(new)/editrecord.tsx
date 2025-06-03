@@ -226,7 +226,9 @@ export default function EditRecordScreen() {
       type,
       title,
       message,
-      buttons: isProcessing ? [] : buttons || [{ text: "OK", style: "default" }],
+      buttons: isProcessing
+        ? []
+        : buttons || [{ text: "OK", style: "default" }],
     });
   };
 
@@ -238,6 +240,7 @@ export default function EditRecordScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [recordData, setRecordData] = useState<any>(null);
+  const [isSaving, setIsSaving] = useState(false); // Thêm state để track trạng thái saving
 
   // States cho dữ liệu chỉnh sửa
   const [date, setDate] = useState<Date>(new Date());
@@ -571,7 +574,14 @@ export default function EditRecordScreen() {
 
   // Xử lý cập nhật record
   const handleSave = async () => {
+    // Kiểm tra nếu đang saving thì return sớm
+    if (isSaving) {
+      return;
+    }
+
     try {
+      setIsSaving(true); // Bắt đầu quá trình saving
+
       console.log("Cập nhật record:", {
         id,
         date,
@@ -683,6 +693,8 @@ export default function EditRecordScreen() {
         "Error",
         "Unable to update record. Please try again later."
       );
+    } finally {
+      setIsSaving(false); // Kết thúc quá trình saving trong mọi trường hợp
     }
   };
 
@@ -801,7 +813,7 @@ export default function EditRecordScreen() {
 
           {/* Nút Lưu */}
           <View style={styles.buttonContainer}>
-            <SaveButton onSave={handleSave} />
+            <SaveButton onSave={handleSave} isLoading={isSaving} />
           </View>
 
           {/* Nút Xóa */}

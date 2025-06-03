@@ -1,32 +1,57 @@
 import React, { useState } from "react";
-import { TouchableOpacity, Text, StyleSheet } from "react-native";
+import {
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { wp, hp } from "../newemoji/utils";
 
 interface SaveButtonProps {
   onSave: () => void;
+  isLoading?: boolean;
 }
 
-const SaveButton: React.FC<SaveButtonProps> = ({ onSave }) => {
+const SaveButton: React.FC<SaveButtonProps> = ({
+  onSave,
+  isLoading = false,
+}) => {
   const [savePressed, setSavePressed] = useState(false);
 
   return (
     <LinearGradient
-      colors={["#32B768", "#27A35A"]}
+      colors={isLoading ? ["#9CA3AF", "#6B7280"] : ["#32B768", "#27A35A"]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
-      style={[styles.saveGradient, savePressed && styles.saveButtonPressed]}
+      style={[
+        styles.saveGradient,
+        savePressed && styles.saveButtonPressed,
+        isLoading && styles.saveButtonDisabled,
+      ]}
     >
       <TouchableOpacity
         style={styles.saveButton}
-        onPress={onSave}
-        onPressIn={() => setSavePressed(true)}
-        onPressOut={() => setSavePressed(false)}
-        activeOpacity={0.9}
+        onPress={isLoading ? undefined : onSave}
+        onPressIn={isLoading ? undefined : () => setSavePressed(true)}
+        onPressOut={isLoading ? undefined : () => setSavePressed(false)}
+        activeOpacity={isLoading ? 1 : 0.9}
+        disabled={isLoading}
       >
-        <Ionicons name="checkmark" size={wp(8)} color="#fff" />
-        <Text style={styles.saveButtonText}>Save</Text>
+        {isLoading ? (
+          <ActivityIndicator size={wp(6)} color="#fff" />
+        ) : (
+          <Ionicons name="checkmark" size={wp(8)} color="#fff" />
+        )}
+        <Text
+          style={[
+            styles.saveButtonText,
+            isLoading && styles.saveButtonTextDisabled,
+          ]}
+        >
+          {isLoading ? "Saving..." : "Save"}
+        </Text>
       </TouchableOpacity>
     </LinearGradient>
   );
@@ -58,12 +83,19 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 3,
   },
+  saveButtonDisabled: {
+    shadowOpacity: 0.1,
+    elevation: 2,
+  },
   saveButtonText: {
     fontSize: wp(5),
     color: "#fff",
     marginLeft: wp(2),
     fontWeight: "bold",
     fontFamily: "Quicksand-Bold",
+  },
+  saveButtonTextDisabled: {
+    opacity: 0.8,
   },
 });
 

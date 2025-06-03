@@ -18,7 +18,7 @@ const { width, height } = Dimensions.get("window");
 export interface FeelingRecordProps {
   id?: string | number;
   index: number;
-  total: number
+  total: number;
   date: string;
   emoji: string;
   feeling: string;
@@ -82,61 +82,68 @@ const FeelingRecord = ({
   return (
     <View style={styles.container}>
       {/* Emoji Section */}
-      <Feeling emoji={emoji} showVerticalLine={!(index == total - 1)}/>
-      
+      <Feeling
+        emoji={emoji}
+        showVerticalLine={!(index == total - 1)}
+        isFirst={index === 0}
+        isLast={index === total - 1}
+      />
+
       <View style={styles.main}>
         <View style={styles.textContainer}>
-            <Text style={styles.dateText}>{date}</Text>
-            {/* Button - Áp dụng màu động */}
-            <TouchableOpacity
+          <Text style={styles.dateText}>{date}</Text>
+          {/* Button - Áp dụng màu động */}
+          <TouchableOpacity
             style={[styles.button, { backgroundColor: buttonColor }]}
             onPress={handleViewRecord}
-            >
-            <Text style={styles.buttonText} numberOfLines={1}>{feeling}</Text>
-            </TouchableOpacity>
+          >
+            <Text style={styles.buttonText} numberOfLines={1}>
+              {feeling}
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Menu Options Container */}
         <View style={styles.optionsContainer}>
-            {/* Three dots button */}
-            <TouchableOpacity
+          {/* Three dots button */}
+          <TouchableOpacity
             onPress={() => setShowOptions(!showOptions)}
             style={styles.optionsButton}
-            >
+          >
             <MaterialCommunityIcons
-                name="dots-horizontal"
-                size={width * 0.06}
-                color="black"
+              name="dots-horizontal"
+              size={width * 0.06}
+              color="black"
             />
-            </TouchableOpacity>
+          </TouchableOpacity>
 
-            {/* Options Menu */}
-            {showOptions && (
+          {/* Options Menu */}
+          {showOptions && (
             <View style={styles.optionsMenu}>
-                <TouchableOpacity
+              <TouchableOpacity
                 style={styles.optionItem}
                 onPress={handleViewRecord}
-                >
+              >
                 <Feather name="eye" size={width * 0.05} color="#333" />
                 <Text style={styles.optionText}>View</Text>
-                </TouchableOpacity>
+              </TouchableOpacity>
 
-                <TouchableOpacity
+              <TouchableOpacity
                 style={styles.optionItem}
                 onPress={handleEditRecord}
-                >
+              >
                 <Feather name="edit-2" size={width * 0.05} color="#333" />
                 <Text style={styles.optionText}>Edit</Text>
-                </TouchableOpacity>
+              </TouchableOpacity>
             </View>
-            )}
+          )}
         </View>
 
         {/* Invisible Touchable Overlay to close menu when clicking outside */}
         {showOptions && (
-            <TouchableWithoutFeedback onPress={() => setShowOptions(false)}>
+          <TouchableWithoutFeedback onPress={() => setShowOptions(false)}>
             <View style={styles.touchableOverlay} />
-            </TouchableWithoutFeedback>
+          </TouchableWithoutFeedback>
         )}
       </View>
     </View>
@@ -148,8 +155,8 @@ const styles = StyleSheet.create({
     position: "relative",
     backgroundColor: "#fff",
     borderRadius: width * 0.025,
-    padding: width * 0.06,
-    paddingTop: height * 0.035,
+    padding: width * 0.04,
+    paddingTop: height * 0.025,
     shadowColor: "#000",
     shadowOffset: { width: 2, height: height * 0.005 },
     shadowOpacity: 0.4,
@@ -158,82 +165,81 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    gap: width * 0.025,
-    marginRight: width * 0.03
+    gap: width * 0.02,
+    marginRight: width * 0.03,
   },
   container: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    gap: width * 0.025,
-    paddingVertical: height * 0.015,
+    gap: width * 0.02,
+    paddingVertical: height * 0.01,
     paddingHorizontal: width * 0.025,
   },
   textContainer: {
     flexDirection: "column",
-    gap: height * 0.015,
-    paddingHorizontal: width * 0.025,
+    gap: height * 0.01,
+    paddingHorizontal: width * 0.02,
     alignItems: "center",
     justifyContent: "center",
   },
   dateText: {
     fontFamily: "Quicksand-Regular",
-    fontSize: width * 0.035,
+    fontSize: width * 0.032,
     color: HOME_COLOR.HOMETEXT,
     fontWeight: "500",
     width: width * 0.5,
     textAlign: "center",
   },
   button: {
-    borderRadius: width * 0.05,
-    paddingVertical: height * 0.018,
+    borderRadius: width * 0.045,
+    paddingVertical: height * 0.014,
     paddingHorizontal: width * 0.02,
     alignItems: "center",
-    width: width * 0.4,
-    // tôi chỉ muốn độ dài của text là 1 dòng, nếu dài hơn thì hiện ... ở cuối
+    width: width * 0.38,
   },
   buttonText: {
     fontFamily: "Quicksand-Bold",
     color: "#fff",
-    fontSize: width * 0.04,
+    fontSize: width * 0.038,
     fontWeight: "600",
   },
   optionsContainer: {
     position: "absolute",
-    top: height * 0.012,
-    right: width * 0.025,
+    top: height * 0.008,
+    right: width * 0.02,
     zIndex: 10,
   },
   optionsButton: {
-    padding: width * 0.01,
+    padding: width * 0.008,
     alignItems: "center",
     justifyContent: "center",
   },
   optionsMenu: {
     position: "absolute",
-    top: height * 0.025, // Đặt menu bên dưới nút 3 chấm
+    top: height * 0.02,
     right: 0,
     backgroundColor: "white",
-    borderRadius: width * 0.03,
-    padding: width * 0.02,
+    borderRadius: width * 0.025,
+    padding: width * 0.015,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
-    width: width * 0.35,
+    width: width * 0.32,
     zIndex: 20,
   },
   optionItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: height * 0.012,
-    paddingHorizontal: width * 0.03,
-    gap: width * 0.02,
+    paddingVertical: height * 0.008,
+    paddingHorizontal: width * 0.02,
+    gap: width * 0.015,
   },
   optionText: {
     fontFamily: "Quicksand-Medium",
-    fontSize: width * 0.04,
+    fontSize: width * 0.035,
     color: "#333",
   },
   touchableOverlay: {

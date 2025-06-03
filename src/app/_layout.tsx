@@ -101,7 +101,7 @@ const RootLayout = () => {
       // Push a new entry to the SystemBars stack with desired properties
       systemBarsEntry.current = SystemBars.pushStackEntry({
         // Light content for better visibility on dark backgrounds
-        style: { statusBar: "dark", navigationBar: "light" },
+        style: { statusBar: "auto", navigationBar: "light" },
         // Hide the navigation bar initially
         hidden: { navigationBar: true, statusBar: false },
       });
@@ -119,7 +119,7 @@ const RootLayout = () => {
   return (
     <Provider store={store}>
       <SystemBars
-        style={{ statusBar: "dark", navigationBar: "light" }}
+        style={{ statusBar: "auto", navigationBar: "light" }}
         hidden={{ navigationBar: true, statusBar: false }}
       />
       <Stack screenOptions={{ headerShown: false }}>

@@ -24,6 +24,7 @@ export default function Register() {
   const [username, setUserName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isSigningUp, setIsSigningUp] = useState(false);
   const [alertConfig, setAlertConfig] = useState({
     visible: false,
     title: "",
@@ -73,7 +74,14 @@ export default function Register() {
   };
 
   const handleSignUp = async () => {
+    // Kiểm tra nếu đang signing up thì return sớm
+    if (isSigningUp) {
+      return;
+    }
+
     try {
+      setIsSigningUp(true); // Bắt đầu quá trình signing up
+
       if (password !== confirmPassword) {
         showAlert(
           "Error",
@@ -118,6 +126,8 @@ export default function Register() {
         "An unexpected error occurred. Please try again later.",
         "error"
       );
+    } finally {
+      setIsSigningUp(false); // Kết thúc quá trình signing up trong mọi trường hợp
     }
   };
 
@@ -162,17 +172,17 @@ export default function Register() {
           </View>
 
           <View style={styles.buttonLoginBox}>
-            <ButtonAuth title="Sign up" onPress={handleSignUp} />
+            <ButtonAuth
+              title="Sign up"
+              onPress={handleSignUp}
+              isLoading={isSigningUp}
+            />
           </View>
 
           <View style={styles.navigateBox}>
             <TouchableOpacity onPress={handleReturnToLogin}>
               <View style={styles.buttonInnerBox}>
-                <Ionicons
-                  name="chevron-back"
-                  size={24}
-                  color="#6F6D6C"
-                />
+                <Ionicons name="chevron-back" size={24} color="#6F6D6C" />
                 <Text style={styles.buttonText}> Back to Login</Text>
               </View>
             </TouchableOpacity>

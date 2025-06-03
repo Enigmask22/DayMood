@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
-import { 
-  View, 
-  StyleSheet, 
-  Dimensions, 
-  Text, 
+import {
+  View,
+  StyleSheet,
+  Dimensions,
+  Text,
   ScrollView,
   Animated,
   TouchableOpacity,
   Image,
-  ActivityIndicator
+  ActivityIndicator,
 } from "react-native";
 import { Calendar } from "react-native-calendars";
 import { LocaleConfig } from "react-native-calendars";
@@ -19,8 +19,12 @@ import YearPickerModal from "../../components/calendar/YearPickerModal";
 import { router, useFocusEffect } from "expo-router";
 import { API_URL } from "@/utils/config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { LinearGradient } from 'expo-linear-gradient';
-import { MaterialCommunityIcons, FontAwesome5, Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from "expo-linear-gradient";
+import {
+  MaterialCommunityIcons,
+  FontAwesome5,
+  Ionicons,
+} from "@expo/vector-icons";
 import { HOME_COLOR } from "@/utils/constant";
 import { useAppSelector } from "@/store";
 import { selectTimezone } from "@/store/slices/timezoneSlice";
@@ -82,7 +86,7 @@ const CalendarPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedDayMoods, setSelectedDayMoods] = useState<any[]>([]);
-  
+
   // Animation values
   const calendarOpacity = useRef(new Animated.Value(0)).current;
   const calendarTranslateY = useRef(new Animated.Value(20)).current;
@@ -119,54 +123,55 @@ const CalendarPage = () => {
       // Convert API data to eventDates format
       const newEventDates: Record<string, any> = {};
       const dailyStats = data.data.monthly.dailyMoodStats || [];
-      
+
       dailyStats.forEach((day: any) => {
         if (day.totalRecords > 0) {
           const dots = day.moodStats.map((mood: any) => ({
             color: getMoodColor(mood.moodId),
             key: `mood-${mood.moodId}`,
           }));
-          
+
           newEventDates[day.date] = {
             marked: true,
             dots: dots,
             customStyles: {
               container: {
                 borderWidth: 1,
-                borderColor: '#E6F4EA',
-              }
-            }
+                borderColor: "#E6F4EA",
+              },
+            },
           };
         }
       });
 
       setEventDates(newEventDates);
-      
+
       // Update selected day moods if the selected day has data
-      const selectedDayData = dailyStats.find((day: any) => day.date === selected);
+      const selectedDayData = dailyStats.find(
+        (day: any) => day.date === selected
+      );
       if (selectedDayData) {
         setSelectedDayMoods(selectedDayData.moodStats || []);
       } else {
         setSelectedDayMoods([]);
       }
-      
     } catch (err) {
       setError("Failed to fetch mood statistics");
       console.error("Error fetching mood statistics:", err);
     } finally {
       setLoading(false);
-      
+
       // Animate calendar and summary into view
       Animated.parallel([
         Animated.timing(calendarOpacity, {
           toValue: 1,
           duration: 700,
-          useNativeDriver: true
+          useNativeDriver: true,
         }),
         Animated.timing(calendarTranslateY, {
           toValue: 0,
           duration: 700,
-          useNativeDriver: true
+          useNativeDriver: true,
         }),
         Animated.sequence([
           Animated.delay(300),
@@ -174,15 +179,15 @@ const CalendarPage = () => {
             Animated.timing(summaryOpacity, {
               toValue: 1,
               duration: 700,
-              useNativeDriver: true
+              useNativeDriver: true,
             }),
             Animated.timing(summaryTranslateY, {
               toValue: 0,
               duration: 700,
-              useNativeDriver: true
-            })
-          ])
-        ])
+              useNativeDriver: true,
+            }),
+          ]),
+        ]),
       ]).start();
     }
   };
@@ -193,12 +198,15 @@ const CalendarPage = () => {
       setSelectedDayMoods([]);
       return;
     }
-    
+
     const dayData = Object.entries(eventDates).find(([key]) => key === date);
-    if (dayData && dayData[1].dots) {      // Extract actual mood data from API response
-      const selectedDayData = Object.entries(eventDates).find(([key]) => key === date)?.[1];
+    if (dayData && dayData[1].dots) {
+      // Extract actual mood data from API response
+      const selectedDayData = Object.entries(eventDates).find(
+        ([key]) => key === date
+      )?.[1];
       const selectedDayDots = selectedDayData?.dots || [];
-      
+
       // Convert dots to mood objects with consistent time values
       const moodIds = selectedDayDots.map((dot: any, index: number) => {
         // Extract mood ID from color
@@ -209,42 +217,47 @@ const CalendarPage = () => {
           "#FCA10C": 4, // Joyful
           "#22C55E": 5, // Excellent
         };
-        
+
         // Find the matching mood ID or default to index + 1
-        const moodId = Object.entries(colorToMoodId).find(
-          ([_, id]) => getMoodColor(id as number) === dot.color
-        )?.[1] || (index + 1);
-        
+        const moodId =
+          Object.entries(colorToMoodId).find(
+            ([_, id]) => getMoodColor(id as number) === dot.color
+          )?.[1] || index + 1;
+
         // Format the time based on record creation time or use a consistent fallback
         // We'll format a time that's based on the moodId to ensure consistency
         const hours = 8 + (moodId % 12); // Range will be 8-20 (8am-8pm) based on moodId
         const minutes = (moodId * 5) % 60; // Range will be 0-55 in increments of 5
-        
+
         return {
           moodId,
-          recordId: dot.key ? dot.key.replace('mood-', '') : `record-${moodId}`,
-          time: `${hours}:${minutes.toString().padStart(2, '0')} ${hours >= 12 ? 'PM' : 'AM'}`
+          recordId: dot.key ? dot.key.replace("mood-", "") : `record-${moodId}`,
+          time: `${hours}:${minutes.toString().padStart(2, "0")} ${
+            hours >= 12 ? "PM" : "AM"
+          }`,
         };
       });
-        // Sort mood records by time for consistent display
+      // Sort mood records by time for consistent display
       const sortedMoodIds = [...moodIds].sort((a, b) => {
         // Extract hours and minutes for comparison
-        const [aTimeStr] = a.time.split(' '); // "8:30" from "8:30 AM"
-        const [bTimeStr] = b.time.split(' '); // "2:15" from "2:15 PM"
-        
-        const [aHours, aMinutes] = aTimeStr.split(':').map(Number);
-        const [bHours, bMinutes] = bTimeStr.split(':').map(Number);
-        
+        const [aTimeStr] = a.time.split(" "); // "8:30" from "8:30 AM"
+        const [bTimeStr] = b.time.split(" "); // "2:15" from "2:15 PM"
+
+        const [aHours, aMinutes] = aTimeStr.split(":").map(Number);
+        const [bHours, bMinutes] = bTimeStr.split(":").map(Number);
+
         // Convert to 24-hour format for proper comparison
-        const aIs24Hour = a.time.includes('PM') && aHours !== 12 ? aHours + 12 : aHours;
-        const bIs24Hour = b.time.includes('PM') && bHours !== 12 ? bHours + 12 : bHours;
-        
+        const aIs24Hour =
+          a.time.includes("PM") && aHours !== 12 ? aHours + 12 : aHours;
+        const bIs24Hour =
+          b.time.includes("PM") && bHours !== 12 ? bHours + 12 : bHours;
+
         if (aIs24Hour !== bIs24Hour) {
           return aIs24Hour - bIs24Hour;
         }
         return aMinutes - bMinutes;
       });
-      
+
       setSelectedDayMoods(sortedMoodIds);
     } else {
       setSelectedDayMoods([]);
@@ -262,26 +275,29 @@ const CalendarPage = () => {
     };
     return moodColors[moodId] || "#7C5CFC";
   };
-    // Get mood emoji image based on moodId
+  // Get mood emoji image based on moodId
   const getMoodEmoji = (moodId: number) => {
     const moodGifs = {
-      1: require('../../assets/emoji/sad.gif'),      // Sad
-      2: require('../../assets/emoji/angry.gif'),    // Angry
-      3: require('../../assets/emoji/normal.gif'),   // Normal
-      4: require('../../assets/emoji/joyful.gif'),   // Joyful
-      5: require('../../assets/emoji/excellent.gif') // Excellent
+      1: require("../../assets/emoji/sad.gif"), // Sad
+      2: require("../../assets/emoji/angry.gif"), // Angry
+      3: require("../../assets/emoji/normal.gif"), // Normal
+      4: require("../../assets/emoji/joyful.gif"), // Joyful
+      5: require("../../assets/emoji/excellent.gif"), // Excellent
     };
-    return moodGifs[moodId as keyof typeof moodGifs] || require('../../assets/emoji/normal.gif');
+    return (
+      moodGifs[moodId as keyof typeof moodGifs] ||
+      require("../../assets/emoji/normal.gif")
+    );
   };
-  
+
   // Get mood name based on moodId
   const getMoodName = (moodId: number): string => {
     const moodNames: Record<number, string> = {
-      1: "Sad", 
-      2: "Angry", 
-      3: "Normal", 
-      4: "Joyful", 
-      5: "Excellent", 
+      1: "Sad",
+      2: "Angry",
+      3: "Normal",
+      4: "Joyful",
+      5: "Excellent",
     };
     return moodNames[moodId] || "Unknown";
   };
@@ -352,8 +368,8 @@ const CalendarPage = () => {
   };
 
   return (
-    <LinearGradient 
-      colors={['#E6F4EA', '#F0F8F3']} 
+    <LinearGradient
+      colors={["#E6F4EA", "#F0F8F3"]}
       style={styles.gradientBackground}
     >
       <ScrollView style={styles.screen} showsVerticalScrollIndicator={false}>
@@ -369,18 +385,21 @@ const CalendarPage = () => {
           }}
         />
 
-        <Animated.View 
+        <Animated.View
           style={[
             styles.calendarContainer,
-            { 
+            {
               opacity: calendarOpacity,
-              transform: [{ translateY: calendarTranslateY }] 
-            }
+              transform: [{ translateY: calendarTranslateY }],
+            },
           ]}
         >
           <Calendar
             key={`${currentYear}-${currentMonth}`}
-            current={`${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-01`}
+            current={`${currentYear}-${String(currentMonth + 1).padStart(
+              2,
+              "0"
+            )}-01`}
             onDayPress={(day: any) => {
               setSelected(day.dateString);
               setCurrentMonth(Number(day.month) - 1);
@@ -428,51 +447,60 @@ const CalendarPage = () => {
         </Animated.View>
 
         {/* Daily Mood Summary */}
-        <Animated.View 
+        <Animated.View
           style={[
-            styles.summaryContainer, 
-            { 
-              opacity: summaryOpacity, 
-              transform: [{ translateY: summaryTranslateY }] 
-            }
+            styles.summaryContainer,
+            {
+              opacity: summaryOpacity,
+              transform: [{ translateY: summaryTranslateY }],
+            },
           ]}
         >
           <Text style={styles.summaryTitle}>
-            <Ionicons name="calendar-outline" size={20} color="#7C5CFC" /> Day Summary
+            <Ionicons name="calendar-outline" size={20} color="#7C5CFC" /> Day
+            Summary
           </Text>
-          
+
           {loading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color={HOME_COLOR.HOMETABBAR} />
               <Text style={styles.loadingText}>Loading moods...</Text>
-            </View>          ) : selectedDayMoods.length > 0 ? (
+            </View>
+          ) : selectedDayMoods.length > 0 ? (
             <>
               <View style={styles.dateChip}>
-                <Text style={styles.dateChipText}>{
-                  new Date(selected).toLocaleDateString('en-US', { 
-                    weekday: 'short', 
-                    day: 'numeric', 
-                    month: 'short' 
-                  })
-                }</Text>
+                <Text style={styles.dateChipText}>
+                  {new Date(selected).toLocaleDateString("en-US", {
+                    weekday: "short",
+                    day: "numeric",
+                    month: "short",
+                  })}
+                </Text>
               </View>
-                <View style={styles.moodIconsRow}>
+              <View style={styles.moodIconsRow}>
                 {/* Group all mood icons of the same type together */}
-                {Array.from(new Set(selectedDayMoods.map(mood => mood.moodId))).map((moodId: number) => (
+                {Array.from(
+                  new Set(selectedDayMoods.map((mood) => mood.moodId))
+                ).map((moodId: number) => (
                   <View key={`mood-${moodId}`} style={styles.moodIconCard}>
-                    <View style={[styles.moodIconContainer, { backgroundColor: getMoodColor(moodId) }]}>
-                      <Image 
-                        source={getMoodEmoji(moodId)} 
-                        style={styles.moodEmoji} 
-                        resizeMode='center'
+                    <View
+                      style={[
+                        styles.moodIconContainer,
+                        { backgroundColor: getMoodColor(moodId) },
+                      ]}
+                    >
+                      <Image
+                        source={getMoodEmoji(moodId)}
+                        style={styles.moodEmoji}
+                        resizeMode="center"
                       />
                     </View>
                     <Text style={styles.moodLabel}>{getMoodName(moodId)}</Text>
                   </View>
                 ))}
               </View>
-              
-              <TouchableOpacity 
+
+              <TouchableOpacity
                 style={styles.addButton}
                 onPress={() => {
                   router.navigate({
@@ -489,8 +517,8 @@ const CalendarPage = () => {
             </>
           ) : (
             <View style={styles.emptyContainer}>
-              <Image 
-                source={require('../../assets/images/splash-icon.png')} 
+              <Image
+                source={require("../../assets/images/splash-icon.png")}
                 style={styles.emptyImage}
                 resizeMode="contain"
               />
@@ -498,7 +526,7 @@ const CalendarPage = () => {
               <Text style={styles.emptyText}>
                 You haven't recorded any moods for this day yet.
               </Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.addButton}
                 onPress={() => {
                   router.navigate({
@@ -510,7 +538,7 @@ const CalendarPage = () => {
                 }}
               >
                 <Ionicons name="add-circle" size={20} color="#fff" />
-                <Text style={styles.addButtonText}>Add mew mood</Text>
+                <Text style={styles.addButtonText}>Add new records</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -580,7 +608,8 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     alignSelf: "center",
     marginBottom: 16,
-  },  dateChipText: {
+  },
+  dateChipText: {
     color: "#7C5CFC",
     fontWeight: "600",
     fontSize: 14,

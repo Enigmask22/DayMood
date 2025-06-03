@@ -6,7 +6,7 @@ import {
   View,
   ActivityIndicator,
   TouchableOpacity,
-  ScrollView
+  ScrollView,
 } from "react-native";
 import { useState, useEffect } from "react";
 import FeelingRecord from "./FeelingRecord";
@@ -27,14 +27,18 @@ interface RecordsListProps {
 
 const RecordsList = ({ records, loading, error }: RecordsListProps) => {
   // State to hold the selected mood filter
-  const [selectedMoodFilter, setSelectedMoodFilter] = useState<string | null>(null);
+  const [selectedMoodFilter, setSelectedMoodFilter] = useState<string | null>(
+    null
+  );
   // State to hold filtered records
   const [filteredRecords, setFilteredRecords] = useState<RecordItem[]>(records);
 
   // Update filtered records when records change or filter changes
   useEffect(() => {
     if (selectedMoodFilter) {
-      const filtered = records.filter(record => record.emoji === selectedMoodFilter.toLowerCase());
+      const filtered = records.filter(
+        (record) => record.emoji === selectedMoodFilter.toLowerCase()
+      );
       setFilteredRecords(filtered);
     } else {
       setFilteredRecords(records);
@@ -62,7 +66,8 @@ const RecordsList = ({ records, loading, error }: RecordsListProps) => {
       {!loading && !error && selectedMoodFilter && (
         <View style={styles.filterStatusContainer}>
           <Text style={styles.filterStatusText}>
-            Showing {filteredRecords.length} {selectedMoodFilter} record{filteredRecords.length !== 1 ? 's' : ''}
+            Showing {filteredRecords.length} {selectedMoodFilter} record
+            {filteredRecords.length !== 1 ? "s" : ""}
           </Text>
         </View>
       )}
@@ -83,7 +88,7 @@ const RecordsList = ({ records, loading, error }: RecordsListProps) => {
           </View>
         )}
 
-       {/* Improved empty state with visual elements */}
+        {/* Improved empty state with visual elements */}
         {!loading && !error && records.length === 0 && (
           <View style={styles.emptyContainer}>
             <View style={styles.emptyIconContainer}>
@@ -101,6 +106,38 @@ const RecordsList = ({ records, loading, error }: RecordsListProps) => {
             </Text>
           </View>
         )}
+
+        {/* Empty filter state - khi có records nhưng filter không trả về kết quả */}
+        {!loading &&
+          !error &&
+          records.length > 0 &&
+          filteredRecords.length === 0 &&
+          selectedMoodFilter && (
+            <View style={styles.emptyFilterContainer}>
+              <View style={styles.emptyIconContainer}>
+                <AntDesign name="filter" size={width * 0.12} color="#BDBDBD" />
+                <AntDesign
+                  name="frowno"
+                  size={width * 0.05}
+                  color="#FF6B6B"
+                  style={styles.sadIcon}
+                />
+              </View>
+              <Text style={styles.emptyTitleText}>
+                No {selectedMoodFilter} Records
+              </Text>
+              <Text style={styles.emptySubtitleText}>
+                You don't have any {selectedMoodFilter.toLowerCase()} mood
+                records for this month.
+              </Text>
+              <TouchableOpacity
+                style={styles.clearFilterButton}
+                onPress={clearFilter}
+              >
+                <Text style={styles.clearFilterText}>Show All Records</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
         {/* Scrollable List */}
         {!loading && !error && filteredRecords.length > 0 && (
@@ -123,37 +160,44 @@ const RecordsList = ({ records, loading, error }: RecordsListProps) => {
             scrollIndicatorInsets={{ right: 1 }}
           />
         )}
-        {/* Mood Filter Section */}
-        <View style={styles.filterContainer}>
-          <Text style={styles.filterTitle}>Filter by mood:</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
-            {MOODS.map((mood) => (
-              <TouchableOpacity
-                key={mood.id}
-                style={[
-                  styles.moodFilterItem,
-                  selectedMoodFilter === mood.name && styles.moodFilterItemSelected,
-                  { backgroundColor: selectedMoodFilter === mood.name ? mood.color : 'rgba(0,0,0,0.05)' }
-                ]}
-                onPress={() => handleMoodFilter(mood.name)}
-              >
-                <Text style={[
-                  styles.moodFilterText,
-                  selectedMoodFilter === mood.name && styles.moodFilterTextSelected
-                ]}>
-                  {mood.name}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+      </View>
 
-          {/* Show Clear Filter button when a filter is active */}
-          {/* {selectedMoodFilter && (
-            <TouchableOpacity style={styles.clearFilterButton} onPress={clearFilter}>
-              <Text style={styles.clearFilterText}>Clear Filter</Text>
+      {/* Mood Filter Section - Di chuyển ra ngoài contentWrapper để cố định ở dưới */}
+      <View style={styles.filterContainer}>
+        <Text style={styles.filterTitle}>Filter by mood:</Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.filterScroll}
+        >
+          {MOODS.map((mood) => (
+            <TouchableOpacity
+              key={mood.id}
+              style={[
+                styles.moodFilterItem,
+                selectedMoodFilter === mood.name &&
+                  styles.moodFilterItemSelected,
+                {
+                  backgroundColor:
+                    selectedMoodFilter === mood.name
+                      ? mood.color
+                      : "rgba(0,0,0,0.05)",
+                },
+              ]}
+              onPress={() => handleMoodFilter(mood.name)}
+            >
+              <Text
+                style={[
+                  styles.moodFilterText,
+                  selectedMoodFilter === mood.name &&
+                    styles.moodFilterTextSelected,
+                ]}
+              >
+                {mood.name}
+              </Text>
             </TouchableOpacity>
-          )} */}
-        </View>
+          ))}
+        </ScrollView>
       </View>
     </View>
   );
@@ -176,7 +220,7 @@ const styles = StyleSheet.create({
     paddingLeft: width * 0.02,
   },
   filterScroll: {
-    flexDirection: 'row',
+    flexDirection: "row",
     paddingVertical: 6,
   },
   moodFilterItem: {
@@ -184,9 +228,9 @@ const styles = StyleSheet.create({
     paddingVertical: height * 0.01,
     borderRadius: 20,
     marginRight: width * 0.02,
-    backgroundColor: 'rgba(0,0,0,0.05)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "rgba(0,0,0,0.05)",
+    alignItems: "center",
+    justifyContent: "center",
   },
   moodFilterItemSelected: {
     elevation: 3,
@@ -203,15 +247,17 @@ const styles = StyleSheet.create({
     fontFamily: "Quicksand-Bold",
   },
   clearFilterButton: {
-    alignSelf: 'flex-end',
-    paddingHorizontal: width * 0.03,
-    paddingVertical: height * 0.005,
-    marginTop: height * 0.01,
+    alignSelf: "center",
+    paddingHorizontal: width * 0.04,
+    paddingVertical: height * 0.012,
+    marginTop: height * 0.02,
+    backgroundColor: "#2196F3",
+    borderRadius: 20,
   },
   clearFilterText: {
-    color: "#2196F3",
-    fontFamily: "Quicksand-Semibold",
-    fontSize: width * 0.035,
+    color: "white",
+    fontFamily: "Quicksand-Bold",
+    fontSize: width * 0.038,
   },
   filterStatusContainer: {
     paddingHorizontal: width * 0.02,
@@ -240,7 +286,7 @@ const styles = StyleSheet.create({
     color: "#000",
   },
   scrollContainer: {
-    flex: 1
+    flex: 1,
   },
   contentContainer: {
     paddingHorizontal: width * 0.025,
@@ -266,7 +312,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     padding: width * 0.05,
   },
-    emptyContainer: {
+  emptyContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
@@ -274,11 +320,11 @@ const styles = StyleSheet.create({
     marginTop: height * 0.05,
   },
   emptyIconContainer: {
-    position: 'relative',
+    position: "relative",
     margin: width * 0.05,
   },
   attentionIcon: {
-    position: 'absolute',
+    position: "absolute",
     top: -width * 0.02,
     right: -width * 0.02,
   },
@@ -306,6 +352,18 @@ const styles = StyleSheet.create({
     fontFamily: "Inter-Light",
     color: "#666",
     marginRight: 5,
+  },
+  emptyFilterContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: width * 0.05,
+    marginTop: height * 0.05,
+  },
+  sadIcon: {
+    position: "absolute",
+    top: -width * 0.02,
+    right: -width * 0.02,
   },
 });
 

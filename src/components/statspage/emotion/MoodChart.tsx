@@ -1,15 +1,15 @@
-import React from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  Dimensions 
-} from 'react-native';
-import { MOODS } from '@/utils/constant';
-import { ChartWeekData, DayData } from './types';
+import React from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Dimensions,
+} from "react-native";
+import { MOODS } from "@/utils/constant";
+import { ChartWeekData, DayData } from "./types";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 const BAR_HEIGHT = 180;
 const BAR_WIDTH = 32;
@@ -25,15 +25,18 @@ const MoodChart: React.FC<MoodChartProps> = ({ weekData, onDayPress }) => {
   // Calculate the maximum value for proper scaling
   const calculateMaxValue = () => {
     let maxValue = MAX_BAR_VALUE;
-    weekData.days.forEach(day => {
-      const totalCount = Object.values(day.moodCounts).reduce((sum, count) => sum + count, 0);
+    weekData.days.forEach((day) => {
+      const totalCount = Object.values(day.moodCounts).reduce(
+        (sum, count) => sum + count,
+        0
+      );
       if (totalCount > maxValue) maxValue = totalCount;
     });
     return Math.max(5, Math.ceil(maxValue));
   };
 
   const maxValue = calculateMaxValue();
-  
+
   // Generate y-axis values
   const yAxisValues: number[] = [];
   for (let i = maxValue; i >= 0; i -= Math.ceil(maxValue / 5)) {
@@ -84,12 +87,9 @@ const MoodChart: React.FC<MoodChartProps> = ({ weekData, onDayPress }) => {
     <View style={styles.chartContainer}>
       <View style={styles.yAxisContainer}>
         {yAxisValues.map((value, index) => (
-          <View 
-            key={index} 
-            style={[
-              styles.yAxisLabelContainer, 
-              { top: index * gridSpacing }
-            ]}
+          <View
+            key={index}
+            style={[styles.yAxisLabelContainer, { top: index * gridSpacing }]}
           >
             <Text style={styles.yAxisLabel}>{value}</Text>
             <View style={styles.gridLine} />
@@ -97,7 +97,7 @@ const MoodChart: React.FC<MoodChartProps> = ({ weekData, onDayPress }) => {
         ))}
       </View>
 
-<View style={[styles.barsContainer, { height: CHART_HEIGHT }]}>
+      <View style={[styles.barsContainer, { height: CHART_HEIGHT }]}>
         {weekData.days.map((dayData, index) => {
           let cumulativeValue = 0; // Reset for each day's bar
 
@@ -114,7 +114,7 @@ const MoodChart: React.FC<MoodChartProps> = ({ weekData, onDayPress }) => {
                     {/* MOODS are iterated in their defined order.
                         With flexDirection: 'column-reverse', MOODS[0] will be at the bottom.
                     */}
-                    {MOODS.map(mood => {
+                    {MOODS.map((mood) => {
                       const count = dayData.moodCounts[mood.id] || 0;
                       if (count === 0) return null;
 
@@ -168,10 +168,10 @@ const MoodChart: React.FC<MoodChartProps> = ({ weekData, onDayPress }) => {
 
       {/* Legend */}
       <View style={styles.legendContainer}>
-        {MOODS.map(mood => (
+        {MOODS.map((mood) => (
           <View key={mood.id} style={styles.legendItem}>
-            <View 
-              style={[styles.legendColorBox, { backgroundColor: mood.color }]} 
+            <View
+              style={[styles.legendColorBox, { backgroundColor: mood.color }]}
             />
             <Text style={styles.legendText}>{mood.name}</Text>
           </View>
@@ -186,106 +186,107 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     paddingVertical: 10,
     paddingRight: 10,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 12,
-    position: 'relative',
+    position: "relative",
     paddingLeft: 10,
     paddingBottom: 10, // Add space for legend
   },
   yAxisContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: 10,
     height: CHART_HEIGHT,
     zIndex: 2,
   },
   yAxisLabelContainer: {
-    position: 'absolute',
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
+    position: "absolute",
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
     height: 20,
   },
   yAxisLabel: {
     fontSize: 10,
-    color: '#64748b',
+    color: "#64748b",
     width: 25,
-    textAlign: 'right',
+    textAlign: "right",
     marginRight: 5,
-  },  
+  },
   gridLine: {
-    position: 'absolute',
+    position: "absolute",
     left: 30,
     right: -width + 85,
     height: 1,
-    backgroundColor: 'rgba(203, 213, 225, 0.4)',
+    backgroundColor: "rgba(203, 213, 225, 0.4)",
     zIndex: 1,
   },
   barsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
+    flexDirection: "row",
+    justifyContent: "flex-start",
     marginLeft: 35,
     marginTop: 10,
     marginRight: 5,
     zIndex: 2,
   },
   barColumn: {
-    alignItems: 'center',
+    alignItems: "center",
     width: BAR_WIDTH + 6,
-  },  barContainer: {
+  },
+  barContainer: {
     width: BAR_WIDTH,
-    justifyContent: 'flex-end',
+    justifyContent: "flex-end",
     zIndex: 3,
   },
   bar: {
-    flexDirection: 'column-reverse',
-    width: '100%',
-    height: '100%',
+    flexDirection: "column-reverse",
+    width: "100%",
+    height: "100%",
     borderRadius: 4,
-    overflow: 'hidden',
+    overflow: "hidden",
     zIndex: 3,
   },
   barSegment: {
-    width: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: "100%",
+    justifyContent: "center",
+    alignItems: "center",
   },
   barLabel: {
     fontSize: 10,
-    color: '#fff',
-    fontWeight: 'bold',
+    color: "#fff",
+    fontWeight: "bold",
   },
   emptyBar: {
     height: 20,
     width: BAR_WIDTH,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   emptyDash: {
     width: 16,
     height: 2,
-    backgroundColor: '#cbd5e1',
+    backgroundColor: "#cbd5e1",
     borderRadius: 1,
   },
   dayLabel: {
     fontSize: 12,
-    fontWeight: '500',
-    color: '#334155',
+    fontWeight: "500",
+    color: "#334155",
     marginTop: 8,
   },
   legendContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
     marginTop: 40,
     gap: 8,
   },
   legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginHorizontal: 4,
     paddingVertical: 4,
     paddingHorizontal: 8,
-    backgroundColor: '#f8fafc',
+    backgroundColor: "#f8fafc",
     borderRadius: 12,
   },
   legendColorBox: {
@@ -296,7 +297,7 @@ const styles = StyleSheet.create({
   },
   legendText: {
     fontSize: 10,
-    color: '#334155',
+    color: "#334155",
   },
 });
 

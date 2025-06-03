@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   FlatList,
@@ -6,25 +6,25 @@ import {
   Dimensions,
   Text,
   ActivityIndicator,
-} from 'react-native';
-import { format, parseISO } from 'date-fns';
-import { HOME_COLOR, MOODS, moodAdviceMap } from '@/utils/constant';
-import { API_ENDPOINTS } from '@/utils/config';
-import { ScreenItem, StatisticData } from '@/types/stats';
-import { renderSlideCard } from './renderSlideCard';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useAppSelector } from '@/store';
+} from "react-native";
+import { format, parseISO } from "date-fns";
+import { HOME_COLOR, MOODS, moodAdviceMap } from "@/utils/constant";
+import { API_ENDPOINTS } from "@/utils/config";
+import { ScreenItem, StatisticData } from "@/types/stats";
+import { renderSlideCard } from "./renderSlideCard";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useAppSelector } from "@/store";
 
 // Import our new components
-import MoodChart from './MoodChart';
-import WeekNavigation from './WeekNavigation';
-import MoodTooltip from './MoodTooltip';
+import MoodChart from "./MoodChart";
+import WeekNavigation from "./WeekNavigation";
+import MoodTooltip from "./MoodTooltip";
 
 // Import types
-import { ChartWeekData, DayData, TooltipData, DailyMoodStat } from './types';
-import { selectTimezone } from '@/store/slices/timezoneSlice';
+import { ChartWeekData, DayData, TooltipData, DailyMoodStat } from "./types";
+import { selectTimezone } from "@/store/slices/timezoneSlice";
 
-const { width, height } = Dimensions.get('window');
+const { width, height } = Dimensions.get("window");
 
 // Number of days to show per week
 const DAYS_PER_WEEK = 7;
@@ -38,7 +38,7 @@ interface EmotionPageProps {
 const EmotionPage: React.FC<EmotionPageProps> = ({
   currentDate,
   setCurrentDate,
-  showMoodChartOnly = false // Default to false
+  showMoodChartOnly = false, // Default to false
 }) => {
   // State management
   const [currentScreenIndex, setCurrentScreenIndex] = useState(0);
@@ -50,11 +50,11 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
   const [chartWeeks, setChartWeeks] = useState<ChartWeekData[]>([]);
   const [tooltipData, setTooltipData] = useState<TooltipData>({
     visible: false,
-    date: '',
-    day: '',
+    date: "",
+    day: "",
     position: { x: 0, y: 0 },
     moods: [],
-    totalCount: 0
+    totalCount: 0,
   });
 
   // Refs
@@ -79,8 +79,8 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
       const weekDays: DayData[] = [];
       const endIdx = Math.min(startIdx + DAYS_PER_WEEK, daysInMonth);
 
-      let startDate = '';
-      let endDate = '';
+      let startDate = "";
+      let endDate = "";
 
       for (let i = startIdx; i < endIdx; i++) {
         const dailyStat = dailyMoodStats[i];
@@ -90,13 +90,13 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
         if (i === endIdx - 1) endDate = date;
 
         // Get day of month number
-        const day = date.split('-')[2];
+        const day = date.split("-")[2];
 
         // Create mood counts object
         const moodCounts: { [key: number]: number } = {};
         let hasData = false;
 
-        dailyStat.moodStats.forEach(stat => {
+        dailyStat.moodStats.forEach((stat) => {
           moodCounts[stat.moodId] = stat.count;
           if (stat.count > 0) hasData = true;
         });
@@ -106,19 +106,19 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
           day,
           moodCounts,
           totalRecords: dailyStat.totalRecords,
-          hasData
+          hasData,
         });
       }
 
       // Format date range for this week
-      const formattedStartDate = format(parseISO(startDate), 'MMM d');
-      const formattedEndDate = format(parseISO(endDate), 'MMM d');
+      const formattedStartDate = format(parseISO(startDate), "MMM d");
+      const formattedEndDate = format(parseISO(endDate), "MMM d");
       const weekDateRange = `${formattedStartDate} - ${formattedEndDate}`;
 
       weeks.push({
         days: weekDays,
         startDate,
-        endDate
+        endDate,
       });
     }
 
@@ -133,7 +133,7 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
     if (!weeklyStats || !monthlyStats) return;
 
     const findMoodById = (moodId: number) =>
-      MOODS.find(mood => mood.id === moodId);
+      MOODS.find((mood) => mood.id === moodId);
 
     const getPercentage = (moodData: any, totalRecords: number) => {
       // If percentage is already provided in the data
@@ -151,56 +151,62 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
 
     const screensData: ScreenItem[] = [
       {
-        title: 'This week',
+        title: "This week",
         content: (
           <Text style={styles.screenContentText}>
-            Your highest mood is{' '}
+            Your highest mood is{" "}
             <Text
               style={{
                 color: findMoodById(weeklyStats.mostFrequentMood.moodId)?.color,
-                fontWeight: 'bold',
+                fontWeight: "bold",
               }}
             >
               {findMoodById(weeklyStats.mostFrequentMood.moodId)?.name}
             </Text>
-            {` (${getPercentage(weeklyStats.mostFrequentMood, weeklyStats.totalRecords)}%)`}
+            {` (${getPercentage(
+              weeklyStats.mostFrequentMood,
+              weeklyStats.totalRecords
+            )}%)`}
           </Text>
         ),
         emoji: findMoodById(weeklyStats.mostFrequentMood.moodId)?.emoji || null,
         indicator: [true, false, false],
       },
       {
-        title: 'This month',
-        content: (
-          findMoodById(monthlyStats.mostFrequentMood.moodId)? 
-           
+        title: "This month",
+        content: findMoodById(monthlyStats.mostFrequentMood.moodId) ? (
           <Text style={styles.screenContentText}>
-            Your highest mood is{' '}
+            Your highest mood is{" "}
             <Text
               style={{
-                color: findMoodById(monthlyStats.mostFrequentMood.moodId)?.color,
-                fontWeight: 'bold',
+                color: findMoodById(monthlyStats.mostFrequentMood.moodId)
+                  ?.color,
+                fontWeight: "bold",
               }}
             >
               {findMoodById(monthlyStats.mostFrequentMood.moodId)?.name}
             </Text>
-            {` (${getPercentage(monthlyStats.mostFrequentMood, monthlyStats.totalRecords)}%)`}
+            {` (${getPercentage(
+              monthlyStats.mostFrequentMood,
+              monthlyStats.totalRecords
+            )}%)`}
           </Text>
-          : 
+        ) : (
           <Text style={styles.screenContentText}>
             You haven't recorded any mood yet.
           </Text>
         ),
-        emoji: findMoodById(monthlyStats.mostFrequentMood.moodId)?.emoji || null,
+        emoji:
+          findMoodById(monthlyStats.mostFrequentMood.moodId)?.emoji || null,
         indicator: [false, true, false],
       },
       // Keep the advice slide the same
       {
-        title: 'Advice for this month',
+        title: "Advice for this month",
         content: (
           <Text style={styles.screenContentText}>
             {moodAdviceMap[monthlyStats.mostFrequentMood.moodId] ||
-              'Keep up the good work!'}
+              "Keep up the good work!"}
           </Text>
         ),
         emoji: undefined,
@@ -214,19 +220,20 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
   // Handle user tapping on a day bar in the chart
   const handleDayPress = (dayData: DayData, dayIndex: number) => {
     // Create tooltip data from the day data
-    const moodDetails = MOODS.map(mood => {
+    const moodDetails = MOODS.map((mood) => {
       const count = dayData.moodCounts[mood.id] || 0;
-      const percentage = dayData.totalRecords ?
-        Math.round((count / dayData.totalRecords) * 100) : 0;
+      const percentage = dayData.totalRecords
+        ? Math.round((count / dayData.totalRecords) * 100)
+        : 0;
 
       return {
         moodId: mood.id,
         moodName: mood.name,
         moodColor: mood.color,
         count,
-        percentage
+        percentage,
       };
-    }).filter(mood => mood.count > 0);
+    }).filter((mood) => mood.count > 0);
 
     setTooltipData({
       visible: true,
@@ -234,7 +241,7 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
       day: dayData.day,
       position: { x: dayIndex * 40, y: 100 }, // Approximate position
       moods: moodDetails,
-      totalCount: dayData.totalRecords
+      totalCount: dayData.totalRecords,
     });
   };
 
@@ -243,11 +250,11 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
     const monthType = getMonthType(currentDate);
 
     // For past months, only slide 1 is visible, so set index to 1
-    if (monthType === 'past') {
+    if (monthType === "past") {
       setCurrentScreenIndex(1);
     }
     // For future months, only slide 2 is visible, so set index to 2
-    else if (monthType === 'future') {
+    else if (monthType === "future") {
       setCurrentScreenIndex(2);
     }
     // For current month, use the calculated index
@@ -258,7 +265,7 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
 
   // Event Handlers
   const closeTooltip = () => {
-    setTooltipData(prev => ({ ...prev, visible: false }));
+    setTooltipData((prev) => ({ ...prev, visible: false }));
   };
 
   const handleWeekChange = (weekIndex: number) => {
@@ -271,9 +278,9 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
 
     // Only show indicators for visible slides based on month type
     const visibleIndices = (() => {
-      if (monthType === 'past') {
+      if (monthType === "past") {
         return [1]; // Only month card (index 1) is visible in past months
-      } else if (monthType === 'future') {
+      } else if (monthType === "future") {
         return [2]; // Only advice card (index 2) is visible in future months
       }
       return [0, 1, 2]; // All cards are visible in current month
@@ -281,15 +288,17 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
 
     // Enhance the indicators to make sure they're visible
     return (
-      <View style={[styles.indicatorContainer, styles.enhancedIndicatorContainer]}>
-        {visibleIndices.map(index => (
+      <View
+        style={[styles.indicatorContainer, styles.enhancedIndicatorContainer]}
+      >
+        {visibleIndices.map((index) => (
           <View
             key={index}
             style={[
               styles.indicator,
               styles.enhancedIndicator,
               currentScreenIndex === index && styles.indicatorActive,
-              visibleIndices.length === 1 && styles.singleIndicator
+              visibleIndices.length === 1 && styles.singleIndicator,
             ]}
           />
         ))}
@@ -319,7 +328,10 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
     // Format week date range for display
     const startDate = parseISO(currentWeek.startDate);
     const endDate = parseISO(currentWeek.endDate);
-    const weekDateRange = `${format(startDate, 'MMM d')} - ${format(endDate, 'MMM d')}`;
+    const weekDateRange = `${format(startDate, "MMM d")} - ${format(
+      endDate,
+      "MMM d"
+    )}`;
 
     return (
       <View>
@@ -330,15 +342,12 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
           onWeekChange={handleWeekChange}
         />
 
-        <MoodChart
-          weekData={currentWeek}
-          onDayPress={handleDayPress}
-        />
+        <MoodChart weekData={currentWeek} onDayPress={handleDayPress} />
       </View>
     );
   };
 
-  const getMonthType = (date: Date): 'past' | 'current' | 'future' => {
+  const getMonthType = (date: Date): "past" | "current" | "future" => {
     const today = new Date();
     const currentYear = today.getFullYear();
     const currentMonth = today.getMonth();
@@ -346,26 +355,30 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
     const selectedYear = date.getFullYear();
     const selectedMonth = date.getMonth();
 
-    if (selectedYear < currentYear ||
-      (selectedYear === currentYear && selectedMonth < currentMonth)) {
-      return 'past';
-    } else if (selectedYear > currentYear ||
-      (selectedYear === currentYear && selectedMonth > currentMonth)) {
-      return 'future';
+    if (
+      selectedYear < currentYear ||
+      (selectedYear === currentYear && selectedMonth < currentMonth)
+    ) {
+      return "past";
+    } else if (
+      selectedYear > currentYear ||
+      (selectedYear === currentYear && selectedMonth > currentMonth)
+    ) {
+      return "future";
     }
-    return 'current';
+    return "current";
   };
 
   // Effects
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const userData = await AsyncStorage.getItem('user');
+        const userData = await AsyncStorage.getItem("user");
         if (userData) {
           setUser(JSON.parse(userData));
         }
       } catch (err) {
-        console.error('Failed to load user data:', err);
+        console.error("Failed to load user data:", err);
       }
     };
 
@@ -382,7 +395,7 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
         const year = currentDate.getFullYear();
 
         const response = await fetch(
-          `${API_ENDPOINTS.RECORDS}/statistic/mood?user_id=${user.id}&month=${month}&year=${year}&timezone=${timezone}`,
+          `${API_ENDPOINTS.RECORDS}/statistic/mood?user_id=${user.id}&month=${month}&year=${year}&timezone=${timezone}`
         );
 
         const data = await response.json();
@@ -393,7 +406,7 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
           setStatistic(null);
         }
       } catch (err) {
-        console.error('Failed to fetch statistics:', err);
+        console.error("Failed to fetch statistics:", err);
         setStatistic(null);
       }
       setLoading(false);
@@ -421,7 +434,7 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
     const monthType = getMonthType(currentDate);
 
     // For past months, show the monthly stats card (index 1)
-    if (monthType === 'past') {
+    if (monthType === "past") {
       setCurrentScreenIndex(1);
       // Optional: scroll to the right position
       if (flatListRef.current) {
@@ -429,13 +442,16 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
       }
     }
     // For future months, show the advice card (index 2)
-    else if (monthType === 'future') {
+    else if (monthType === "future") {
       setCurrentScreenIndex(2);
       if (flatListRef.current) {
-        flatListRef.current.scrollToOffset({ offset: width * 2, animated: false });
+        flatListRef.current.scrollToOffset({
+          offset: width * 2,
+          animated: false,
+        });
       }
     }
-    // For current month, reset to the first card (index 0) 
+    // For current month, reset to the first card (index 0)
     else {
       setCurrentScreenIndex(0);
       if (flatListRef.current) {
@@ -445,12 +461,12 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
   }, [currentDate]); // Only watch for month changes
   // Main render
   return (
-    <View style={[styles.container, showMoodChartOnly && styles.compactContainer]}>
+    <View
+      style={[styles.container, showMoodChartOnly && styles.compactContainer]}
+    >
       {/* If showMoodChartOnly is true, only render the chart section */}
       {showMoodChartOnly ? (
-        <View style={styles.chartWrapper}>
-          {renderChartSection()}
-        </View>
+        <View style={styles.chartWrapper}>{renderChartSection()}</View>
       ) : (
         <View style={styles.container}>
           {/* Chart Section */}
@@ -461,9 +477,7 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
               {"Let's see how your mood has been this month!"}
             </Text>
 
-            <View style={styles.chartWrapper}>
-              {renderChartSection()}
-            </View>
+            <View style={styles.chartWrapper}>{renderChartSection()}</View>
           </View>
 
           {/* Slides Section */}
@@ -471,11 +485,13 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
             <FlatList
               ref={flatListRef}
               data={screens}
-              renderItem={({ item, index }) => renderSlideCard({
-                item,
-                index,
-                monthType: getMonthType(currentDate)
-              })}
+              renderItem={({ item, index }) =>
+                renderSlideCard({
+                  item,
+                  index,
+                  monthType: getMonthType(currentDate),
+                })
+              }
               keyExtractor={(_, index) => index.toString()}
               horizontal
               pagingEnabled
@@ -483,7 +499,7 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
               onMomentumScrollEnd={(event) => {
                 const index = Math.round(
                   event.nativeEvent.contentOffset.x /
-                  event.nativeEvent.layoutMeasurement.width
+                    event.nativeEvent.layoutMeasurement.width
                 );
                 handleSlideChange(index);
               }}
@@ -493,24 +509,17 @@ const EmotionPage: React.FC<EmotionPageProps> = ({
           </View>
 
           {/* Tooltip for mood details */}
-          <MoodTooltip
-            data={tooltipData}
-            onClose={closeTooltip}
-          />
+          <MoodTooltip data={tooltipData} onClose={closeTooltip} />
         </View>
       )}
 
       {/* Only show tooltip if not in compact mode or if it's visible */}
       {(!showMoodChartOnly || tooltipData.visible) && (
-        <MoodTooltip
-          data={tooltipData}
-          onClose={closeTooltip}
-        />
+        <MoodTooltip data={tooltipData} onClose={closeTooltip} />
       )}
     </View>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: {
@@ -518,12 +527,12 @@ const styles = StyleSheet.create({
     paddingBottom: height * 0.05,
   },
   chartCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 18,
     padding: 16,
     marginBottom: height * 0.02,
     marginHorizontal: width * 0.04,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
@@ -531,36 +540,36 @@ const styles = StyleSheet.create({
   },
   chartTitle: {
     fontSize: 20,
-    fontFamily: 'Quicksand-Bold',
-    color: '#1e293b',
-    textAlign: 'center',
+    fontFamily: "Quicksand-Bold",
+    color: "#1e293b",
+    textAlign: "center",
     marginBottom: 4,
   },
   chartSubtitle: {
     fontSize: 14,
-    fontFamily: 'Inter-Light',
-    color: '#64748b',
-    textAlign: 'center',
+    fontFamily: "Inter-Light",
+    color: "#64748b",
+    textAlign: "center",
     paddingHorizontal: width * 0.1,
   },
   chartWrapper: {
-    overflow: 'hidden',
+    overflow: "hidden",
     borderRadius: 12,
   },
   loadingContainer: {
     height: 240,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   noDataContainer: {
     height: 200,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   noDataText: {
     fontSize: 16,
-    color: '#94a3b8',
-    textAlign: 'center',
+    color: "#94a3b8",
+    textAlign: "center",
   },
   slideContainer: {
     flex: 1,
@@ -569,27 +578,27 @@ const styles = StyleSheet.create({
     width: width,
   },
   indicatorContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     paddingTop: 16,
   },
   indicator: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#e2e8f0',
+    backgroundColor: "#e2e8f0",
     marginHorizontal: 4,
   },
   indicatorActive: {
     width: 30,
-    backgroundColor: '#4CAF50',
+    backgroundColor: "#4CAF50",
   },
   screenContentText: {
     fontSize: 16,
     lineHeight: 24,
-    color: '#334155',
-    textAlign: 'center',
+    color: "#334155",
+    textAlign: "center",
   },
   compactContainer: {
     paddingBottom: 0,
@@ -597,10 +606,10 @@ const styles = StyleSheet.create({
   },
   singleIndicator: {
     width: 30, // Make single indicators more prominent
-    backgroundColor: '#4CAF50',
+    backgroundColor: "#4CAF50",
   },
   enhancedIndicatorContainer: {
-    position: 'absolute',
+    position: "absolute",
     bottom: height * 0.04,
     left: 0,
     right: 0,

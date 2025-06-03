@@ -1124,7 +1124,8 @@ const styles = StyleSheet.create({
   imageGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
+    gap: wp(1.5),
   },
   imageWrapper: {
     width: "32%",
